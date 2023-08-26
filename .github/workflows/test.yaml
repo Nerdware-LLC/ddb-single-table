@@ -1,0 +1,47 @@
+name: Test Workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize] # default PR types
+    branches: [main, next]
+    paths: ["src/**/*", "package*.json"]
+  push:
+    branches: [main, next]
+    paths: ["src/**/*", "package*.json"]
+
+jobs:
+  test:
+    name: Run Tests
+    uses: Nerdware-LLC/reusable-action-workflows/.github/workflows/node_test.yaml@main
+    with:
+      node-version: "18.17.1"
+      test-script: "test:ci"
+    # secrets:
+    # TODO make a CODECOV_TOKEN secret
+    #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  update_pr:
+    name: Update PR with Coverage Reports
+    needs: test # only run on PRs
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read #       required to checkout the code
+      pull-requests: write # required to put a comment in the PR
+    steps:
+      - name: Download Artifact "coverage-reports"
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-reports
+      - name: Add Coverage Report to PR
+        uses: davelosert/vitest-coverage-report-action@v2
+
+        # TODO make a SEMANTIC_RELEASE_TOKEN secret
+  # release:
+  #   name: Release (push-only)
+  #   needs: test # only run on push events when tests pass
+  #   if: github.event_name == 'push' && needs.test.result == 'success'
+  #   uses: ./.github/workflows/release.yaml
+  # secrets:
+  #   SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}

@@ -1,8 +1,7 @@
 ---
 branches:
   - main
-  - next
-ci: false
+  - { name: next, prerelease: true }
 tagFormat: v${version}
 plugins:
   - - "@semantic-release/commit-analyzer"
@@ -15,21 +14,23 @@ plugins:
         - { type: fix, release: patch }
         - { type: perf, release: patch }
         # Non-default release rules
-        - { type: refactor, scope: "core*", release: minor }
-        - { type: docs, release: patch }
         - { type: refactor, release: patch }
+        - { type: docs, release: false }
         - { scope: no-release, release: false }
 
   - - "@semantic-release/release-notes-generator"
     - preset: angular
 
+  - - "@semantic-release/npm"
+    - npmPublish: false
+
   - - "@semantic-release/github"
     - addReleases: bottom
-    # TIP: You can add "assignees" here to auto-assign issues on release failure
+      assignees: trevor-anderson
 
   - - "@semantic-release/changelog"
     - changelogFile: "CHANGELOG.md"
-      changelogTitle: |
+      changelogTitle: |-
         # Changelog
 
         All notable changes to this project will be documented in this file.
@@ -37,5 +38,5 @@ plugins:
         ---
 
   - - "@semantic-release/git"
-    - assets: ["CHANGELOG.md"]
+    - assets: ["CHANGELOG.md", "package.json", "package-lock.json", "npm-shrinkwrap.json"]
       message: "chore(release): version ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"

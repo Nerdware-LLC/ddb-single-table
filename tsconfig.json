@@ -1,0 +1,30 @@
+{
+  "include": ["src/**/*", "__mocks__/**/*"],
+
+  "compilerOptions": {
+    // Language and Environment:
+    "target": "ESNext",
+    "lib": ["ESNext"],
+
+    // Modules:
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "types": ["node", "vitest/globals"],
+
+    // "Completeness" Configs:
+    "skipLibCheck": false,
+
+    // Output Formatting:
+    "noErrorTruncation": true,
+    "outDir": "dist",
+
+    // Interop Constraints:
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Type Checking:
+    "noImplicitAny": true,
+    "strict": true
+  }
+}
