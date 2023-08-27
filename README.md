@@ -4,7 +4,12 @@
     <img src=".github/assets/ddb-single-table-banner.png" alt="ddb-single-table-banner" />
   </a>
 
-**A schema-based DynamoDB modeling tool and client wrapper for NodeJS built to supercharge single-table designs⚡**
+  <br />
+
+A schema-based DynamoDB modeling tool and client wrapper for NodeJS built to _**supercharge**_ single-table designs!⚡<br>
+Both ESM and CommonJS builds are provided, and the package is fully typed.
+
+  <br />
 
 [![pre-commit][pre-commit-shield]](https://github.com/pre-commit/pre-commit)
 [![semantic-release][semantic-shield]](https://github.com/semantic-release/semantic-release)
@@ -19,10 +24,8 @@
   - [Q: _Why "single-table-first"?_](#q-why-single-table-first)
   - [Q: _How does DDB-ST interact with the underlying DynamoDB client?_](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client)
   - [Q: _What version of the AWS SDK does DDB-ST use?_](#q-what-version-of-the-aws-sdk-does-ddb-st-use)
-- [💬 Contact](#-contact)
 - [📝 License](#-license)
-
-> This project is currently ESM-only and does not support CommonJS module syntax. If you need to use this project in a CommonJS environment, please open an issue and I'll prioritize adding support.
+- [💬 Contact](#-contact)
 
 ---
 
@@ -67,7 +70,9 @@
 
 **A:** Version 3. For the specific minor/patch release, please refer to the [package.json](./package.json).
 
----
+## 📝 License
+
+**ddb-single-table** is open-source software licensed under an [MIT License](/LICENSE).
 
 <div align="center" style="margin-top:35px;">
 
@@ -97,10 +102,6 @@ Trevor Anderson - [@TeeRevTweets](https://twitter.com/teerevtweets) - [Trevor@Ne
   </a>
 
 </div>
-
-## 📝 License
-
-**ddb-single-table** is open-source software licensed under an [MIT License](/LICENSE).
 
 <!-- LINKS -->
 

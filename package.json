@@ -1,22 +1,23 @@
 {
-  "name": "ddb-single-table",
+  "name": "@nerdware/ddb-single-table",
   "version": "1.0.0",
   "description": "A DynamoDB modeling tool and client wrapper for NodeJS built for single-table designs.",
   "author": {
     "name": "Trevor Anderson",
-    "email": "Trevor@Nerdware.cloud"
+    "email": "trevor@nerdware.cloud"
   },
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
-  "type": "module",
-  "module": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "main": "dist/cjs/index.js",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.js"
+      "import": "./dist/esm/index.js",
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.js"
     }
   },
   "private": false,
