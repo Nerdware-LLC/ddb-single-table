@@ -1,5 +1,5 @@
 import merge from "lodash.merge";
-import { ioHookActions } from "./ioHookActions";
+import { ioActions } from "./ioActions";
 import { hasKey, DdbSingleTableError, ItemInputError } from "./utils";
 import { validateModelSchema } from "./validateModelSchema";
 import type { PartialDeep } from "type-fest";
@@ -10,6 +10,8 @@ import type {
   ModelSchemaType,
   ModelSchemaOptions,
   SchemaEntries,
+  // Model method types:
+  ProcessItemDataDict,
   // IO-Action types:
   IODirection,
   IOActionSetFn,
@@ -45,7 +47,7 @@ import type {
  * Each Model instance is provided with a set of CRUD methods featuring parameter
  * and return types which reflect the Model's schema. Model instance methods wrap
  * a corresponding method of the DdbSingleTableClient instance with sets of
- * "{@link IOActionSetFn|IO Hook Actions}" which use the Model's schema to provide
+ * "{@link IOActionSetFn|IO Actions}" which use the Model's schema to provide
  * functionality related to database-IO like alias mapping, value validation, etc.
  *
  * There are two sets of IO-Actions, grouped by data flow directionality:
@@ -58,7 +60,7 @@ import type {
  * that some IO-Actions are skipped by certain methods, depending on the method's purpose.
  * For example, objects provided to `Model.updateItem` are not subjected to `"required"`
  * checks, since the method is intended to update individual properties of existing items.
- * _See **{@link ioHookActions}** for more info an any of the IO-Actions listed below._
+ * _See **{@link ioActions}** for more info an any of the IO-Actions listed below._
  *
  * **`toDB`**:
  * 1. **`Alias Mapping`** — Replaces "alias" keys with attribute names.
@@ -172,7 +174,7 @@ export class Model<
     this.indexes = indexes;
     this.ddbClient = ddbClient;
 
-    // Cache sorted schema entries for IOHookActions
+    // Cache sorted schema entries for IOActions
     this.schemaEntries = Object.entries(modelSchema).sort(([attrNameA], [attrNameB]) => {
       return attrNameA === tableHashKey // Sort tableHashKey to the front
         ? -1
@@ -312,7 +314,7 @@ export class Model<
     ...otherQueryOpts
   }: QueryOpts<ItemInput>) => {
     // If Where-API object is provided, unalias the keys
-    where &&= ioHookActions.aliasMapping(where, {
+    where &&= ioActions.aliasMapping(where, {
       ioDirection: "toDB",
       modelName: this.modelName,
       schema: this.schema,
@@ -348,7 +350,13 @@ export class Model<
    * | `toDB`   | Actions executed on objects being _sent to_ the database.       | Only used for _writes_             |
    * | `fromDB` | Actions executed on objects being _returned from_ the database. | Used for both _reads_ AND _writes_ |
    */
-  readonly processItemData = {
+  readonly processItemData: ProcessItemDataDict<Schema, ItemOutput, ItemInput> = {
+    /**
+     * This method applies `toDB` IO-Actions to the provided `itemInput` for DB write operations.
+     * @param itemInput The item(s) being sent to the database.
+     * @param ioBehavioralOpts Boolean options for controlling the behavior of IO-Actions.
+     * @returns The item(s) after being processed by the IO-Actions.
+     */
     toDB: <ItemArgs extends OneOrMoreMaybePartialItems<ItemInput>>(
       itemInput: ItemArgs,
       {
@@ -369,7 +377,12 @@ export class Model<
         DynamoDbItemType<Schema>
       >;
     },
-
+    /**
+     * This method applies `fromDB` IO-Actions to the provided `itemOutput` for DB R/W operations.
+     * @param itemOutput The item(s) being returned from the database.
+     * @param ioBehavioralOpts Boolean options for controlling the behavior of IO-Actions.
+     * @returns The item(s) after being processed by the IO-Actions.
+     */
     fromDB: <ItemArgs extends OneOrMoreMaybePartialItems<DynamoDbItemType<Schema>>>(
       itemOutput: ItemArgs | Record<string, any> | Array<Record<string, any>>,
       { shouldTransformItem = true } = {}
@@ -385,8 +398,7 @@ export class Model<
   };
 
   /**
-   * This method obtains and calls IO-hook actions for a given action set, and
-   * handles type coercion.
+   * This method obtains and calls IO-Actions for a given action set, and handles type coercion.
    */
   private readonly applyActionSetToItemData = <
     ItemArgs extends OneOrMoreMaybePartialItems<Record<string, unknown>>,
@@ -423,13 +435,15 @@ export class Model<
           return ioAction(itemAccum as Record<string, unknown>) as ItemArgs;
         }
       : (batchItemsAccum: ItemArgs, ioAction) => {
-          return (batchItemsAccum as Array<{}>).map((item) => ioAction(item)) as ItemArgs;
+          return (batchItemsAccum as Array<Record<string, unknown>>).map((item) =>
+            ioAction(item)
+          ) as ItemArgs;
         };
 
     return ioActions.reduce(itemDataReducer, itemData);
   };
 
-  // DATABASE I/O HOOK ACTION SETS:
+  // DATABASE I/O ACTION SETS:
 
   private readonly getActionsSet: Record<
     IODirection,
@@ -446,44 +460,44 @@ export class Model<
     ) => {
       return [
         // Alias Mapping
-        (item) => ioHookActions.aliasMapping(item, ioContext),
+        (item) => ioActions.aliasMapping(item, ioContext),
         // Apply Defaults
         ...(shouldSetDefaults
-          ? ([(item) => ioHookActions.setDefaults(item, ioContext)] satisfies [IOActionSetFn])
+          ? ([(item) => ioActions.setDefaults(item, ioContext)] satisfies [IOActionSetFn])
           : []),
         // Attribute-level transformValue.toDB
-        (item) => ioHookActions.transformValues(item, ioContext),
+        (item) => ioActions.transformValues(item, ioContext),
         // Schema-level transformItem.toDB
         ...(shouldTransformItem
-          ? ([(item) => ioHookActions.transformItem(item, ioContext)] satisfies [IOActionSetFn])
+          ? ([(item) => ioActions.transformItem(item, ioContext)] satisfies [IOActionSetFn])
           : []),
         // Type Checking
-        (item) => ioHookActions.typeChecking(item, ioContext),
+        (item) => ioActions.typeChecking(item, ioContext),
         // Attribute-level Validation
-        (item) => ioHookActions.validate(item, ioContext),
+        (item) => ioActions.validate(item, ioContext),
         // Item-level Validation
         ...(shouldValidateItem
-          ? ([(item) => ioHookActions.validateItem(item, ioContext)] satisfies [IOActionSetFn])
+          ? ([(item) => ioActions.validateItem(item, ioContext)] satisfies [IOActionSetFn])
           : []),
         // Convert JS Types
-        (item) => ioHookActions.convertJsTypes(item, ioContext),
+        (item) => ioActions.convertJsTypes(item, ioContext),
         // Check Required
         ...(shouldCheckRequired
-          ? ([(item) => ioHookActions.checkRequired(item, ioContext)] satisfies [IOActionSetFn])
+          ? ([(item) => ioActions.checkRequired(item, ioContext)] satisfies [IOActionSetFn])
           : []),
       ];
     },
     fromDB: (ioContext, { shouldTransformItem = true } = {}) => [
       // Convert JS Types
-      (item) => ioHookActions.convertJsTypes(item, ioContext),
+      (item) => ioActions.convertJsTypes(item, ioContext),
       // Attribute-level transformValue.fromDB
-      (item) => ioHookActions.transformValues(item, ioContext),
+      (item) => ioActions.transformValues(item, ioContext),
       // Schema-level transformItem.fromDB
       ...(shouldTransformItem
-        ? ([(item) => ioHookActions.transformItem(item, ioContext)] satisfies [IOActionSetFn])
+        ? ([(item) => ioActions.transformItem(item, ioContext)] satisfies [IOActionSetFn])
         : []),
       // Alias Mapping
-      (item) => ioHookActions.aliasMapping(item, ioContext),
+      (item) => ioActions.aliasMapping(item, ioContext),
     ],
   };
 
