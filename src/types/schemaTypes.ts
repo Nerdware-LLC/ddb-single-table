@@ -268,7 +268,7 @@ export interface ModelSchemaOptions {
    * items upon invocation (default: `{ enabled: true, attrName: "createdAt" }`). Use
    * `"attrName"` to specify an attribute name other than `"createdAt"`. Unless `"enabled"`
    * is set to `false` to disable this behavior, the timestamp field is added _before_ any
-   * IOHookActions are called, thereby facilitating the use of timestamp-based values in
+   * IOActions are called, thereby facilitating the use of timestamp-based values in
    * the schema. For example, your schema could define a `"pk"` attribute with a `default`
    * function which generates a timestamp-based UUID using the `createdAt` value.
    * Note that this config has no impact on Model typings created with DdbST generics like
@@ -285,9 +285,9 @@ export interface ModelSchemaOptions {
  * Schema entries are created by each Model upon instantiation using
  * `Object.entries(schema)` to achieve the following:
  *
- * - Ensure `IOHookActionMethod`s aren't needlessly re-creating schema entries
+ * - Ensure `IOActionMethod`s aren't needlessly re-creating schema entries
  *   using `Object.entries(schema)` on every call.
- * - Ensure that the order of attributes processed by `IOHookActionMethod`s is
+ * - Ensure that the order of attributes processed by `IOActionMethod`s is
  *   always consistent.
  * - Ensure that key attributes are always processed before non-key attributes.
  */

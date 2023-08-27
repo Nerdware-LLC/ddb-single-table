@@ -11,7 +11,7 @@ import type {
 export type IODirection = "toDB" | "fromDB";
 
 /**
- * The context object passed to IO hook actions.
+ * The context object passed to IO Actions.
  */
 interface BaseIOActionContext {
   /** The calling Model's name. */
@@ -36,13 +36,13 @@ export interface RecursiveIOActionContext extends BaseIOActionContext {
   schema: ModelSchemaNestedAttributes;
 }
 
-export type IOHookActionMethod = (
+export type IOActionMethod = (
   item: Record<string, unknown>,
   context: IOActionContext
 ) => Record<string, unknown>;
 
 export type RecursiveIOActionMethod = (
-  ioAction: IOHookActionMethod,
+  ioAction: IOActionMethod,
   itemValue: Required<unknown>,
   ctx: RecursiveIOActionContext
 ) => Required<unknown>;
