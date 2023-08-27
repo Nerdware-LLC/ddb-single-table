@@ -132,7 +132,7 @@ export const stringifyNestedSchema = (
   propertiesToPrint: Array<keyof ModelSchemaAttributeConfig> = ["type", "oneOf", "schema"],
   spaces = 2
 ) => {
-  return JSON.stringify(
+  return safeJsonStringify(
     nestedSchema,
     (key: any, value: unknown) => (propertiesToPrint.includes(key) ? value : undefined),
     spaces
