@@ -2,13 +2,18 @@ import { safeJsonStringify } from "./safeJsonStringify";
 import type { ModelSchemaAttributeConfig, ModelSchemaNestedAttributes } from "../types";
 
 /**
- * The base `error` class for `DdbSingleTable`.
+ * This is the base `error` class for `DdbSingleTable`. If the `message` arg is anything
+ * other than a truthy string, then the resultant Error's `message` property will be set
+ * to a default value. A second `fallbackMsg` arg can be provided to override the default
+ * message.
  */
 export class DdbSingleTableError extends Error {
+  static readonly DEFAULT_MSG = "An unknown error occurred";
   readonly name: string;
 
-  constructor(message = "An unknown error occurred") {
-    super(message);
+  constructor(message?: unknown) {
+    // This ctor allows `message` to be any type, but it's only used if it's a truthy string.
+    super((typeof message === "string" && message) || DdbSingleTableError.DEFAULT_MSG);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, DdbSingleTableError);
   }
