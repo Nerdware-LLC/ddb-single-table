@@ -1,4 +1,5 @@
 import { mockClient } from "aws-sdk-client-mock";
+import { MOCK_TABLE } from "../../src/tests/staticMockItems";
 import type {
   ListTablesOutput,
   DescribeTableInput,
@@ -13,40 +14,6 @@ const {
   CreateTableCommand,
   ListTablesCommand,
 } = await vi.importActual<typeof import("@aws-sdk/client-dynamodb")>("@aws-sdk/client-dynamodb");
-
-const MOCK_TABLE: { [Key in keyof CreateTableInput]: Exclude<CreateTableInput[Key], undefined> } = {
-  TableName: "mock-table",
-  BillingMode: "PROVISIONED",
-  AttributeDefinitions: [
-    { AttributeName: "pk", AttributeType: "S" },
-    { AttributeName: "sk", AttributeType: "S" },
-    { AttributeName: "data", AttributeType: "S" },
-  ],
-  KeySchema: [
-    { AttributeName: "pk", KeyType: "HASH" },
-    { AttributeName: "sk", KeyType: "RANGE" },
-  ],
-  GlobalSecondaryIndexes: [
-    {
-      IndexName: "Overloaded_SK_GSI",
-      KeySchema: [
-        { AttributeName: "sk", KeyType: "HASH" },
-        { AttributeName: "data", KeyType: "RANGE" },
-      ],
-      Projection: { ProjectionType: "ALL" },
-      ProvisionedThroughput: { ReadCapacityUnits: 10, WriteCapacityUnits: 10 },
-    },
-    {
-      IndexName: "Overloaded_Data_GSI",
-      KeySchema: [
-        { AttributeName: "data", KeyType: "HASH" },
-        { AttributeName: "sk", KeyType: "RANGE" },
-      ],
-      Projection: { ProjectionType: "ALL" },
-      ProvisionedThroughput: { ReadCapacityUnits: 10, WriteCapacityUnits: 10 },
-    },
-  ],
-};
 
 const DynamoDBClient = vi.fn(() =>
   mockClient(_DynamoDBClient)
