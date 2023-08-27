@@ -1,0 +1,11 @@
+{
+  // This tsconfig is used for building the project's CommonJS dist files.
+
+  "extends": "./tsconfig.build-esm.json",
+
+  "compilerOptions": {
+    "module": "CommonJS",
+    "outDir": "dist/cjs",
+    "target": "ESNext"
+  }
+}

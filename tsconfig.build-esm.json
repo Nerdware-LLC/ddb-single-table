@@ -1,0 +1,27 @@
+{
+  // This tsconfig is used for building the project's ESM dist files.
+
+  "extends": "./tsconfig.json",
+
+  "include": ["src"],
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/tests/**/*",
+    "src/**/__mocks__/**/*"
+  ],
+
+  "compilerOptions": {
+    // General build settings used for both ESM and CommonJS builds:
+    "types": ["node"],
+    "skipLibCheck": true,
+
+    // ESM build settings:
+    "module": "ESNext",
+    "outDir": "dist/esm",
+    "target": "ESNext"
+  }
+}
