@@ -16,6 +16,7 @@ import type {
   MergeModelAndTableKeysSchema,
   ItemInputType,
   ItemOutputType,
+  DdbSingleTableCreateModelMethod,
 } from "./types";
 
 /**
@@ -136,7 +137,7 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
     });
   };
 
-  readonly createModel = <
+  readonly createModel: DdbSingleTableCreateModelMethod<TableKeysSchema> = <
     ModelSchema extends ModelSchemaType<TableKeysSchema>,
     ItemOutput extends Record<string, any> = ItemOutputType<
       MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema>
