@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
   workflow_call:
     secrets:
-      GITHUB_TOKEN: { required: true }
+      SEMANTIC_RELEASE_TOKEN: { required: true }
 
 jobs:
   release:
     name: Release
     uses: Nerdware-LLC/reusable-action-workflows/.github/workflows/release.yaml@main
     secrets:
-      SEMANTIC_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
