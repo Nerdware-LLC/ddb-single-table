@@ -68,7 +68,7 @@ export class SchemaValidationError extends DdbSingleTableError {
 }
 
 /**
- * This error is thrown by Model `IOHookAction` functions when run-time input
+ * This error is thrown by Model `IOAction` functions when run-time input
  * data is invalid.
  */
 export class ItemInputError extends DdbSingleTableError {
