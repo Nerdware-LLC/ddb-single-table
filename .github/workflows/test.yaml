@@ -17,9 +17,8 @@ jobs:
     with:
       node-version: "18.17.1"
       test-script: "test:ci"
-    # secrets:
-    # TODO make a CODECOV_TOKEN secret
-    #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   update_pr:
     name: Update PR with Coverage Reports
@@ -37,11 +36,9 @@ jobs:
       - name: Add Coverage Report to PR
         uses: davelosert/vitest-coverage-report-action@v2
 
-        # TODO make a SEMANTIC_RELEASE_TOKEN secret
-  # release:
-  #   name: Release (push-only)
-  #   needs: test # only run on push events when tests pass
-  #   if: github.event_name == 'push' && needs.test.result == 'success'
-  #   uses: ./.github/workflows/release.yaml
-  # secrets:
-  #   SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+  release:
+    name: Release (push-only)
+    needs: test # only run on push events when tests pass
+    if: github.event_name == 'push' && needs.test.result == 'success'
+    uses: ./.github/workflows/release.yaml
+    secrets: inherit
