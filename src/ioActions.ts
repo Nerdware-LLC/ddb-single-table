@@ -3,44 +3,46 @@ import {
   hasKey,
   safeJsonStringify,
   hasDefinedProperty,
+  isConvertibleToDate,
   isType,
   ItemInputError,
   getAttrErrID,
   stringifyNestedSchema,
 } from "./utils";
 import type {
-  IOHookActionMethod,
+  IOActionMethod,
   RecursiveIOActionMethod,
   ModelSchemaType,
   SchemaEntries,
+  ModelSchemaNestedAttributes as NestedAttributes,
 } from "./types";
 
 /**
  * An object with various methods used to validate and transform items to/from the db.
  *
- * @type {IOHookActions}
- * @property {RecursiveIOActionMethod} recursivelyApplyIOHookAction - Applies any given `ioAction` to nested attributes of type "map" or "array".
- * @property {IOHookActionMethod} aliasMapping - Swaps attribute-names with their corresponding aliases.
- * @property {IOHookActionMethod} setDefaults - Applies attribute default values/functions when creating items.
- * @property {IOHookActionMethod} transformValues - Transforms attribute values using `transformValue` functions.
- * @property {IOHookActionMethod} transformItem - Transforms an entire item using the `transformItem` method.
- * @property {IOHookActionMethod} typeChecking - Checks item properties for conformance with their respective attribute "type".
- * @property {IOHookActionMethod} validate - Validates an item's individual properties using attribute's respective `"validate"` functions.
- * @property {IOHookActionMethod} validateItem - Validates an item in its entirety using the `validateItem` method.
- * @property {IOHookActionMethod} convertJsTypes - Converts JS types to DynamoDB types and vice versa.
- * @property {IOHookActionMethod} checkRequired - Checks an item for the existence of properties marked `required` in the schema.
+ * @type {IOActions}
+ * @property {RecursiveIOActionMethod} recursivelyApplyIOAction - Applies any given `ioAction` to nested attributes of type "map" or "array".
+ * @property {IOActionMethod} aliasMapping - Swaps attribute-names with their corresponding aliases.
+ * @property {IOActionMethod} setDefaults - Applies attribute default values/functions when creating items.
+ * @property {IOActionMethod} transformValues - Transforms attribute values using `transformValue` functions.
+ * @property {IOActionMethod} transformItem - Transforms an entire item using the `transformItem` method.
+ * @property {IOActionMethod} typeChecking - Checks item properties for conformance with their respective attribute "type".
+ * @property {IOActionMethod} validate - Validates an item's individual properties using attribute's respective `"validate"` functions.
+ * @property {IOActionMethod} validateItem - Validates an item in its entirety using the `validateItem` method.
+ * @property {IOActionMethod} convertJsTypes - Converts JS types to DynamoDB types and vice versa.
+ * @property {IOActionMethod} checkRequired - Checks an item for the existence of properties marked `required` in the schema.
  */
-export const ioHookActions: IOHookActions = Object.freeze({
+export const ioActions: IOActions = Object.freeze({
   /**
    * Applies any given `ioAction` to nested attributes of type "map" or "array".
    */
-  recursivelyApplyIOHookAction: function (ioAction, itemValue, { schema: nestedSchema, ...ctx }) {
+  recursivelyApplyIOAction: function (ioAction, itemValue, { schema: nestedSchema, ...ctx }) {
     /* See if nested schema is an array or an object. Nested values can only be set if
     parent already exists, so itemValue is also checked (if !exists, do nothing). Note
     that `ioAction` must be called using the `call` prototype method to ensure the fn
     doesn't lose its "this" context. */
     if (isType.array(nestedSchema) && isType.array(itemValue)) {
-      /* For both ARRAYs and TUPLEs, since `IOHookActionMethod`s require `item` to
+      /* For both ARRAYs and TUPLEs, since `IOActionMethod`s require `item` to
       be an object, array values and their respective nested schema are provided as
       the value to a wrapper object with an arbitrary key of "_".  */
 
@@ -78,7 +80,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` swaps attribute-names with their corresponding
+   * This `IOActionMethod` swaps attribute-names with their corresponding
    * aliases:
    * - `toDB`: replaces "alias" keys with attribute names
    * - `fromDB`: replaces attribute names with "alias" keys
@@ -107,7 +109,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` applies any `"default"`s defined in the schema in
+   * This `IOActionMethod` applies any `"default"`s defined in the schema in
    * the course of "create" operations. Attribute default values/functions are used
    * when the item either does not have the attribute (as determined by
    * `hasOwnProperty`), or the attribute value is `null` or `undefined`.
@@ -125,7 +127,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
       }
       // Run recursively on nested attributes if parent value exists
       if (attrConfig?.schema && hasDefinedProperty(item, attrName)) {
-        item[attrName] = this.recursivelyApplyIOHookAction(this.setDefaults, item[attrName], {
+        item[attrName] = this.recursivelyApplyIOAction(this.setDefaults, item[attrName], {
           parentItem,
           ...ctx,
           schema: attrConfig.schema, // <-- overwrites ctx.schema with the nested schema
@@ -136,7 +138,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` uses `transformValue` functions (if defined) to
+   * This `IOActionMethod` uses `transformValue` functions (if defined) to
    * transform attribute values before they are validated, converted to DynamoDB
    * types, etc.
    */
@@ -153,7 +155,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
       }
       // Run recursively on nested attributes if parent value exists
       if (attrConfig?.schema && hasDefinedProperty(item, attrName)) {
-        item[attrName] = this.recursivelyApplyIOHookAction(this.transformValues, item[attrName], {
+        item[attrName] = this.recursivelyApplyIOAction(this.transformValues, item[attrName], {
           parentItem: item,
           ioDirection,
           ...ctx,
@@ -165,7 +167,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` uses the `transformItem` method (if defined in the
+   * This `IOActionMethod` uses the `transformItem` method (if defined in the
    * Model's schema options), to transform an entire item before it is sent to
    * the database. This is useful for potentially adding/removing/renaming item
    * properties, however **it may necessitate providing explicit Model type params
@@ -180,7 +182,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` checks item properties for conformance with their
+   * This `IOActionMethod` checks item properties for conformance with their
    * respective attribute "type" as defined in the schema.
    */
   typeChecking: function (item, { schemaEntries, modelName, ioDirection, ...ctx }) {
@@ -196,16 +198,16 @@ export const ioHookActions: IOHookActions = Object.freeze({
             `Invalid type of value provided for ${getAttrErrID(modelName, attrName, attrConfig)}.` +
               `\nExpected: ${attrConfig.type} ` +
               (attrConfig.type === "enum"
-                ? `(oneOf: ${JSON.stringify(attrConfig.oneOf)})`
+                ? `(oneOf: ${safeJsonStringify(attrConfig.oneOf)})`
                 : ["map", "array", "tuple"].includes(attrConfig.type)
-                ? `(schema: ${stringifyNestedSchema(attrConfig.schema as any)})`
+                ? `(schema: ${stringifyNestedSchema(attrConfig.schema as NestedAttributes)})`
                 : "") +
               `\nReceived: ${safeJsonStringify(item[attrName])}`
           );
         }
         // Run recursively on nested attributes
         if (attrConfig?.schema) {
-          this.recursivelyApplyIOHookAction(this.typeChecking, item[attrName], {
+          this.recursivelyApplyIOAction(this.typeChecking, item[attrName], {
             parentItem: item,
             ioDirection,
             modelName,
@@ -219,7 +221,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` validates an item's individual properties using
+   * This `IOActionMethod` validates an item's individual properties using
    * attribute's respective `"validate"` functions provided in the schema.
    */
   validate: function (item, { schemaEntries, modelName, ...ctx }) {
@@ -236,7 +238,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
         }
         // Run recursively on nested attributes
         if (attrConfig?.schema) {
-          this.recursivelyApplyIOHookAction(this.validate, item[attrName], {
+          this.recursivelyApplyIOAction(this.validate, item[attrName], {
             parentItem: item,
             modelName,
             ...ctx,
@@ -249,7 +251,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` uses the `validateItem` method provided in the
+   * This `IOActionMethod` uses the `validateItem` method provided in the
    * Model schema options to validate an item in its entirety.
    */
   validateItem: function (item, { schemaOptions, modelName }) {
@@ -264,7 +266,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` converts JS types to DynamoDB types and vice versa.
+   * This `IOActionMethod` converts JS types to DynamoDB types and vice versa.
    *
    * - `"Date"` Attributes
    *   - `toDB`: JS Date objects are converted to unix timestamps
@@ -285,12 +287,12 @@ export const ioHookActions: IOHookActions = Object.freeze({
           if (ioDirection === "toDB" && (isType.Date(itemValue) || isType.string(itemValue))) {
             // toDB, convert Date objects to unix timestamps (Math.floor(new Date(value).getTime() / 1000))
             convertedValue = dayjs(itemValue).unix();
-          } else if (ioDirection === "fromDB" && dayjs(itemValue as any).isValid()) {
+          } else if (ioDirection === "fromDB" && isConvertibleToDate(itemValue)) {
             // fromDB, convert timestamps to Date objects
             convertedValue = dayjs(
               isType.number(itemValue)
                 ? itemValue * 1000 // <-- convert seconds to milliseconds
-                : (itemValue as any)
+                : itemValue
             ).toDate();
           }
         } else if (attrType === "Buffer") {
@@ -304,7 +306,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
           }
         } else if ((attrType === "map" || attrType === "array") && attrConfig?.schema) {
           // Run recursively on nested attributes
-          convertedValue = this.recursivelyApplyIOHookAction(this.convertJsTypes, itemValue, {
+          convertedValue = this.recursivelyApplyIOAction(this.convertJsTypes, itemValue, {
             parentItem: item,
             ioDirection,
             ...ctx,
@@ -319,7 +321,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 
   /**
-   * This `IOHookActionMethod` checks an item for the existence of properties
+   * This `IOActionMethod` checks an item for the existence of properties
    * marked `required` in the schema, and throws an error if a required property is
    * not present (as indicated by `hasOwnProperty`), or its value is `null` or
    * `undefined`. This check occurs by default for the following Model methods:
@@ -340,7 +342,7 @@ export const ioHookActions: IOHookActions = Object.freeze({
       }
       // Run recursively on nested attributes if parent exists
       if (attrConfig?.schema && hasDefinedProperty(item, attrName)) {
-        this.recursivelyApplyIOHookAction(this.checkRequired, item[attrName], {
+        this.recursivelyApplyIOAction(this.checkRequired, item[attrName], {
           parentItem: item,
           ioDirection,
           modelName,
@@ -353,9 +355,9 @@ export const ioHookActions: IOHookActions = Object.freeze({
   },
 });
 
-export type IOHookActions = Readonly<
+export type IOActions = Readonly<
   {
-    recursivelyApplyIOHookAction: RecursiveIOActionMethod;
+    recursivelyApplyIOAction: RecursiveIOActionMethod;
   } & Record<
     | "aliasMapping"
     | "setDefaults"
@@ -366,6 +368,6 @@ export type IOHookActions = Readonly<
     | "validateItem"
     | "convertJsTypes"
     | "checkRequired",
-    IOHookActionMethod
+    IOActionMethod
   >
 >;
