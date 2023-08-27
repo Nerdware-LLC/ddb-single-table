@@ -51,13 +51,6 @@ export default [
       "node/no-process-env": "error",
       "node/no-unpublished-import": "off",
       "node/no-unsupported-features/es-syntax": "off",
-      "@typescript-eslint/ban-types": [
-        "error",
-        {
-          types: { "{}": false /* un-bans `{}`, which is banned by default */ },
-          extendDefaults: true,
-        },
-      ],
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-inferrable-types": "off",
       "@typescript-eslint/no-misused-promises": [
