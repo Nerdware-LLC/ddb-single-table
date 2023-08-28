@@ -6,7 +6,7 @@
 
   <br />
 
-A schema-based DynamoDB modeling tool, type-generator, and client wrapper for NodeJS built to _**supercharge**_ single-table designs!⚡<br>
+A schema-based DynamoDB modeling tool, type-generator, and client wrapper built to _**supercharge**_ single-table designs!⚡<br>
 Both ESM and CommonJS builds are provided, and the package is fully typed.
 
 [![pre-commit][pre-commit-shield]](https://github.com/pre-commit/pre-commit)
