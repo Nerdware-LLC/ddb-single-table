@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.0.0...v1.0.1-next.1) (2023-08-28)
+
+
+### Bug Fixes
+
+* add 'undefined' to banned types ([1e3c58f](https://github.com/Nerdware-LLC/ddb-single-table/commit/1e3c58fe5d0d772d1d75a6dd27df365762491038))
+
 # 1.0.0 (2023-08-27)
 
 
