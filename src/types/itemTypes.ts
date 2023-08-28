@@ -294,7 +294,7 @@ type GetRequiredKeys<
   T extends Record<string, BaseAttributeConfigProperties>,
   Opts extends { optionalIfDefault?: boolean }
 > = Opts["optionalIfDefault"] extends true
-  ? ConditionalExcept<ConditionalPick<T, { required: true }>, { default: {} }>
+  ? ConditionalExcept<ConditionalPick<T, { required: true }>, { default: NonNullable<unknown> }>
   : ConditionalPick<T, { required: true }>;
 
 /**
