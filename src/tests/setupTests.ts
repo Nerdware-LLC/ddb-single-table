@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { isDate, isConvertibleToDate } from "../utils";
+import { isConvertibleToDate } from "../utils";
 
 /**
  * This Vitest setup file accomplishes the following:
