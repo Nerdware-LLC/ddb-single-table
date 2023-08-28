@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.1-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.0.1-next.1...v1.0.1-next.2) (2023-08-28)
+
+
+### Bug Fixes
+
+* correct isRecordObject logic, add jsdoc ([82f9359](https://github.com/Nerdware-LLC/ddb-single-table/commit/82f9359140f7074ad629785c57dc0b766a34ff6a))
+* rm unused isDate import ([3e0b36e](https://github.com/Nerdware-LLC/ddb-single-table/commit/3e0b36eb3b70d431018744c8f4a85c7e24a33874))
+
 ## [1.0.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.0.0...v1.0.1-next.1) (2023-08-28)
 
 
