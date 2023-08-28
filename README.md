@@ -111,7 +111,7 @@ Both ESM and CommonJS builds are provided, and the package is fully typed.
        type: "string",
        alias: "id", // <-- Each Model can have custom aliases for keys
        default: ({ createdAt }: { createdAt: Date }) => {
-        return `USER#${createdAt.valueOf()}`
+        return `USER#${createdAt.getTime()}`
        },
        validate: (id: string) => /^USER#\d{10,}$/.test(id),
        required: true,
@@ -164,7 +164,7 @@ Both ESM and CommonJS builds are provided, and the package is fully typed.
       each Model (unless explicitly disabled). Here's an example with these
       attributes explicitly provided:                                    */
       createdAt: {
-        type: "Date", // <-- All "Date" values are validated using dayjs
+        type: "Date",
         required: true,
         default: () => new Date()
       },
