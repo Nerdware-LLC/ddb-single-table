@@ -9,8 +9,14 @@
 A schema-based DynamoDB modeling tool, type-generator, and client wrapper built to _**supercharge**_ single-table designs!⚡<br>
 Both ESM and CommonJS builds are provided, and the package is fully typed.
 
+![test_workflow_status](https://github.com/Nerdware-LLC/ddb-single-table/actions/workflows/test.yaml/badge.svg?branch=main)
+&nbsp;
+[![codecov](https://codecov.io/gh/Nerdware-LLC/ddb-single-table/graph/badge.svg?token=RLCCIOLT01)](https://codecov.io/gh/Nerdware-LLC/ddb-single-table)
+&nbsp;
 [![pre-commit][pre-commit-shield]](https://github.com/pre-commit/pre-commit)
+&nbsp;
 [![semantic-release][semantic-shield]](https://github.com/semantic-release/semantic-release)
+&nbsp;
 [![License: MIT][license-shield]](https://opensource.org/licenses/MIT)
 
 </div>
