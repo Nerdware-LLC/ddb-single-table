@@ -6,7 +6,8 @@
 
   <br />
 
-A schema-based DynamoDB modeling tool, high-level API, and type-generator built to _**supercharge**_ single-table designs!⚡<br><br>
+A schema-based DynamoDB modeling tool, high-level API, and type-generator <br>
+built to _**supercharge**_ single-table designs!⚡<br><br>
 Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-features). <br>
 <font size="2"><i>Fully-typed support for ESM and CommonJS</i></font>
 
