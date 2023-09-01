@@ -10,7 +10,7 @@ import type {
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type { Simplify } from "type-fest";
-import type { GenerateKeyConditionExpressionArgs } from "../generateKeyConditionExpression";
+import type { WhereQueryParam } from "../WhereQuery";
 import type { GenerateUpdateExpressionOpts } from "../generateUpdateExpression";
 
 /**
@@ -66,7 +66,7 @@ export type BatchDeleteItemsOpts = BatchWriteCommandParameters;
 export type BatchUpsertAndDeleteItemsOpts = BatchWriteCommandParameters;
 export type QueryOpts<ItemType extends Record<string, unknown> = Record<string, unknown>> =
   QueryCommandParameters &
-    Partial<GenerateKeyConditionExpressionArgs<ItemType>> & {
+    Partial<WhereQueryParam<ItemType>> & {
       limit?: QueryCommandParameters["Limit"];
     };
 export type ScanOpts = ScanCommandParameters;

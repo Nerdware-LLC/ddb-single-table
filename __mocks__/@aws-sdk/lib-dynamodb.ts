@@ -1,5 +1,5 @@
 import { mockClient } from "aws-sdk-client-mock";
-import { MOCK_USERS } from "../../src/tests/staticMockItems";
+import { MOCK_ITEMS } from "../../src/tests/staticMockItems";
 import type {
   GetCommandInput,
   GetCommandOutput,
@@ -43,7 +43,7 @@ const DynamoDBDocumentClient = {
       .callsFake(
         fakeDdbCommandFn<GetCommandInput, GetCommandOutput>(() => {
           return {
-            Item: MOCK_USERS.USER_A,
+            Item: MOCK_ITEMS.ITEM_A,
           };
         })
       )
@@ -53,7 +53,7 @@ const DynamoDBDocumentClient = {
           const [tableName] = Object.entries(RequestItems)[0];
           return {
             Responses: {
-              [tableName]: Object.values(MOCK_USERS),
+              [tableName]: Object.values(MOCK_ITEMS),
             },
           };
         })
@@ -63,7 +63,7 @@ const DynamoDBDocumentClient = {
         fakeDdbCommandFn<PutCommandInput, PutCommandOutput>(({ Item: { pk, sk, ...item } }) => {
           return {
             Attributes: {
-              ...MOCK_USERS.USER_A,
+              ...MOCK_ITEMS.ITEM_A,
               ...item,
             },
           };
@@ -89,7 +89,7 @@ const DynamoDBDocumentClient = {
       .callsFake(
         fakeDdbCommandFn<DeleteCommandInput, DeleteCommandOutput>(({ Key }) => {
           return {
-            Attributes: MOCK_USERS.USER_A,
+            Attributes: MOCK_ITEMS.ITEM_A,
           };
         })
       )
@@ -106,7 +106,7 @@ const DynamoDBDocumentClient = {
       .callsFake(
         fakeDdbCommandFn<ScanCommandInput, ScanCommandOutput>(() => {
           return {
-            Items: Object.values(MOCK_USERS),
+            Items: Object.values(MOCK_ITEMS),
           };
         })
       )

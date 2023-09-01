@@ -48,6 +48,19 @@ describe("DdbSingleTable", () => {
           } as any,
         });
       }).toThrowError(DdbSingleTableError);
+      expect(() => {
+        new DdbSingleTable({
+          tableName: "TestTable",
+          tableKeysSchema: {
+            partitionKey: { type: "string", isHashKey: true, required: true },
+            sortKey: { type: "string", isRangeKey: true, required: true },
+          },
+          tableConfigs: {
+            billingMode: "PAY_PER_REQUEST",
+            UNKNOWN_KEY: "SHOULD_THROW", // <-- should cause an error
+          } as any,
+        });
+      }).toThrowError(DdbSingleTableError);
     });
   });
 

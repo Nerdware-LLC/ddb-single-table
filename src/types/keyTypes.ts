@@ -7,14 +7,14 @@ export type AliasedItemPrimaryKeys<
 > = {
   // This map will set RangeKey to optional if configured with a default
   -readonly [K in keyof KeyAttributesSchema as KeyAttributesSchema[K] extends { isRangeKey: true }
-    ? KeyAttributesSchema[K]["default"] extends {}
+    ? KeyAttributesSchema[K]["default"] extends NonNullable<unknown>
       ? GetAliasOrAttrName<KeyAttributesSchema, K>
       : never
     : never]+?: string;
 } & {
   // Required - filter out RangeKey if configured with a default
   -readonly [K in keyof KeyAttributesSchema as KeyAttributesSchema[K] extends { isRangeKey: true }
-    ? KeyAttributesSchema[K]["default"] extends {}
+    ? KeyAttributesSchema[K]["default"] extends NonNullable<unknown>
       ? never
       : GetAliasOrAttrName<KeyAttributesSchema, K>
     : GetAliasOrAttrName<KeyAttributesSchema, K>]-?: string;

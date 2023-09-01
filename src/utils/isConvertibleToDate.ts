@@ -11,5 +11,5 @@ export const isConvertibleToDate = (
   value: unknown
 ): value is Exclude<ConfigType, null | undefined> => {
   // The dayjs ctor only ever throws when given a Symbol or BigInt.
-  return !["symbol", "bigint"].includes(typeof value) && dayjs(value as any).isValid();
+  return !["symbol", "bigint", "undefined"].includes(typeof value) && dayjs(value as any).isValid();
 };

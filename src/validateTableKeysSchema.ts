@@ -1,5 +1,5 @@
 import { SchemaValidationError } from "./utils";
-import type { TableKeysSchemaType, DdbTableProperties, DdbTableIndexes } from "./types";
+import type { TableKeysSchemaType, DdbTableConfigs, DdbTableIndexes } from "./types";
 
 /**
  * This function validates the provided `TableKeysSchema`, and if valid, returns an
@@ -19,7 +19,7 @@ export const validateTableKeysSchema = function ({
   tableConfigs,
 }: {
   tableKeysSchema: TableKeysSchemaType;
-  tableConfigs: DdbTableProperties;
+  tableConfigs: DdbTableConfigs;
 }) {
   const { tableHashKey, tableRangeKey, indexes } = Object.entries(tableKeysSchema).reduce(
     (

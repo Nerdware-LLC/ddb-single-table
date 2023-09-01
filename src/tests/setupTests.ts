@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { isDate } from "../utils";
+import { isConvertibleToDate } from "../utils";
 
 /**
  * This Vitest setup file accomplishes the following:
@@ -76,15 +76,15 @@ expect.extend({
       expected: matchObjects,
     };
   },
-  /** Test if the `received` value is a valid Date object OR ISO 8601 date string. */
+  /** Test if the `received` value represents a valid datetime (can be Date, string, or number). */
   toBeValidDate(received: unknown) {
     return {
-      pass: isDate(received) || (typeof received === "string" && dayjs(received).isValid()),
+      pass: isConvertibleToDate(received) && dayjs(received).isValid(),
       message: () =>
         getCustomMatcherMessage({
           received,
           predicate: "be",
-          expected: "a valid Date object or ISO 8601 date string",
+          expected: "a valid Date object, ISO 8601 date string, or numerical timestamp",
           ...this,
         }),
       actual: received,

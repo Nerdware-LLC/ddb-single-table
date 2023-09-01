@@ -3,6 +3,21 @@ import { isRecordObject, DdbSingleTableError, DdbConnectionError } from "./utils
 import type { SetNonNullable, SetRequired } from "type-fest";
 import type { TableKeysSchemaType, CreateTableOpts } from "./types";
 
+/**
+ * This method of the `DdbSingleTable` class is used to check if a DynamoDB table is
+ * active and ready for use.
+ *
+ * The function checks the status of the table using the `describeTable` method of the
+ * `ddbClient` object. If the method returns a `ResourceNotFoundException`, the table
+ * does not exist. If the table does not exist and `createIfNotExists` is set to `true`,
+ * the function creates the table using the `createTable` method of the `ddbClient` obj,
+ * and then continues the process of waiting for the table to become active.
+ *
+ * Regardless of whether the table initially existed or not, if it is not active, the
+ * function tries to connect to it again after `frequency` number of seconds have passed
+ * until either the table is active, or `maxRetries` number of attempts have been made,
+ * or `timeout` number of seconds have passed.
+ */
 export const ensureTableIsActive = async function <TableKeysSchema extends TableKeysSchemaType>(
   this: InstanceType<typeof DdbSingleTable<TableKeysSchema>>
 ) {
@@ -20,7 +35,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
   let hasCreateTableBeenCalled = false;
 
   // Try to get TableStatus, ensure it's ACTIVE.
-  for (let i = 0; i < this.waitForActive.maxAttempts; i++) {
+  for (let i = 0; i < this.waitForActive.maxRetries; i++) {
     try {
       // DescribeTable will throw if Table doesn't exists
       const { TableStatus } = await this.ddbClient.describeTable();
@@ -49,7 +64,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       // If `err` is a "ResourceNotFoundException", Table doesn't exist - see if it should be created.
       if (err?.name !== "ResourceNotFoundException") throw err;
 
-      // Inform user Table *probably* doesn't exist
+      // Inform user the Table doesn't exist.
       console.info(`Table "${this.tableName}" not found.`);
 
       // If Table doesn't exist AND tableConfigs.createIfNotExists != true, throw error.
@@ -59,7 +74,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
         );
       }
 
-      // If createTable has already been called, continue for loop.
+      // If createTable has already been called, continue the for-loop.
       if (hasCreateTableBeenCalled === true) continue;
 
       // Else attempt to create the Table.
@@ -161,6 +176,13 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       }
     }
   }
+};
+
+export type WaitForActiveBehavioralConfigs = {
+  enabled: boolean;
+  maxRetries: number;
+  timeout: number;
+  frequency: number;
 };
 
 /**

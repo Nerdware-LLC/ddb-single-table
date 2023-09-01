@@ -13,4 +13,4 @@ jobs:
     name: Release
     uses: Nerdware-LLC/reusable-action-workflows/.github/workflows/release.yaml@main
     secrets:
-      SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+      SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}

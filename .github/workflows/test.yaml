@@ -15,7 +15,7 @@ jobs:
     name: Run Tests
     uses: Nerdware-LLC/reusable-action-workflows/.github/workflows/node_test.yaml@main
     with:
-      node-version: "18.17.1"
+      node-version: "16.20.2"
       test-script: "test:ci"
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -26,8 +26,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      contents: read #       required to checkout the code
-      pull-requests: write # required to put a comment in the PR
+      contents: read #       to checkout the code
+      pull-requests: write # to add coverage reports to the PR
     steps:
       - name: Download Artifact "coverage-reports"
         uses: actions/download-artifact@v3
@@ -42,4 +42,4 @@ jobs:
     if: github.event_name == 'push' && needs.test.result == 'success'
     uses: ./.github/workflows/release.yaml
     secrets:
-      SEMANTIC_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}

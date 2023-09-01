@@ -1,6 +1,6 @@
 import { DdbSingleTableClient } from "./DdbSingleTableClient";
 import { Model } from "./Model";
-import { ensureTableIsActive } from "./ensureTableIsActive";
+import { ensureTableIsActive, type WaitForActiveBehavioralConfigs } from "./ensureTableIsActive";
 import { getMergedModelSchema } from "./getMergedModelSchema";
 import { DdbSingleTableError } from "./utils";
 import { validateTableKeysSchema } from "./validateTableKeysSchema";
@@ -8,7 +8,7 @@ import type { DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import type { TranslateConfig } from "@aws-sdk/lib-dynamodb";
 import type { Simplify } from "type-fest";
 import type {
-  DdbTableProperties,
+  DdbTableConfigs,
   DdbTableIndexes,
   TableKeysSchemaType,
   ModelSchemaType,
@@ -44,12 +44,15 @@ import type {
  * @param waitForActive - Configs for waiting for the table to become active.
  */
 export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
-  private static readonly DEFAULTS = {
+  private static readonly DEFAULTS: Readonly<{
+    WAIT_FOR_ACTIVE: WaitForActiveBehavioralConfigs;
+    TABLE_CONFIGS: DdbTableConfigs;
+  }> = {
     WAIT_FOR_ACTIVE: {
       enabled: true,
       timeout: 30000,
       frequency: 1000,
-      maxAttempts: 20,
+      maxRetries: 20,
     },
     TABLE_CONFIGS: {
       createIfNotExists: false,
@@ -57,16 +60,31 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
     },
   };
 
-  // INSTANCE PROPERTIES
+  // INSTANCE PROPERTIES:
+
   readonly tableName: string;
   readonly tableKeysSchema: TableKeysSchema;
-  readonly tableConfigs: typeof DdbSingleTable.DEFAULTS.TABLE_CONFIGS & DdbTableProperties;
+  readonly tableConfigs: DdbTableConfigs;
   readonly tableHashKey: string;
   readonly tableRangeKey: string;
   /** Map of index configs which can be used to build `query` arguments. */
   readonly indexes: DdbTableIndexes;
   readonly ddbClient: DdbSingleTableClient;
-  protected readonly waitForActive: typeof DdbSingleTable.DEFAULTS.WAIT_FOR_ACTIVE;
+  /**
+   * `waitForActive` configs control the 'wait-for-active-table' behavior
+   * encapsulated in the `ensureTableIsActive` method. If enabled, calling
+   * the method will initiate a loop that checks the table's status every
+   * `frequency` number of seconds, until one of the following occurs:
+   *   - The table becomes active
+   *   - The function times out after `timeout` number of seconds
+   *   - The function has been called `maxRetries` number of times
+   */
+  protected readonly waitForActive: WaitForActiveBehavioralConfigs;
+  /**
+   * `isTableActive` is a boolean that indicates whether the table is active.
+   * It is initially false, unless `waitForActive` is disabled, in which case
+   * this prop is set to `true`.
+   */
   isTableActive: boolean;
 
   constructor({
@@ -78,9 +96,9 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
   }: {
     tableName: string;
     tableKeysSchema: TableKeysSchema;
-    tableConfigs?: Partial<typeof DdbSingleTable.DEFAULTS.TABLE_CONFIGS> & DdbTableProperties;
+    tableConfigs?: DdbTableConfigs;
     ddbClientConfigs?: Simplify<DynamoDBClientConfig & TranslateConfig>;
-    waitForActive?: Partial<typeof DdbSingleTable.DEFAULTS.WAIT_FOR_ACTIVE>;
+    waitForActive?: Partial<WaitForActiveBehavioralConfigs>;
   }) {
     // Initialize high-level table properties
     this.tableName = tableName;

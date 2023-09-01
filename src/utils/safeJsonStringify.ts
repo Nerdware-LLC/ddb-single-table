@@ -5,7 +5,7 @@
 export const safeJsonStringify: typeof JSON.stringify = (input: unknown, replacer, space) => {
   const circularSet = new WeakSet<object>();
 
-  const customReplacer = (key: string, value: unknown) => {
+  const customReplacer = (_key: string, value: unknown) => {
     const { stringified, shouldAddRef = false } =
       typeof value === "bigint"
         ? { stringified: `${value.toString()}n` }

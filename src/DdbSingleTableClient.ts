@@ -17,7 +17,7 @@ import {
   ScanCommand,
   type TranslateConfig,
 } from "@aws-sdk/lib-dynamodb";
-import { generateKeyConditionExpression } from "./generateKeyConditionExpression";
+import { convertWhereQueryToSdkQueryArgs } from "./WhereQuery";
 import { generateUpdateExpression } from "./generateUpdateExpression";
 import { ItemInputError } from "./utils";
 import type { Simplify } from "type-fest";
@@ -337,12 +337,12 @@ export class DdbSingleTableClient {
     IndexName,
     ...otherQueryOpts
   }: QueryOpts) => {
-    // Check if Where-API object is provided (unaliased by Model.query wrapper method)
+    // Check if WhereQuery object is provided (unaliased by Model.query wrapper method)
     if (where) {
       const [pkAttrName, skAttrName] = Object.keys(where);
       // Generate the KeyConditionExpression and related values
       ({ KeyConditionExpression, ExpressionAttributeNames, ExpressionAttributeValues } =
-        generateKeyConditionExpression({ where }));
+        convertWhereQueryToSdkQueryArgs({ where }));
 
       // See if IndexName needs to be set by testing if `where` contains the table's PK+SK
       if (

@@ -1,4 +1,7 @@
-export type DdbTableProperties = {
+/**
+ * DynamoDB table properties set by the SDK
+ */
+export type DdbSdkTableProperties = {
   billingMode?: "PROVISIONED" | "PAY_PER_REQUEST";
   provisionedThroughput?: {
     read: number;
@@ -7,12 +10,22 @@ export type DdbTableProperties = {
   // IDEA Add CreateTable params: "SSESpecification", "StreamSpecification", "TableClass".
 };
 
-export type DdbTableIndexes = Record<
-  string,
-  {
+/**
+ * This type includes table properties set by the SDK, as well as configs that
+ * are used by the DdbSingleTable class to control `ddb-single-table` behavior.
+ */
+export type DdbTableConfigs = DdbSdkTableProperties & {
+  createIfNotExists: boolean;
+};
+
+/**
+ * DynamoDB table indexes
+ */
+export type DdbTableIndexes = {
+  [indexName: string]: {
     name: string;
     type: "GLOBAL" | "LOCAL";
     indexPK: string;
     indexSK?: string;
-  }
->;
+  };
+};
