@@ -1,6 +1,6 @@
 {
   "name": "@nerdware/ddb-single-table",
-  "version": "1.0.1-next.2",
+  "version": "1.1.0-next.1",
   "description": "A DynamoDB modeling tool and client wrapper for NodeJS built for single-table designs.",
   "author": {
     "name": "Trevor Anderson",
