@@ -1,6 +1,6 @@
 import { DdbSingleTableClient } from "./DdbSingleTableClient";
 import { Model } from "./Model";
-import { ensureTableIsActive } from "./ensureTableIsActive";
+import { ensureTableIsActive, type WaitForActiveBehavioralConfigs } from "./ensureTableIsActive";
 import { getMergedModelSchema } from "./getMergedModelSchema";
 import { DdbSingleTableError } from "./utils";
 import { validateTableKeysSchema } from "./validateTableKeysSchema";
@@ -57,10 +57,11 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
     },
   };
 
-  // INSTANCE PROPERTIES
+  // INSTANCE PROPERTIES:
+
   readonly tableName: string;
   readonly tableKeysSchema: TableKeysSchema;
-  readonly tableConfigs: typeof DdbSingleTable.DEFAULTS.TABLE_CONFIGS & DdbTableProperties;
+  readonly tableConfigs: DdbTableConfigs;
   readonly tableHashKey: string;
   readonly tableRangeKey: string;
   /** Map of index configs which can be used to build `query` arguments. */
@@ -94,7 +95,7 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
     tableKeysSchema: TableKeysSchema;
     tableConfigs?: Partial<typeof DdbSingleTable.DEFAULTS.TABLE_CONFIGS> & DdbTableProperties;
     ddbClientConfigs?: Simplify<DynamoDBClientConfig & TranslateConfig>;
-    waitForActive?: Partial<typeof DdbSingleTable.DEFAULTS.WAIT_FOR_ACTIVE>;
+    waitForActive?: Partial<WaitForActiveBehavioralConfigs>;
   }) {
     // Initialize high-level table properties
     this.tableName = tableName;
