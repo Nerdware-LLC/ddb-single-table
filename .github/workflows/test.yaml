@@ -26,8 +26,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      contents: read #       required to checkout the code
-      pull-requests: write # required to put a comment in the PR
+      contents: read #       to checkout the code
+      pull-requests: write # to add coverage reports to the PR
     steps:
       - name: Download Artifact "coverage-reports"
         uses: actions/download-artifact@v3
