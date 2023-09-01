@@ -49,7 +49,7 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
       enabled: true,
       timeout: 30000,
       frequency: 1000,
-      maxAttempts: 20,
+      maxRetries: 20,
     },
     TABLE_CONFIGS: {
       createIfNotExists: false,

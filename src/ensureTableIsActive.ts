@@ -35,7 +35,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
   let hasCreateTableBeenCalled = false;
 
   // Try to get TableStatus, ensure it's ACTIVE.
-  for (let i = 0; i < this.waitForActive.maxAttempts; i++) {
+  for (let i = 0; i < this.waitForActive.maxRetries; i++) {
     try {
       // DescribeTable will throw if Table doesn't exists
       const { TableStatus } = await this.ddbClient.describeTable();
