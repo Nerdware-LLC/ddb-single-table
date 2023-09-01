@@ -7,9 +7,13 @@ export type DdbSdkTableProperties = {
   // IDEA Add CreateTable params: "SSESpecification", "StreamSpecification", "TableClass".
 };
 
-export type DdbTableIndexes = Record<
-  string,
-  {
+/**
+ * This type includes table properties set by the SDK, as well as configs that
+ * are used by the DdbSingleTable class to control `ddb-single-table` behavior.
+ */
+export type DdbTableConfigs = DdbSdkTableProperties & {
+  createIfNotExists: boolean;
+};
     name: string;
     type: "GLOBAL" | "LOCAL";
     indexPK: string;
