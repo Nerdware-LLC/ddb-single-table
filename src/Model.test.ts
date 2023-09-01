@@ -1,20 +1,17 @@
 import { DdbSingleTable } from "./DdbSingleTable";
 import { Model } from "./Model";
+import { MOCK_ITEMS_SCHEMA } from "./tests/staticMockItems";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
 
-describe("lib > DdbSingleTable > Model", () => {
-  it("should create an instance of Model with valid arguments", () => {
-    // Arrange
+describe("Model", () => {
+  describe("Model constructor", () => {
+    // Mock table:
     const table = new DdbSingleTable({
-      tableName: "test-table",
+      tableName: "mock-table",
       tableKeysSchema: {
-        pk: {
-          type: "string",
-          required: true,
-          isHashKey: true,
-        },
+        pk: { type: "string", required: true, isHashKey: true },
         sk: {
           type: "string",
           required: true,
@@ -47,29 +44,24 @@ describe("lib > DdbSingleTable > Model", () => {
           secretAccessKey: "local",
         },
       },
-      tableConfigs: {
-        createIfNotExists: true,
-        billingMode: "PROVISIONED",
-        provisionedThroughput: { read: 20, write: 20 },
-      },
     });
-    const modelName = "TestModel";
-    const modelSchema = table.getModelSchema({
-      id: { type: "string" },
-      name: { type: "string" },
-    } as const);
 
-    // Act
+    const modelName = "MockModel";
+
+    const modelSchema = table.getModelSchema(MOCK_ITEMS_SCHEMA);
+
     const model = new Model(modelName, modelSchema, table);
 
-    // Assert
-    expect(model).toBeInstanceOf(Model);
-    expect(model.modelName).toBe(modelName);
-    expect(model.schema).toBe(modelSchema);
-    expect(model.tableHashKey).toBe(table.tableHashKey);
-    expect(model.tableRangeKey).toBe(table.tableRangeKey);
-    expect(model.indexes).toBe(table.indexes);
-    expect(model.ddbClient).toBe(table.ddbClient);
-    expect(model.schemaOptions.allowUnknownAttributes).toBe(false);
+    it("should create a valid Model instance when provided valid arguments", () => {
+      // Assert
+      expect(model).toBeInstanceOf(Model);
+      expect(model.modelName).toBe(modelName);
+      expect(model.schema).toBe(modelSchema);
+      expect(model.tableHashKey).toBe(table.tableHashKey);
+      expect(model.tableRangeKey).toBe(table.tableRangeKey);
+      expect(model.indexes).toBe(table.indexes);
+      expect(model.ddbClient).toBe(table.ddbClient);
+      expect(model.schemaOptions.allowUnknownAttributes).toBe(false);
+    });
   });
 });
