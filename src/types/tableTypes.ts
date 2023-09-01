@@ -14,9 +14,15 @@ export type DdbSdkTableProperties = {
 export type DdbTableConfigs = DdbSdkTableProperties & {
   createIfNotExists: boolean;
 };
+
+/**
+ * DynamoDB table indexes
+ */
+export type DdbTableIndexes = {
+  [indexName: string]: {
     name: string;
     type: "GLOBAL" | "LOCAL";
     indexPK: string;
     indexSK?: string;
-  }
->;
+  };
+};
