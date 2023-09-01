@@ -1,3 +1,6 @@
+/**
+ * DynamoDB table properties set by the SDK
+ */
 export type DdbSdkTableProperties = {
   billingMode?: "PROVISIONED" | "PAY_PER_REQUEST";
   provisionedThroughput?: {
