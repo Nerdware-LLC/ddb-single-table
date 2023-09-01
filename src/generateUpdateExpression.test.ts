@@ -9,12 +9,12 @@ describe("generateUpdateExpression()", () => {
   test("returns the expected values when called with truthy string/number/object attributes", () => {
     const result = generateUpdateExpression({ attr1: "foo", attr2: 22, attr3: [{ nested: true }] });
     expect(result.UpdateExpression).toBe("SET #attr1 = :attr1, #attr2 = :attr2, #attr3 = :attr3");
-    expect(result.ExpressionAttributeNames).toEqual({
+    expect(result.ExpressionAttributeNames).toStrictEqual({
       "#attr1": "attr1",
       "#attr2": "attr2",
       "#attr3": "attr3",
     });
-    expect(result.ExpressionAttributeValues).toEqual({
+    expect(result.ExpressionAttributeValues).toStrictEqual({
       ":attr1": "foo",
       ":attr2": 22,
       ":attr3": [{ nested: true }],
@@ -27,8 +27,8 @@ describe("generateUpdateExpression()", () => {
       { nullHandling: "REMOVE" }
     );
     expect(result.UpdateExpression).toBe("REMOVE #attr1, #attr2");
-    expect(result.ExpressionAttributeNames).toEqual({ "#attr1": "attr1", "#attr2": "attr2" });
-    expect(result.ExpressionAttributeValues).toEqual({});
+    expect(result.ExpressionAttributeNames).toStrictEqual({ "#attr1": "attr1", "#attr2": "attr2" });
+    expect(result.ExpressionAttributeValues).toStrictEqual({});
   });
 
   test(`returns the expected values when called with null/undefined attributes and "nullHandling" is "SET"`, () => {
@@ -37,7 +37,7 @@ describe("generateUpdateExpression()", () => {
       { nullHandling: "SET" }
     );
     expect(result.UpdateExpression).toBe("SET #attr1 = :attr1 REMOVE #attr2");
-    expect(result.ExpressionAttributeNames).toEqual({ "#attr1": "attr1", "#attr2": "attr2" });
-    expect(result.ExpressionAttributeValues).toEqual({ ":attr1": null });
+    expect(result.ExpressionAttributeNames).toStrictEqual({ "#attr1": "attr1", "#attr2": "attr2" });
+    expect(result.ExpressionAttributeValues).toStrictEqual({ ":attr1": null });
   });
 });
