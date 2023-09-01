@@ -64,7 +64,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       // If `err` is a "ResourceNotFoundException", Table doesn't exist - see if it should be created.
       if (err?.name !== "ResourceNotFoundException") throw err;
 
-      // Inform user Table *probably* doesn't exist
+      // Inform user the Table doesn't exist.
       console.info(`Table "${this.tableName}" not found.`);
 
       // If Table doesn't exist AND tableConfigs.createIfNotExists != true, throw error.
@@ -74,7 +74,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
         );
       }
 
-      // If createTable has already been called, continue for loop.
+      // If createTable has already been called, continue the for-loop.
       if (hasCreateTableBeenCalled === true) continue;
 
       // Else attempt to create the Table.
