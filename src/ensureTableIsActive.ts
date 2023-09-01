@@ -178,6 +178,13 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
   }
 };
 
+export type WaitForActiveBehavioralConfigs = {
+  enabled: boolean;
+  maxRetries: number;
+  timeout: number;
+  frequency: number;
+};
+
 /**
  * This union reflects the keys of the initial accumulator object provided to the
  * reduce method that's used to derive `createTableArgsFromSchema`.
