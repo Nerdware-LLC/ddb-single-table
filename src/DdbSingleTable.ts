@@ -66,7 +66,21 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
   /** Map of index configs which can be used to build `query` arguments. */
   readonly indexes: DdbTableIndexes;
   readonly ddbClient: DdbSingleTableClient;
-  protected readonly waitForActive: typeof DdbSingleTable.DEFAULTS.WAIT_FOR_ACTIVE;
+  /**
+   * `waitForActive` configs control the 'wait-for-active-table' behavior
+   * encapsulated in the `ensureTableIsActive` method. If enabled, calling
+   * the method will initiate a loop that checks the table's status every
+   * `frequency` number of seconds, until one of the following occurs:
+   *   - The table becomes active
+   *   - The function times out after `timeout` number of seconds
+   *   - The function has been called `maxRetries` number of times
+   */
+  protected readonly waitForActive: WaitForActiveBehavioralConfigs;
+  /**
+   * `isTableActive` is a boolean that indicates whether the table is active.
+   * It is initially false, unless `waitForActive` is disabled, in which case
+   * this prop is set to `true`.
+   */
   isTableActive: boolean;
 
   constructor({
