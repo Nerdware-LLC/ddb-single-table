@@ -1,4 +1,4 @@
-export type DdbTableProperties = {
+export type DdbSdkTableProperties = {
   billingMode?: "PROVISIONED" | "PAY_PER_REQUEST";
   provisionedThroughput?: {
     read: number;
