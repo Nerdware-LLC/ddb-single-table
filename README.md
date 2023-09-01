@@ -9,15 +9,28 @@
 A schema-based DynamoDB modeling tool, type-generator, and client wrapper built to _**supercharge**_ single-table designs!⚡<br>
 Both ESM and CommonJS builds are provided, and the package is fully typed.
 
-![test_workflow_status](https://github.com/Nerdware-LLC/ddb-single-table/actions/workflows/test.yaml/badge.svg?branch=main)
+[![npm package][npm-badge]](https://www.npmjs.com/package/@nerdware/ddb-single-table)
 &nbsp;
-[![codecov](https://codecov.io/gh/Nerdware-LLC/ddb-single-table/graph/badge.svg?token=RLCCIOLT01)](https://codecov.io/gh/Nerdware-LLC/ddb-single-table)
+[![Test Workflow][gh-test-badge]](https://github.com/Nerdware-LLC/ddb-single-table/blob/main/.github/workflows/test.yaml)
 &nbsp;
-[![pre-commit][pre-commit-shield]](https://github.com/pre-commit/pre-commit)
+[![Codecov][codecov-badge]](https://codecov.io/gh/Nerdware-LLC/ddb-single-table)
 &nbsp;
-[![semantic-release][semantic-shield]](https://github.com/semantic-release/semantic-release)
+[![pre-commit][pre-commit-badge]](https://pre-commit.com/)
 &nbsp;
-[![License: MIT][license-shield]](https://opensource.org/licenses/MIT)
+[![semantic-release][semantic-badge]](https://github.com/semantic-release/semantic-release#readme)
+&nbsp;
+[![License: MIT][license-badge]](https://opensource.org/licenses/MIT)
+
+<!--
+    BADGE LINKS:
+-->
+
+[license-badge]: https://img.shields.io/badge/License-MIT-000080.svg "opensource.org: The MIT License"
+[codecov-badge]: https://codecov.io/gh/Nerdware-LLC/ddb-single-table/graph/badge.svg?token=RLCCIOLT01 "codecov.io: Coverage Report"
+[semantic-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-6601ff.svg "github.com: semantic-release"
+[gh-test-badge]: https://github.com/Nerdware-LLC/ddb-single-table/actions/workflows/test.yaml/badge.svg?branch=main "github.com: Test Workflow"
+[pre-commit-badge]: https://img.shields.io/badge/pre--commit-7A8B80.svg?logo=pre-commit&logoColor=F8B424&labelColor=gray "pre-commit.com"
+[npm-badge]: https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40nerdware%2Fddb-single-table&query=%2Fhtml%2Fbody%2Fdiv%2Fdiv%2Fdiv%5B2%5D%2Fmain%2Fdiv%2Fdiv%5B3%5D%2Fdiv%5B4%5D%2Fdiv%2Fp&prefix=v&logo=npm&label=npm%40latest "npmjs.com: @nerdware/ddb-single-table"
 
 </div>
 
@@ -308,9 +321,3 @@ Trevor Anderson - [@TeeRevTweets](https://twitter.com/teerevtweets) - [Trevor@Ne
   </a>
 
 </div>
-
-<!-- LINKS -->
-
-[pre-commit-shield]: https://img.shields.io/badge/pre--commit-33A532.svg?logo=pre-commit&logoColor=F8B424&labelColor=gray
-[semantic-shield]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-E10079.svg
-[license-shield]: https://img.shields.io/badge/License-MIT-yellow.svg
