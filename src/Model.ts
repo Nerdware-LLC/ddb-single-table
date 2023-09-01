@@ -4,7 +4,8 @@ import { hasKey, DdbSingleTableError, ItemInputError } from "./utils";
 import { validateModelSchema } from "./validateModelSchema";
 import type { PartialDeep } from "type-fest";
 import type { DdbSingleTableClient } from "./DdbSingleTableClient";
-import type { ItemConditionals } from "./generateKeyConditionExpression";
+import type { WhereQueryParam } from "./WhereQuery";
+import type { IODirection, IOActionContext } from "./ioActions";
 import type {
   // Model schema types:
   ModelSchemaType,
@@ -13,9 +14,7 @@ import type {
   // Model method types:
   ProcessItemDataDict,
   // IO-Action types:
-  IODirection,
   IOActionSetFn,
-  IOActionContext,
   IOBehavioralOpts,
   // Item types:
   ItemInputType,
@@ -313,7 +312,7 @@ export class Model<
     where,
     ...otherQueryOpts
   }: QueryOpts<ItemInput>) => {
-    // If Where-API object is provided, unalias the keys
+    // If a WhereQuery object is provided, unalias the keys
     where &&= ioActions.aliasMapping(where, {
       ioDirection: "toDB",
       modelName: this.modelName,
@@ -322,7 +321,7 @@ export class Model<
       schemaOptions: this.schemaOptions,
       attributesToAliasesMap: this.attributesToAliasesMap,
       aliasesToAttributesMap: this.aliasesToAttributesMap,
-    }) as ItemConditionals<ItemInput>;
+    }) as WhereQueryParam<ItemInput>;
     // Run the query
     const items = await this.ddbClient.query({ where, ...otherQueryOpts });
     // If `items` is undefined, return an empty array instead of undefined
