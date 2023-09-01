@@ -42,4 +42,4 @@ jobs:
     if: github.event_name == 'push' && needs.test.result == 'success'
     uses: ./.github/workflows/release.yaml
     secrets:
-      SEMANTIC_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
