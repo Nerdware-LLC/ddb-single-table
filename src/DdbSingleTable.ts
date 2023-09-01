@@ -8,7 +8,7 @@ import type { DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import type { TranslateConfig } from "@aws-sdk/lib-dynamodb";
 import type { Simplify } from "type-fest";
 import type {
-  DdbTableProperties,
+  DdbTableConfigs,
   DdbTableIndexes,
   TableKeysSchemaType,
   ModelSchemaType,
@@ -44,7 +44,10 @@ import type {
  * @param waitForActive - Configs for waiting for the table to become active.
  */
 export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
-  private static readonly DEFAULTS = {
+  private static readonly DEFAULTS: Readonly<{
+    WAIT_FOR_ACTIVE: WaitForActiveBehavioralConfigs;
+    TABLE_CONFIGS: DdbTableConfigs;
+  }> = {
     WAIT_FOR_ACTIVE: {
       enabled: true,
       timeout: 30000,
@@ -93,7 +96,7 @@ export class DdbSingleTable<TableKeysSchema extends TableKeysSchemaType> {
   }: {
     tableName: string;
     tableKeysSchema: TableKeysSchema;
-    tableConfigs?: Partial<typeof DdbSingleTable.DEFAULTS.TABLE_CONFIGS> & DdbTableProperties;
+    tableConfigs?: DdbTableConfigs;
     ddbClientConfigs?: Simplify<DynamoDBClientConfig & TranslateConfig>;
     waitForActive?: Partial<WaitForActiveBehavioralConfigs>;
   }) {
