@@ -6,8 +6,9 @@
 
   <br />
 
-A schema-based DynamoDB modeling tool, type-generator, and client wrapper built to _**supercharge**_ single-table designs!⚡<br>
-Both ESM and CommonJS builds are provided, and the package is fully typed.
+A schema-based DynamoDB modeling tool, high-level API, and type-generator built to _**supercharge**_ single-table designs!⚡<br><br>
+Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-features). <br>
+<font size="2"><i>Fully-typed support for ESM and CommonJS</i></font>
 
 [![npm package][npm-badge]](https://www.npmjs.com/package/@nerdware/ddb-single-table)
 &nbsp;
@@ -253,11 +254,12 @@ Both ESM and CommonJS builds are provided, and the package is fully typed.
 ## ✨ Key Features
 
 - Easy-to-use declarative API for managing DDB tables, connections, and models
-- Map DDB attribute names to model item properties and vice versa
+- Custom attribute aliases for each model
 - Create attributes/properties from combinations of other attributes/properties
-- Type checking
+- Type checking and conversions for all DDB attribute types
 - Validation checks for individual properties
 - Validation checks for entire objects
+- Where-style query API
 - Default values
 - Property-level get/set modifiers
 - Schema-level get/set modifiers
