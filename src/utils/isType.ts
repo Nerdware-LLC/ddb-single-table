@@ -1,4 +1,4 @@
-import type { SupportedTypes } from "../types";
+import type { SchemaSupportedTypeStringLiterals } from "../types";
 
 /** `string` type guard function */
 export const isString = (value?: unknown): value is string => {
@@ -125,4 +125,7 @@ export const isType = Object.freeze({
   tuple: isTuple,
   /** Type guard function for `type: "enum"` */
   enum: isEnumMember,
-}) satisfies Record<SupportedTypes, (value: unknown, nestedSchema?: unknown) => boolean>;
+}) satisfies Record<
+  SchemaSupportedTypeStringLiterals,
+  (value: unknown, nestedSchema?: unknown) => boolean
+>;
