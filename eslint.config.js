@@ -41,23 +41,26 @@ export default [
       ...tsEslintPlugin.configs["recommended-requiring-type-checking"].rules,
       eqeqeq: ["error", "always"],
       "no-console": ["warn", { allow: ["info", "warn", "error"] }],
-      "no-dupe-class-members": "off", // @typescript-eslint/no-dupe-class-members is used instead
-      "no-redeclare": "off", //          @typescript-eslint/no-redeclare is used instead
-      "no-unused-vars": "off", //        @typescript-eslint/no-unused-vars is used instead
+      "no-dupe-class-members": "off", // used instead: @typescript-eslint/no-dupe-class-members
+      "no-redeclare": "off", //          used instead: @typescript-eslint/no-redeclare
+      "no-unused-vars": "off", //        used instead: @typescript-eslint/no-unused-vars
       "prefer-const": "warn",
       semi: ["error", "always"],
-      "import/no-unresolved": "error",
-      "node/no-missing-import": "off",
+      "node/no-missing-import": [
+        "error",
+        {
+          tryExtensions: [".ts"],
+          allowModules: ["type-fest", "lodash.set"],
+        },
+      ],
       "node/no-process-env": "error",
-      "node/no-unpublished-import": "off",
-      "node/no-unsupported-features/es-syntax": "off",
+      "node/no-unpublished-import": ["error", { allowModules: ["type-fest", "lodash.set"] }],
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-inferrable-types": "off",
       "@typescript-eslint/no-misused-promises": [
         "error",
         { checksVoidReturn: { arguments: false } },
       ],
-      "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unused-vars": [
