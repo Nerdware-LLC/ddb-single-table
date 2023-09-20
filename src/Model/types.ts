@@ -1,4 +1,4 @@
-import type { Simplify, ConditionalPick } from "type-fest";
+import type { Simplify } from "type-fest";
 import type { BatchRetryExponentialBackoffConfigs } from "../BatchRequests";
 import type {
   GetItemInput,
