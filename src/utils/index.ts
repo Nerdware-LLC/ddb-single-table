@@ -1,4 +1,3 @@
-export * from "./ddbExpressionHelpers";
 export * from "./errors";
 export * from "./hasDefinedProperty";
 export * from "./hasKey";
