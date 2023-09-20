@@ -10,8 +10,7 @@ export default defineConfig({
     */
     restoreMocks: true,
     globals: true,
-    clearMocks: true,
-    mockReset: true,
+    silent: true,
     environment: "node",
     include: ["**/?(*.){test,spec}.?(c|m)[tj]s?(x)"],
     setupFiles: ["src/tests/setupTests.ts"],
