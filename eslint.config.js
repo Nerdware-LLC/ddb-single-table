@@ -40,7 +40,7 @@ export default [
       ...tsEslintPlugin.configs.recommended.rules,
       ...tsEslintPlugin.configs["recommended-requiring-type-checking"].rules,
       eqeqeq: ["error", "always"],
-      "no-console": "off",
+      "no-console": ["warn", { allow: ["info", "warn", "error"] }],
       "no-dupe-class-members": "off", // @typescript-eslint/no-dupe-class-members is used instead
       "no-redeclare": "off", //          @typescript-eslint/no-redeclare is used instead
       "no-unused-vars": "off", //        @typescript-eslint/no-unused-vars is used instead
