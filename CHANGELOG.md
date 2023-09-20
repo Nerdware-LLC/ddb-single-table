@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [1.2.0-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.2.0-next.1...v1.2.0-next.2) (2023-09-20)
+
+
+### Bug Fixes
+
+* correct import path for ModelSchemaType ([5c886da](https://github.com/Nerdware-LLC/ddb-single-table/commit/5c886da44300b6fdbc88983686dd709f37945ccc))
+* rm extraneous import ([48aa92d](https://github.com/Nerdware-LLC/ddb-single-table/commit/48aa92d98abe37fc550ac7f5915127e279210287))
+* rm extraneous import ([5e8dcf2](https://github.com/Nerdware-LLC/ddb-single-table/commit/5e8dcf2552e4c237bc69533e4e98068a1c94cee4))
+
+
+### Reverts
+
+* use old '.vscode' gitignore pattern ([8d7af84](https://github.com/Nerdware-LLC/ddb-single-table/commit/8d7af8424ffdd9b0004d1075feff9eb1d88ec002))
+
 # [1.2.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.1.0...v1.2.0-next.1) (2023-09-20)
 
 
