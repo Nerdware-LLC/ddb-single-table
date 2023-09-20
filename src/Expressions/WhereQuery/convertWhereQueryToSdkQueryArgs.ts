@@ -1,7 +1,9 @@
 import { getValidatedComparisonValues } from "./getValidatedComparisonValues";
 import { WHERE_QUERY_OPERATOR_TO_EXPRESSION } from "./whereQueryOperatorToExpression";
-import { isType, InvalidExpressionError, getExpressionAttrTokens } from "../utils";
-import type { ExpressionAttributeDicts } from "../types";
+import { isType, InvalidExpressionError } from "../../utils";
+import { getExpressionAttrTokens } from "../helpers";
+import type { QueryInput } from "../../DdbClientWrapper";
+import type { BaseItem } from "../../types/itemTypes";
 import type { WhereQueryComparisonObject } from "./types";
 
 /**
@@ -12,7 +14,7 @@ import type { WhereQueryComparisonObject } from "./types";
  * - `ExpressionAttributeNames`
  * - `ExpressionAttributeValues`
  */
-export const convertWhereQueryToSdkQueryArgs = <ItemType extends Record<string, unknown>>({
+export const convertWhereQueryToSdkQueryArgs = <ItemType extends BaseItem>({
   where,
 }: WhereQueryParam<ItemType>) => {
   // Ensure `where` is a Record-like object before providing it to `Object.entries()`
@@ -41,7 +43,15 @@ export const convertWhereQueryToSdkQueryArgs = <ItemType extends Record<string, 
   // Process whereQueryEntries to derive the KCE, EAN, and EAV
   const { KeyConditionExpression, ExpressionAttributeNames, ExpressionAttributeValues } =
     whereQueryEntries.reduce(
-      (accum: { KeyConditionExpression: string } & ExpressionAttributeDicts, [attrName, value]) => {
+      (
+        accum: Required<
+          Pick<
+            QueryInput,
+            "KeyConditionExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
+          >
+        >,
+        [attrName, value]
+      ) => {
         // Derive and append the appropriate KeyConditionExpression clause
 
         // Get the operator and comparand to use in the expression
@@ -107,7 +117,7 @@ export const convertWhereQueryToSdkQueryArgs = <ItemType extends Record<string, 
 /**
  * The `WhereQuery` param for {@link convertWhereQueryToSdkQueryArgs}.
  */
-export type WhereQueryParam<ItemType extends Record<string, unknown>> = {
+export type WhereQueryParam<ItemType extends BaseItem> = {
   /**
    * `WhereQuery` is a flexible, dev-friendly syntax used to build `QueryCommand` args:
    * - `KeyConditionExpression`
@@ -134,8 +144,6 @@ export type WhereQueryParam<ItemType extends Record<string, unknown>> = {
  * or string/number primitive values. If primitives are provided, they are treated
  * as {@link WhereQueryComparisonObject.eq|eq} WhereQuery expressions.
  */
-export type ItemWhereQuery<
-  ItemType extends { [attrName: string]: unknown } = Record<string, unknown>
-> = {
+export type ItemWhereQuery<ItemType extends BaseItem = BaseItem> = {
   [Key in keyof ItemType]?: string | number | WhereQueryComparisonObject;
 };
