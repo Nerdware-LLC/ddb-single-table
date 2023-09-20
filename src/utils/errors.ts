@@ -3,10 +3,10 @@ import { safeJsonStringify } from "./safeJsonStringify";
 import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../types";
 
 /**
- * This is the base `error` class for `DdbSingleTable`. If the `message` arg is anything
- * other than a truthy string, then the resultant Error's `message` property will be set
- * to a default value. A second `fallbackMsg` arg can be provided to override the default
- * message.
+ * This is the base `error` class for custom errors defined in this package. If the
+ * `message` arg is anything other than a truthy string, then the resultant Error's
+ * `message` property will be set to a default value. A second `fallbackMsg` arg can
+ * be provided to override the default message.
  */
 export class DdbSingleTableError extends Error {
   static readonly DEFAULT_MSG: string = "An unknown error occurred";
