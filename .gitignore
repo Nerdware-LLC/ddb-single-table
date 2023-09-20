@@ -90,10 +90,7 @@ FIXME*
 schema.json
 
 # VSCode-related
-.vscode/
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode/settings.json
 *.code-workspace
 .history/
 .vscode-test

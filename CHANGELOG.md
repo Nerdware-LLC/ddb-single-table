@@ -17,6 +17,24 @@ All notable changes to this project will be documented in this file.
 ### Reverts
 
 * use old '.vscode' gitignore pattern ([8d7af84](https://github.com/Nerdware-LLC/ddb-single-table/commit/8d7af8424ffdd9b0004d1075feff9eb1d88ec002))
+=======
+* correct '.vscode' file patterns in gitignore ([dd7dcb2](https://github.com/Nerdware-LLC/ddb-single-table/commit/dd7dcb20c17f4df250e1c5d070839554ac61e344))
+* **prettier:** add missing 'plugins' key to config ([458e64d](https://github.com/Nerdware-LLC/ddb-single-table/commit/458e64dc22cac7266dcadad029b9cc0a384e49f6))
+* rm old export ([9cbf213](https://github.com/Nerdware-LLC/ddb-single-table/commit/9cbf213616323e18400b5f760a5705c5586a56e6))
+* rm types files that have been moved ([775f743](https://github.com/Nerdware-LLC/ddb-single-table/commit/775f743dc4e9daac4a3402480cc944c297b04458))
+* update name of imported type used by isType utils ([f0672e4](https://github.com/Nerdware-LLC/ddb-single-table/commit/f0672e44b68793f8c91e1cc6d1b07a338028c3a5))
+* update Table and Model export names ([b27b516](https://github.com/Nerdware-LLC/ddb-single-table/commit/b27b51628d8c23f75843c79453b00b1667c59a15))
+
+
+### Features
+
+* add handler for batch requests ([f94b1f5](https://github.com/Nerdware-LLC/ddb-single-table/commit/f94b1f55fc5d4a8b186c235ad2d9053fcbae5cb4))
+
+
+### Performance Improvements
+
+* streamline generic mapped types ([bad5ed6](https://github.com/Nerdware-LLC/ddb-single-table/commit/bad5ed6abd1d32894a8df9b49c7f7c8a6b87cea3))
+
 
 # [1.2.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.1.0...v1.2.0-next.1) (2023-09-20)
 
