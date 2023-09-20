@@ -1,7 +1,7 @@
 import lodashSet from "lodash.set";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
 import { setDefaults } from "./setDefaults";
-import type { ModelSchemaType } from "../types";
+import type { ModelSchemaType } from "../../types";
 import type { IOActions, IOActionContext } from "./types";
 
 describe("IOActionMethod: setDefaults", () => {
