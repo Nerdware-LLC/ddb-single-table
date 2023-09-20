@@ -1,16 +1,15 @@
-import { hasKey, SchemaValidationError } from "./utils";
+import { hasKey, SchemaValidationError } from "../utils";
 import type {
   ModelSchemaType,
   TableKeysSchemaType,
   BaseAttributeConfigProperties,
   KeyAttributeConfig,
   MergeModelAndTableKeysSchema,
-} from "./types";
+} from "../types";
 
 /**
- * This function merges the provided TableKeysSchema and (Partial) ModelSchema,
- * excludes key-attribute config properties that are not mergeable, and returns
- * a complete ModelSchema.
+ * This function merges the provided TableKeysSchema and (Partial) ModelSchema, excludes
+ * key-attribute config properties that are not mergeable, and returns a complete ModelSchema.
  *
  * The following key-attribute config properties are excluded:
  * - `isHashKey`
@@ -19,7 +18,7 @@ import type {
  */
 export const getMergedModelSchema = <
   TableKeysSchema extends TableKeysSchemaType,
-  ModelSchema extends ModelSchemaType<TableKeysSchema>
+  ModelSchema extends ModelSchemaType<TableKeysSchema>,
 >({
   tableKeysSchema,
   modelSchema,
@@ -32,7 +31,7 @@ export const getMergedModelSchema = <
     Object.keys(modelAttrConfig).forEach((modelAttrConfigKey) => {
       if (!MODEL_ATTR_CONFIG_PROPERTY_NAMES.includes(modelAttrConfigKey)) {
         throw new SchemaValidationError(
-          `Invalid Model schema: attribute "${modelAttrName}" contains unknown property "${modelAttrConfigKey}".`
+          `Invalid Model schema: attribute "${modelAttrName}" contains invalid property "${modelAttrConfigKey}".`
         );
       }
     });
