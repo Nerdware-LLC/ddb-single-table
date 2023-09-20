@@ -38,6 +38,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 
 - [🚀 Getting Started](#-getting-started)
 - [✨ Key Features](#-key-features)
+  - [Batch Retries with Exponential Backoff](#batch-retries-with-exponential-backoff)
 - [⚙️ Usage Notes](#️-usage-notes)
 - [❓ FAQ](#-faq)
   - [Q: _Why "single-table-first"?_](#q-why-single-table-first)
@@ -255,6 +256,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 ## ✨ Key Features
 
 - Easy-to-use declarative API for managing DDB tables, connections, and models
+- Auto-generated typings for model items
 - Custom attribute aliases for each model
 - Create attributes/properties from combinations of other attributes/properties
 - Type checking and conversions for all DDB attribute types
@@ -266,6 +268,34 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 - Schema-level get/set modifiers
 - Required/nullable property assertions
 - Easy access to a streamlined DynamoDB client (more info [here](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client))
+- Automatic retries for batch operations using exponential backoff (more info [here](#batch-retries-with-exponential-backoff))
+
+### Batch Retries with Exponential Backoff
+
+[As recommended by AWS](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.BatchOperations), DDB-ST will automatically retry batch operations which either return unprocessed requests (e.g., `UnprocessedKeys` for `BatchGetItem`), or result in a retryable error. All retries are implemented using a configurable exponential backoff strategy which adheres to AWS best practices.
+
+<details>
+
+  <summary><i><b>Click here for a detailed overview of the exponential backoff strategy.</b></i></summary>
+
+1. First request: no delay
+2. Second request: delay `initialDelay` milliseconds (default: 100)
+3. All subsequent request delays are equal to the previous delay multiplied by the `timeMultiplier` (default: 2), until either:
+
+   - The `maxRetries` limit is reached (default: 10), or
+   - The `maxDelay` limit is reached (default: 3500, or 3.5 seconds)
+
+   Ergo, the base `delay` calculation can be summarized as follows:
+
+   > `delay in milliseconds = initialDelay * timeMultiplier^attemptNumber`
+
+   If `useJitter` is true (default: false), the `delay` is randomized by applying the following to the base `delay`:
+
+   > `Math.round( Math.random() * delay )`
+
+   Note that the determination as to whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
+
+</details>
 
 ## ⚙️ Usage Notes
 
