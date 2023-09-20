@@ -67,5 +67,8 @@
     "typescript": "^5.2.2",
     "vitest": "^0.34.3",
     "vitest-github-actions-reporter": "^0.10.0"
+  },
+  "overrides": {
+    "prettier": "^3.0.3"
   }
 }
