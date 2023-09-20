@@ -1,4 +1,5 @@
-import { hasDefinedProperty, ItemInputError } from "../utils";
+import { hasDefinedProperty, ItemInputError } from "../../utils";
+import type { BaseItem } from "../../types/itemTypes";
 import type { IOActions, IOActionMethod } from "./types";
 
 /**
@@ -14,7 +15,7 @@ export const aliasMapping: IOActionMethod = function (
 ) {
   const aliasMap = ioDirection === "toDB" ? ctx.aliasesToAttributesMap : ctx.attributesToAliasesMap;
 
-  return Object.entries(item).reduce((accum: Record<string, unknown>, [itemKey, value]) => {
+  return Object.entries(item).reduce((accum: BaseItem, [itemKey, value]) => {
     if (hasDefinedProperty(aliasMap, itemKey)) {
       // If itemKey is in the aliasMap, update the item with the mapped key
       accum[aliasMap[itemKey]] = value;

@@ -1,5 +1,5 @@
-import { isType } from "../utils";
-import type { ModelSchemaType, SchemaEntries } from "../types/schemaTypes";
+import { isType } from "../../utils";
+import type { ModelSchemaType, SchemaEntries } from "../../types/schemaTypes";
 import type { IOActions, RecursiveIOActionMethod } from "./types";
 
 /**

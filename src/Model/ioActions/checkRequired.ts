@@ -1,4 +1,4 @@
-import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../utils";
+import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../../utils";
 import type { IOActions, IOActionMethod } from "./types";
 
 /**
