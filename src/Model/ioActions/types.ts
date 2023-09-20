@@ -1,9 +1,11 @@
+import type { BaseItem, SupportedItemValueTypes } from "../../types/itemTypes";
 import type {
   ModelSchemaType,
   ModelSchemaOptions,
   ModelSchemaNestedAttributes,
   SchemaEntries,
-} from "../types/schemaTypes";
+} from "../../types/schemaTypes";
+import type { AttributesAliasesMap } from "../types";
 
 /**
  * Labels indicating the direction data is flowing - either to or from the database.
@@ -11,7 +13,8 @@ import type {
 export type IODirection = "toDB" | "fromDB";
 
 /**
- * The context object passed to IO-Action functions.
+ * IO-Action context properties available to all IO-Action functions.
+ * @internal
  */
 interface BaseIOActionContext {
   /** The calling Model's name. */
@@ -21,43 +24,68 @@ interface BaseIOActionContext {
   /** `"toDB"` or `"fromDB"` */
   ioDirection: IODirection;
   /** Map of attribute names to their respective aliases (or name if none). */
-  attributesToAliasesMap: Record<string, string>;
+  attributesToAliasesMap: AttributesAliasesMap;
   /** Map of attribute aliases to their respective attribute names. */
-  aliasesToAttributesMap: Record<string, string>;
+  aliasesToAttributesMap: AttributesAliasesMap;
   /** The parent item to which an attribute belongs. */
-  parentItem?: Record<string, unknown>;
+  parentItem?: BaseItem;
 }
+
+/**
+ * The IO-Action context object passed to all IO-Action functions.
+ * @internal
+ */
 export interface IOActionContext extends BaseIOActionContext {
   schema: ModelSchemaType;
   /** Ordered array of schema entries. See {@link SchemaEntries}. */
   schemaEntries: SchemaEntries;
 }
+
+/**
+ * This extension of the {@link BaseIOActionContext} adds a `schema` property for the
+ * {@link RecursiveIOActionMethod} which is set to the [`schema` of a nested attribute][nested-schema] .
+ *
+ * [nested-schema]: {@link ModelSchemaNestedAttributes}
+ *
+ * @internal
+ */
 export interface RecursiveIOActionContext extends BaseIOActionContext {
   schema: ModelSchemaNestedAttributes;
 }
 
 /**
  * A function that performs an IO-Action.
+ * @internal
  */
 export type IOActionMethod = (
   this: IOActions,
-  item: Record<string, unknown>,
+  item: BaseItem,
   context: IOActionContext
-) => Record<string, unknown>;
+) => BaseItem;
 
 /**
  * A function that recursively applies a given IO-Action to an item and its nested attributes.
+ * @internal
  */
 export type RecursiveIOActionMethod = (
   this: IOActions,
   ioAction: IOActionMethod,
-  itemValue: Required<unknown>,
+  /**
+   * The item/items to which the IO-Action should be applied.
+   * @remarks Even though IO-Actions only call `recursivelyApplyIOAction` when `itemValue` is a
+   * nested object/array, this is not typed as `BaseItem | BaseItem[]` because that forces the
+   * IO-Actions to perform type-checking which already occurs in `recursivelyApplyIOAction`, and
+   * non-object/array values will not cause an error - they'd simply be returned as-is. The same
+   * reasoning applies to the return type.
+   */
+  itemValue: SupportedItemValueTypes,
   ctx: RecursiveIOActionContext
-) => Required<unknown>;
+) => SupportedItemValueTypes;
 
 /**
  * A dictionary to which all IO-Action functions belong.
  * > **This object serves as the `this` context for all IO-Action functions.**
+ * @internal
  */
 export type IOActions = Readonly<
   {

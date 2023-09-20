@@ -1,4 +1,4 @@
-import { hasDefinedProperty, hasKey } from "../utils";
+import { hasDefinedProperty, hasKey } from "../../utils";
 import type { IOActions, IOActionMethod } from "./types";
 
 /**
@@ -23,7 +23,7 @@ export const setDefaults: IOActionMethod = function (
       item[attrName] = typeof attrDefault === "function" ? attrDefault(parentItem) : attrDefault;
     }
     // Run recursively on nested attributes if parent value exists
-    if (attrConfig?.schema && hasDefinedProperty(item, attrName)) {
+    if (attrConfig?.schema && hasKey(item, attrName)) {
       item[attrName] = this.recursivelyApplyIOAction(this.setDefaults, item[attrName], {
         parentItem,
         ...ctx,

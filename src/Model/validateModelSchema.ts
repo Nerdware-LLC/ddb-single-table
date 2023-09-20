@@ -1,19 +1,19 @@
-import { hasKey, isType, SchemaValidationError } from "./utils";
-import type { ModelSchemaType, KeyAttributeConfig } from "./types";
+import { hasKey, isType, SchemaValidationError } from "../utils";
+import type { ModelSchemaType, KeyAttributeConfig } from "../types";
 
 /**
- * This function validates the provided Model schema, and if valid, returns the
- * ModelSchema with TableKeysSchema merged in, as well as the Model's alias maps.
+ * This function validates the provided Model schema, and if valid, returns the ModelSchema with
+ * TableKeysSchema merged in, as well as the Model's alias maps.
  *
  * This function performs the following validation checks:
  *
- * 1. Ensure ModelSchema does not specify key-attribute configs which are only
- *    valid in the TableKeysSchema (e.g. "isHashKey", "isRangeKey", "index").
- * 2. Ensure all "alias" values are unique.
- * 3. Ensure a "type" is specified for all attributes.
- * 4. Ensure "default" values comply with "type".
- * 5. Ensure "map" and "array" attributes include a valid "schema" config.
- * 6. Ensure "enum" attributes include a valid "oneOf" config.
+ * 1. Ensure ModelSchema does not specify key-attribute configs which are only valid in the
+ *    TableKeysSchema (e.g. "isHashKey", "isRangeKey", "index")
+ * 2. Ensure all "alias" values are unique
+ * 3. Ensure a "type" is specified for all attributes
+ * 4. Ensure "default" values comply with "type"
+ * 5. Ensure "map" and "array" attributes include a valid "schema" config
+ * 6. Ensure "enum" attributes include a valid "oneOf" config
  */
 export const validateModelSchema = function <ModelSchema extends ModelSchemaType>({
   modelName,

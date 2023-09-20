@@ -1,4 +1,4 @@
-import { hasDefinedProperty, hasKey } from "../utils";
+import { hasKey } from "../../utils";
 import type { IOActions, IOActionMethod } from "./types";
 
 /**
@@ -22,7 +22,7 @@ export const transformValues: IOActionMethod = function (
       if (transformedValue !== undefined) item[attrName] = transformedValue;
     }
     // Run recursively on nested attributes if parent value exists
-    if (attrConfig?.schema && hasDefinedProperty(item, attrName)) {
+    if (attrConfig?.schema && hasKey(item, attrName)) {
       item[attrName] = this.recursivelyApplyIOAction(this.transformValues, item[attrName], {
         parentItem: item,
         ioDirection,
@@ -31,5 +31,6 @@ export const transformValues: IOActionMethod = function (
       });
     }
   });
+
   return item;
 };

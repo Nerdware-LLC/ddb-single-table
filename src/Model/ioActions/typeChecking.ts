@@ -1,6 +1,6 @@
-import { hasDefinedProperty, isType, safeJsonStringify } from "../utils";
-import { ItemInputError, getAttrErrID, stringifyNestedSchema } from "../utils/errors";
-import type { ModelSchemaNestedAttributes as NestedAttributes } from "../types";
+import { hasDefinedProperty, isType, safeJsonStringify } from "../../utils";
+import { ItemInputError, getAttrErrID, stringifyNestedSchema } from "../../utils/errors";
+import type { ModelSchemaNestedAttributes as NestedAttributes } from "../../types";
 import type { IOActions, IOActionMethod } from "./types";
 
 /**

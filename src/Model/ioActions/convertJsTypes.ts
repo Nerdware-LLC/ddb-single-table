@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
-import { hasDefinedProperty, isConvertibleToDate, isType } from "../utils";
+import { hasDefinedProperty, isConvertibleToDate, isType } from "../../utils";
+import type { SupportedItemValueTypes } from "../../types/itemTypes";
 import type { IOActions, IOActionMethod } from "./types";
 
 /**
@@ -22,7 +23,7 @@ export const convertJsTypes: IOActionMethod = function (
     if (hasDefinedProperty(item, attrName)) {
       const itemValue = item[attrName];
       const attrType = attrConfig.type;
-      let convertedValue: unknown = undefined;
+      let convertedValue: SupportedItemValueTypes = undefined;
 
       if (attrType === "Date") {
         // For "Date" attributes, convert Date objects and ISO strings to unix timestamps and vice versa.
@@ -59,5 +60,6 @@ export const convertJsTypes: IOActionMethod = function (
       if (convertedValue) item[attrName] = convertedValue;
     }
   });
+
   return item;
 };
