@@ -1,12 +1,38 @@
-import type { ConditionalPick, ConditionalExcept, Simplify } from "type-fest";
+import type { ConditionalPick, ConditionalExcept, Simplify, OmitIndexSignature } from "type-fest";
 import type {
   ModelSchemaType,
   BaseAttributeConfigProperties,
   ModelSchemaNestedMap,
   ModelSchemaNestedArray,
 } from "./schemaTypes";
+import type { NestDepthMax5, IterateNestDepth } from "./utilTypes";
 
-/** Internal type defining `Opts` type param of item-type generics. */
+/** An interface representing an Item with supported value types. */
+export interface BaseItem {
+  [key: string]: SupportedItemValueTypes;
+}
+
+/** Union of supported Item value types. */
+export type SupportedItemValueTypes =
+  | string
+  | number
+  | boolean
+  | BaseItem
+  | Array<SupportedItemValueTypes>
+  | Date
+  | Buffer
+  | null
+  | undefined;
+
+/** An Item's keys (e.g., `{ id: "USER-1", sk: "FOO-SK" }`) */
+export interface ItemKeys {
+  [key: string]: string | number;
+}
+
+/**
+ * Internal type defining `Opts` type param of item-type generics.
+ * @internal
+ */
 type ItemTypeOptsParam = {
   /** Whether to use attribute `alias` values for item keys rather than attribute names. */
   aliasKeys?: boolean;
@@ -14,47 +40,14 @@ type ItemTypeOptsParam = {
   optionalIfDefault?: boolean;
   /** Whether to add `null` to optional properties (i.e., convert `{ foo?: string }` to `{ foo?: string | null }`). */
   nullableIfOptional?: boolean;
+  /** Whether JS types should be replaced with Ddb types (i.e., convert `Date` to `number`). */
+  useDdbTypes?: boolean;
 };
 
 /**
- * This generic creates an Item type from a DdbSingleTable Model schema.
- * If no `Opts` type param is provided, this generic's default behavior matches
- * that of `ItemOutputType` (`aliasKeys: true` and `optionalIfDefault: false`).
+ * This generic creates an Item type from the provided Model schema.
  *
- * @see {@link ItemOutputType} for examples of the default `ItemTypeFromSchema` type behavior.
- * @see {@link ItemInputType} for examples where attributes with a `default` are optional.
- * @see {@link DynamoDbItemType} for examples with attribute names instead of `alias` keys.
- */
-export type ItemTypeFromSchema<
-  T extends ModelSchemaType,
-  Opts extends ItemTypeOptsParam = {
-    aliasKeys: true;
-    optionalIfDefault: false;
-    nullableIfOptional: true;
-  },
-  NestDepth extends SchemaNestDepth = 0
-> = Simplify<
-  Iterate<NestDepth> extends 5
-    ? never
-    : T extends Record<string, BaseAttributeConfigProperties>
-    ? GetMappedItemWithAccessMods<T, Opts, NestDepth>
-    : T extends Array<BaseAttributeConfigProperties>
-    ? GetAttributeType<T[number], Opts, Iterate<NestDepth>>
-    : never
->;
-
-/**
- * This generic creates an Item _**INPUTS**_ type from a DdbSingleTable Model schema.
- * Unlike the outputs-variant of this type, attributes that have a `default` are optional,
- * even if they are `required` in the schema.
- *
- * > - To get a typedef for Item _**OUTPUTS**_, use {@link ItemOutputType}.
- * > - To get a typedef without `alias` keys, use {@link DynamoDbItemType}.
- *
- * ---
- *
- * Usage Example:
- *
+ * @example
  * ```ts
  * // This Model schema yields the UserItem type definition (see below)
  * const userModelSchema = {
@@ -91,7 +84,78 @@ export type ItemTypeFromSchema<
  *   }
  * } as const;
  *
- * type UserItem = ItemInputType<typeof userModelSchema>;
+ * type UserItem = ItemTypeFromSchema<typeof userModelSchema>;
+ * // Resultant UserItem type is equivalent to the type below
+ * type UserItemEquivalent = {
+ *   userID: string;
+ *   sk: string;
+ *   job?: {
+ *     JobTitle: string;
+ *   } | undefined;
+ *   favoriteFood?: "APPLES" | "CAKE" | "PIZZA" | undefined;
+ *   userHobbies?: Array<string> | undefined;
+ *   listOfPlaces: Array<{
+ *     placeName: string;
+ *     address?: string | undefined;
+ *   }>;
+ * }
+ * ```
+ */
+export type ItemTypeFromSchema<
+  T extends ModelSchemaType,
+  Opts extends ItemTypeOptsParam = {
+    aliasKeys: true;
+    optionalIfDefault: false;
+    nullableIfOptional: true;
+    useDdbTypes: false;
+  },
+  NestDepth extends NestDepthMax5 = 0,
+> = Simplify<
+  IterateNestDepth<NestDepth> extends 5 ? never : SchemaMappedToItem<T, Opts, NestDepth>
+>;
+
+/**
+ * This generic creates a typing for the parameters necessary to create an Item.
+ * Note that attributes with a defined `default` are made optional.
+ *
+ * @example
+ * ```ts
+ * // This Model schema yields the UserItem type definition (see below)
+ * const userModelSchema = {
+ *   pk: { alias: "userID", type: "string", required: true },
+ *   sk: { type: "string", required: true, default: () => `#USER_SK#${Date.now()}` },
+ *   data: {
+ *     alias: "job",
+ *     type: "map",
+ *     schema: {
+ *       fooNestedKey: { alias: "JobTitle", type: "string", required: true }
+ *     }
+ *   },
+ *   favoriteFood: {
+ *     type: "enum",
+ *     oneOf: ["APPLES", "CAKE", "PIZZA"]
+ *   },
+ *   hobbies: {
+ *     alias: "userHobbies",
+ *     type: "array",
+ *     schema: [{ type: "string" }]
+ *   },
+ *   listOfPlaces: {
+ *     type: "array",
+ *     required: true,
+ *     schema: [
+ *       {
+ *         type: "map",
+ *         schema: {
+ *           placeName: { type: "string", required: true },
+ *           address: { type: "string" }
+ *         }
+ *       }
+ *     ]
+ *   }
+ * } as const;
+ *
+ * type UserItem = ItemCreationParameters<typeof userModelSchema>;
  * // Resultant UserItem type is equivalent to the type below
  * type UserItemEquivalent = {
  *   userID: string;
@@ -108,191 +172,82 @@ export type ItemTypeFromSchema<
  * }
  * ```
  */
-export type ItemInputType<
-  T extends ModelSchemaType,
-  NestDepth extends SchemaNestDepth = 0
-> = ItemTypeFromSchema<
+export type ItemCreationParameters<T extends ModelSchemaType> = ItemTypeFromSchema<
   T,
-  { aliasKeys: true; optionalIfDefault: true; nullableIfOptional: true },
-  NestDepth
+  { aliasKeys: true; optionalIfDefault: true; nullableIfOptional: true; useDdbTypes: false }
 >;
 
 /**
- * This generic creates an Item _**OUTPUTS**_ type from a DdbSingleTable Model schema.
- * Unlike the inputs-variant of this type, attributes that are marked `required` in the
- * schema are not optional in the typedef, regardless of whether a `default` is provided.
- *
- * > - To get a typedef for Item _**INPUTS**_, use {@link ItemInputType}.
- * > - To get a typedef without `alias` keys, use {@link DynamoDbItemType}.
- *
- * ---
- *
- * Usage Example:
- *
- * ```ts
- * // This Model schema yields the UserItem type definition (see below)
- * const userModelSchema = {
- *   pk: { alias: "userID", type: "string", required: true },
- *   sk: { type: "string", required: true, default: () => `#USER_SK#${Date.now()}` },
- *   data: {
- *     alias: "job",
- *     type: "map",
- *     schema: {
- *       fooNestedKey: { alias: "JobTitle", type: "string", required: true }
- *     }
- *   },
- *   favoriteFood: {
- *     type: "enum",
- *     oneOf: ["APPLES", "CAKE", "PIZZA"]
- *   },
- *   hobbies: {
- *     alias: "userHobbies",
- *     type: "array",
- *     schema: [{ type: "string" }]
- *   },
- *   listOfPlaces: {
- *     type: "array",
- *     required: true,
- *     schema: [
- *       {
- *         type: "map",
- *         schema: {
- *           placeName: { type: "string", required: true },
- *           address: { type: "string" }
- *         }
- *       }
- *     ]
- *   }
- * } as const;
- *
- * type UserItem = ItemOutputType<typeof userModelSchema>;
- * // Resultant UserItem type is equivalent to the type below
- * type UserItemEquivalent = {
- *   userID: string;
- *   sk: string; // <-- Note that sk is required/present on outputted items
- *   job?: {
- *     JobTitle: string;
- *   } | undefined;
- *   favoriteFood?: "APPLES" | "CAKE" | "PIZZA" | undefined;
- *   userHobbies?: Array<string> | undefined;
- *   listOfPlaces: Array<{
- *     placeName: string;
- *     address?: string | undefined;
- *   }>;
- * }
- * ```
+ * This generic creates a typing for the parameters necessary to update an Item.
  */
-export type ItemOutputType<
-  T extends ModelSchemaType,
-  NestDepth extends SchemaNestDepth = 0
-> = ItemTypeFromSchema<
-  T,
-  { aliasKeys: true; optionalIfDefault: false; nullableIfOptional: true },
-  NestDepth
+export type ItemParameters<T, NestDepth extends NestDepthMax5 = 0> = Simplify<
+  IterateNestDepth<NestDepth> extends 5
+    ? T
+    : T extends Record<PropertyKey, unknown>
+    ? keyof OmitIndexSignature<T> extends never
+      ? Record<keyof T, ItemParameters<T[keyof T], IterateNestDepth<NestDepth>> | undefined>
+      : { [K in keyof T]?: ItemParameters<T[K]> }
+    : T extends Array<infer El>
+    ? Array<ItemParameters<El, IterateNestDepth<NestDepth>>>
+    : T
 >;
 
 /**
- * This generic creates an internal Item type definition from a DdbSingleTable Model schema.
- * > To get a type def with "alias" keys, use `AliasedItemTypeFromSchema`.
- *
- * ---
- *
- * Usage Example:
- *
- * ```ts
- * // This Model schema yields the UserItem type definition (see below)
- * const userModelSchema = {
- *   pk: { alias: "userID", type: "string", required: true },
- *   sk: { type: "string", required: true, default: () => `#USER_SK#${Date.now()}` },
- *   data: {
- *     alias: "job",
- *     type: "map",
- *     schema: {
- *       fooNestedKey: { alias: "JobTitle", type: "string", required: true }
- *     }
- *   },
- *   favoriteFood: {
- *     type: "enum",
- *     oneOf: ["APPLES", "CAKE", "PIZZA"]
- *   },
- *   hobbies: {
- *     alias: "userHobbies",
- *     type: "array",
- *     schema: [{ type: "string" }]
- *   },
- *   listOfPlaces: {
- *     type: "array",
- *     required: true,
- *     schema: [
- *       {
- *         type: "map",
- *         schema: {
- *           placeName: { type: "string", required: true },
- *           address: { type: "string" }
- *         }
- *       }
- *     ]
- *   }
- * } as const;
- *
- * type UserItem = DynamoDbItemTypeFromSchema<typeof userModelSchema>;
- * // Resultant UserItem type is equivalent to the type below
- * type UserItemEquivalent = {
- *   pk: string;
- *   sk?: string | undefined;
- *   data?: {
- *     fooNestedKey: string;
- *   } | undefined;
- *   favoriteFood?: "APPLES" | "CAKE" | "PIZZA" | undefined;
- *   hobbies?: Array<string> | undefined;
- *   listOfPlaces: Array<{
- *     placeName: string;
- *     address?: string | undefined;
- *   }>;
- * }
- * ```
+ * This generic creates a typing for the parameters necessary to update an Item.
  */
-export type DynamoDbItemType<
-  T extends ModelSchemaType,
-  NestDepth extends SchemaNestDepth = 0
-> = ItemTypeFromSchema<
-  T,
-  { aliasKeys: false; optionalIfDefault: false; nullableIfOptional: true },
-  NestDepth
+export type DynamoDbItemType<T, NestDepth extends NestDepthMax5 = 0> = Simplify<
+  IterateNestDepth<NestDepth> extends 5
+    ? T
+    : T extends Date
+    ? number
+    : T extends Buffer
+    ? string
+    : T extends Record<PropertyKey, unknown>
+    ? keyof OmitIndexSignature<T> extends never
+      ? Record<keyof T, DynamoDbItemType<T[keyof T], IterateNestDepth<NestDepth>> | undefined>
+      : { [K in keyof T]?: DynamoDbItemType<T[K]> }
+    : T extends Array<infer El>
+    ? Array<DynamoDbItemType<El, IterateNestDepth<NestDepth>>>
+    : T
 >;
 
 /**
  * This type maps Item keys to values and makes the following access modifications:
  * - Removes readonly
- * - Adds/removes optionality "?" based on `Opts` type param and attribute configs
+ * - Adds/removes optionality based on "required" attribute configs and `Opts` type param.
  */
-type GetMappedItemWithAccessMods<
+type SchemaMappedToItem<
   T extends Record<string, BaseAttributeConfigProperties>,
   Opts extends ItemTypeOptsParam,
-  NestDepth extends SchemaNestDepth
+  NestDepth extends NestDepthMax5,
 > = {
-  -readonly [K in keyof T as GetKey<T, K, Opts>]+?: Opts["nullableIfOptional"] extends true
-    ? GetAttributeType<T[K], Opts, NestDepth> | null
-    : GetAttributeType<T[K], Opts, NestDepth>;
+  // prettier-ignore
+  -readonly [K in keyof RequiredKeys<T, Opts> as AttrAliasOrName<T, K, Opts>]-?: AttributeValue<T[K], Opts, NestDepth>;
 } & {
-    // prettier-ignore
-    -readonly [K in keyof GetRequiredKeys<T, Opts> as GetKey<T, K, Opts>]-?: GetAttributeType<T[K], Opts, NestDepth>;
-  };
+  -readonly [K in keyof T as AttrAliasOrName<T, K, Opts>]+?: Opts["nullableIfOptional"] extends true
+    ? AttributeValue<T[K], Opts, NestDepth> | null
+    : AttributeValue<T[K], Opts, NestDepth>;
+};
 
-/** Returns "alias" if Opts.aliasKeys is true AND an alias exists, else key. */
-type GetKey<
+/**
+ * Returns an attribute's "alias" if `Opts.aliasKeys` is true AND it is configured with an alias,
+ * otherwise this returns the attribute's name.
+ * @internal
+ */
+export type AttrAliasOrName<
   T extends Record<string, BaseAttributeConfigProperties>,
   K extends keyof T,
-  Opts extends { aliasKeys?: boolean } = { aliasKeys: false }
+  Opts extends { aliasKeys?: boolean } = { aliasKeys: true },
 > = Opts["aliasKeys"] extends true ? (T[K]["alias"] extends string ? T[K]["alias"] : K) : K;
 
 /**
  * Picks required keys from Item `<T>`. If `Opts.optionalIfDefault` is true, then
  * all properties that specify a `default` are also optional.
+ * @internal
  */
-type GetRequiredKeys<
+type RequiredKeys<
   T extends Record<string, BaseAttributeConfigProperties>,
-  Opts extends { optionalIfDefault?: boolean }
+  Opts extends { optionalIfDefault?: boolean },
 > = Opts["optionalIfDefault"] extends true
   ? ConditionalExcept<ConditionalPick<T, { required: true }>, { default: NonNullable<unknown> }>
   : ConditionalPick<T, { required: true }>;
@@ -301,11 +256,11 @@ type GetRequiredKeys<
  * This generic gets the type from an individual attribute config from a Model schema.
  * > String literal types ftw!
  */
-type GetAttributeType<
+type AttributeValue<
   T extends BaseAttributeConfigProperties,
   Opts extends ItemTypeOptsParam,
-  NestDepth extends SchemaNestDepth
-> = Iterate<NestDepth> extends 5
+  NestDepth extends NestDepthMax5,
+> = IterateNestDepth<NestDepth> extends 5
   ? never
   : T["type"] extends "string"
   ? string
@@ -314,50 +269,46 @@ type GetAttributeType<
   : T["type"] extends "boolean"
   ? boolean
   : T["type"] extends "Buffer"
-  ? Buffer
+  ? Opts["useDdbTypes"] extends true
+    ? string // binary string
+    : Buffer
   : T["type"] extends "Date"
-  ? Date
+  ? Opts["useDdbTypes"] extends true
+    ? number // numerical unix timestamp
+    : Date
   : T extends { type: "map"; schema: ModelSchemaNestedMap }
-  ? ItemTypeFromSchema<T["schema"], Opts, Iterate<NestDepth>>
+  ? ItemTypeFromSchema<T["schema"], Opts, IterateNestDepth<NestDepth>>
   : T extends { type: "array"; schema: ModelSchemaNestedArray }
-  ? Array<GetAttributeType<T["schema"][number], Opts, Iterate<NestDepth>>>
+  ? Array<AttributeValue<T["schema"][number], Opts, IterateNestDepth<NestDepth>>>
   : T extends { type: "enum"; oneOf: ReadonlyArray<string> }
   ? T["oneOf"][number]
   : never;
 
-type SchemaNestDepth = 0 | 1 | 2 | 3 | 4 | 5;
+/** `T => T | Partial<T>` @internal */
+type MaybePartialItem<T extends BaseItem> = T | Partial<T>;
 
-// prettier-ignore
-type Iterate<NestDepth extends SchemaNestDepth = 0> =
-  NestDepth extends 0
-    ? 1
-    : NestDepth extends 1
-    ? 2
-    : NestDepth extends 2
-    ? 3
-    : NestDepth extends 3
-    ? 4
-    : NestDepth extends 4
-    ? 5
-    : 5;
+/** `T => T | Partial<T> | Array<T> | Array<Partial<T>>` @internal */
+export type OneOrMoreMaybePartialItems<T extends BaseItem> =
+  | MaybePartialItem<T>
+  | Array<MaybePartialItem<T>>;
 
-/** `T => T | Partial<T>` */
-export type MaybePartialItem<T> = T | Partial<T>;
-/** `T => T | Partial<T> | Array<T> | Array<Partial<T>>` */
-export type OneOrMoreMaybePartialItems<T> = MaybePartialItem<T> | Array<MaybePartialItem<T>>;
-
-export type AscertainTypeFromOneOrMoreMaybePartialItems<
-  ItemParam,
-  ItemType,
-  ItemTypeToReturn = ItemType
-> = ItemParam extends Array<infer BatchItem>
-  ? BatchItem extends ItemType
+/**
+ * This generic is a bit of a hack to get `Model.processItemData.toDB/fromDB` methods to return
+ * desired types for a given input. It's targeted for replacement in a future release.
+ * @internal
+ */
+export type AscertainItemProcessingReturnType<
+  ItemData extends OneOrMoreMaybePartialItems<BaseItem>,
+  BaseItemType extends BaseItem,
+  ItemTypeToReturn extends BaseItem,
+> = ItemData extends Array<infer BatchItem>
+  ? BatchItem extends BaseItemType
     ? Array<ItemTypeToReturn>
-    : BatchItem extends Partial<ItemType>
+    : BatchItem extends Partial<BaseItemType>
     ? Array<Partial<ItemTypeToReturn>>
     : never
-  : ItemParam extends ItemType
+  : ItemData extends BaseItemType
   ? ItemTypeToReturn
-  : ItemParam extends Partial<ItemType>
+  : ItemData extends Partial<BaseItemType>
   ? Partial<ItemTypeToReturn>
   : never;

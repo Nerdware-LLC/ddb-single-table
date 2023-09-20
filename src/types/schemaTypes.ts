@@ -1,10 +1,13 @@
 import type { SetOptional } from "type-fest";
+import type { BaseItem, SupportedItemValueTypes } from "./itemTypes";
 
 ///////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:
 
-/** Union of supported types represented as strings. */
-export type SupportedTypes =
+/**
+ * Union of {@link SupportedItemValueTypes | supported types } represented as string literals.
+ */
+export type SchemaSupportedTypeStringLiterals =
   | "string"
   | "number"
   | "boolean"
@@ -15,7 +18,16 @@ export type SupportedTypes =
   | "tuple"
   | "enum";
 
-/** Base attribute config properties common to all attribute types. */
+/**
+ * Union of supported types for {@link BaseAttributeConfigProperties.default | schema `default` configs }.
+ */
+export type AttributeDefault =
+  | SupportedItemValueTypes
+  | ((item: BaseItem) => SupportedItemValueTypes);
+
+/**
+ * Base attribute config properties common to all attribute types.
+ */
 export interface BaseAttributeConfigProperties {
   /**
    * The attribute's name outside of the database (e.g., alias "id" for attribute "pk").
@@ -39,7 +51,7 @@ export interface BaseAttributeConfigProperties {
    * - For type "enum":
    *   - The `oneOf` property must be defined.
    */
-  readonly type: SupportedTypes;
+  readonly type: SchemaSupportedTypeStringLiterals;
   /** Specifies allowed values for attributes of `type: "enum"`. */
   readonly oneOf?: ReadonlyArray<string>;
   /**
@@ -49,7 +61,7 @@ export interface BaseAttributeConfigProperties {
    * attribute's value is set to this `default` if the initial value provided to the Model method
    * is `undefined` or `null`. Note that if a specified `default` is a primitive rather than a fn,
    * and the primitive's type does not match the attribute's `type`, the Model's constructor will
-   * throw an error. _DdbST does not validate functional `default`s._
+   * throw an error. _This package does not validate functional `default`s._
    *
    * Bear in mind that key and index attributes are always processed _before_ all other attributes,
    * thereby making them available to use in `default` functions for other attributes. For example,
@@ -80,16 +92,13 @@ export interface BaseAttributeConfigProperties {
    * };
    * ```
    */
-  readonly default?:
-    | Required<unknown>
-    | null
-    | ((item: Record<string, unknown>) => Required<unknown> | null);
+  readonly default?: AttributeDefault;
   /** Methods for transforming the attribute value to/from the DB. */
   readonly transformValue?: {
     /** Fn to modify value before `validate` fn is called; use for normalization. */
-    readonly toDB?: (inputValue: any) => Required<unknown> | null;
+    readonly toDB?: (inputValue: SupportedItemValueTypes) => SupportedItemValueTypes;
     /** Fn to modify value returned from DDB client; use to format/prettify values. */
-    readonly fromDB?: (dbValue: any) => Required<unknown> | null;
+    readonly fromDB?: (dbValue: SupportedItemValueTypes) => SupportedItemValueTypes;
   };
   /**
    * Custom attribute value validation function called for every write operation. The
@@ -106,7 +115,7 @@ export interface BaseAttributeConfigProperties {
    * Note: `"enum"` attributes are validated using the array specified in the `oneOf`
    * attribute-config, and therefore do not require a custom `validate` function.
    */
-  readonly validate?: (value: any) => boolean;
+  readonly validate?: (value: SupportedItemValueTypes) => boolean;
   /**
    * Optional boolean flag indicating whether a value is required for create-operations.
    * If `true`, an error will be thrown if the attribute value is `undefined` or `null`.
@@ -227,7 +236,7 @@ export type ModelSchemaType<TableKeysSchema extends TableKeysSchemaType | undefi
  */
 export type MergeModelAndTableKeysSchema<
   TableKeysSchema extends TableKeysSchemaType,
-  ModelSchema extends ModelSchemaType<TableKeysSchema>
+  ModelSchema extends ModelSchemaType<TableKeysSchema>,
 > = {
   [K in keyof TableKeysSchema | keyof ModelSchema]: K extends keyof TableKeysSchema
     ? TableKeysSchema[K] extends KeyAttributeConfig // <-- K is in TableKeysSchema
@@ -256,13 +265,12 @@ export interface ModelSchemaOptions {
   /** Item-level transformations to/from the DB. */
   readonly transformItem?: {
     /** Fn to modify entire Item before `validate` fn is called. */
-    readonly toDB?: (item: any) => Record<string, unknown>;
-    // readonly toDB?: (item: Record<string, unknown>) => Record<string, unknown>;
+    readonly toDB?: (item: BaseItem) => BaseItem;
     /** Fn to modify entire Item returned from DDB client. */
-    readonly fromDB?: (item: any) => Record<string, unknown>;
+    readonly fromDB?: (item: BaseItem) => BaseItem;
   };
   /** Item-level custom validation function. */
-  readonly validateItem?: (item: any) => boolean;
+  readonly validateItem?: (item: BaseItem) => boolean;
   /**
    * Whether the `createItem` method should auto-add a `"createdAt"` timestamp field to
    * items upon invocation (default: `{ enabled: true, attrName: "createdAt" }`). Use
@@ -276,6 +284,7 @@ export interface ModelSchemaOptions {
    * defined in the schema.
    */
   readonly autoAddCreatedAt?: {
+    // TODO Consider renaming this to something like `autoAddTimestamps`
     enabled?: boolean;
     attrName?: string;
   };
@@ -292,62 +301,3 @@ export interface ModelSchemaOptions {
  * - Ensure that key attributes are always processed before non-key attributes.
  */
 export type SchemaEntries = Array<[string, ModelSchemaAttributeConfig]>;
-
-///////////////////////////////////////////////////////////////////
-// SCHEMA MAPPED UTILITY-TYPES:
-
-/**
- * This is an internal type used by the Model class to define the map of attribute names
- * to aliases.
- *
- * ```ts
- * // Using the `fooSchema` example below results in `fooSchemaAttrsToAliasesMap`:
- * const fooSchema = {
- *   a: { type: "string", alias: "Apple" },
- *   b: { type: "string", alias: "Banana" },
- *   c: { type: "string" },
- *   d: { type: "string" },
- * } as const;
- * // Resultant type:
- * const fooSchemaAttrsToAliasesMap: ModelSchemaAttributesToAliasesMap<typeof fooSchema> = {
- *   a: "Apple",
- *   b: "Banana",
- * };
- * ```
- */
-export type ModelSchemaAttributesToAliasesMap<Schema extends ModelSchemaType> = {
-  // AttrName --> alias
-  [AttrName in keyof Schema as AttrName extends number | symbol
-    ? never
-    : Schema[AttrName] extends { alias: string }
-    ? AttrName
-    : never]: Schema[AttrName]["alias"] extends string ? Schema[AttrName]["alias"] : never;
-};
-
-/**
- * This is an internal type used by the Model class to define the map of aliases to
- * attribute names.
- *
- * ```ts
- * // Using the `fooSchema` example below results in `fooSchemaAliasesToAttrsMap`:
- * const fooSchema = {
- *   a: { type: "string", alias: "Apple" },
- *   b: { type: "string", alias: "Banana" },
- *   c: { type: "string" },
- *   d: { type: "string" },
- * } as const;
- * // Resultant type:
- * const fooSchemaAliasesToAttrsMap: ModelSchemaAliasesToAttributesMap<typeof fooSchema> = {
- *   Apple: "a",
- *   Banana: "b",
- * };
- * ```
- */
-export type ModelSchemaAliasesToAttributesMap<Schema extends ModelSchemaType> = {
-  // alias --> AttrName
-  [AttrName in keyof Schema as AttrName extends number | symbol
-    ? never
-    : Schema[AttrName] extends { alias: string }
-    ? Schema[AttrName]["alias"]
-    : never]: AttrName extends string ? AttrName : never;
-};
