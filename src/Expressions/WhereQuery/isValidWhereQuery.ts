@@ -1,4 +1,4 @@
-import { InvalidExpressionError, isType } from "../utils";
+import { InvalidExpressionError, isType } from "../../utils";
 import type { WhereQueryComparisonObject, WhereQueryOperator } from "./types";
 
 /**
@@ -6,7 +6,6 @@ import type { WhereQueryComparisonObject, WhereQueryOperator } from "./types";
  *
  * @param str The string to check.
  * @returns A boolean indicating whether the provided `str` is a valid `WhereQueryOperator`.
- *
  * @internal
  */
 export const isValidWhereQueryOperator = (str: string): str is WhereQueryOperator => {
@@ -21,7 +20,6 @@ export const isValidWhereQueryOperator = (str: string): str is WhereQueryOperato
  * @param operator The WhereQuery expression operator.
  * @param value The value to check.
  * @returns A boolean indicating whether the provided `value` is a valid `WhereQueryComparand` for the provided `operator`.
- *
  * @internal
  */
 export const validateWhereQueryComparand = <Operator extends WhereQueryOperator>(

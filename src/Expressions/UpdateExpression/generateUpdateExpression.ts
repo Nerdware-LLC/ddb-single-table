@@ -1,26 +1,25 @@
-import { getExpressionAttrTokens } from "./utils/ddbExpressionHelpers";
-import type { ExpressionAttributeDicts } from "./types";
+import { getExpressionAttrTokens } from "../helpers";
+import type { UpdateItemInput } from "../../DdbClientWrapper";
+import type { GenerateUpdateExpressionOpts } from "./types";
 
 /**
- * This function uses the provided `itemAttributes` to generate the following
- * `updateItem` args:
+ * This function uses the provided `itemAttributes` to generate the following `updateItem` args:
  *
  * - `UpdateExpression` (may include `"SET"` and/or `"REMOVE"` clauses)
  * - `ExpressionAttributeNames`
  * - `ExpressionAttributeValues`
  *
- * Attribute names and values in the `UpdateExpression` are replaced with token
- * placeholders, which here are derived by removing all non-letter characters from
- * the key, and then adding a num-sign prefix to the EA-Names token and a colon
- * prefix to the the EA-Values token. For example, an attribute `"foo-1"` would yield
- * clause `"#foo = :foo"` in the `UpdateExpression`.
+ * Attribute names and values in the `UpdateExpression` are replaced with token placeholders, which
+ * here are derived by removing all non-letter characters from the key, and then adding a num-sign
+ * prefix to the EA-Names token and a colon prefix to the the EA-Values token. For example, an
+ * attribute `"foo-1"` would yield clause `"#foo = :foo"` in the `UpdateExpression`.
  *
  * `UpdateExpression` Clauses:
  * - The `"SET"` clause includes all attributes which are _not_ explicitly `undefined`.
  * - The `"REMOVE"` clause includes all attributes which are explicitly set to `undefined`.
- * - If **{@link GenerateUpdateExpressionOpts|nullHandling}** is `"REMOVE"` (default),
- *   then attributes with `null` values are added to the `"REMOVE"` clause, otherwise
- *   they are added to the `"SET"` clause.
+ * - If **{@link GenerateUpdateExpressionOpts|nullHandling}** is `"REMOVE"` (default), then
+ *   attributes with `null` values are added to the `"REMOVE"` clause, otherwise they are
+ *   added to the `"SET"` clause.
  */
 export const generateUpdateExpression = (
   itemAttributes: { [attrName: string]: unknown },
@@ -35,7 +34,9 @@ export const generateUpdateExpression = (
   const { updateExpressionClauses, ExpressionAttributeNames, ExpressionAttributeValues } =
     Object.entries(itemAttributes).reduce(
       (
-        accum: ExpressionAttributeDicts & {
+        accum: Required<
+          Pick<UpdateItemInput, "ExpressionAttributeNames" | "ExpressionAttributeValues">
+        > & {
           updateExpressionClauses: { SET: string; REMOVE: string };
         },
         [attributeName, attributeValue]
@@ -78,16 +79,3 @@ export const generateUpdateExpression = (
     ExpressionAttributeValues,
   };
 };
-
-export interface GenerateUpdateExpressionOpts {
-  /** Enable/disable auto-generation of `UpdateExpression`s (true by default). */
-  enabled?: boolean;
-  /**
-   * Defines the `UpdateExpression` clause to which `null` values are added:
-   * - `"REMOVE"`: `null` values will be added to the `REMOVE` clause (default).
-   *   - _On `null`, attributes are removed from the db_
-   * - `"SET"`: `null` values will be added to the `SET` clause.
-   *   - _On `null`, attribute values are set to `null` in the db_
-   */
-  nullHandling?: "SET" | "REMOVE";
-}
