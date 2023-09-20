@@ -13,7 +13,6 @@ export default defineConfig({
     silent: true,
     environment: "node",
     include: ["**/?(*.){test,spec}.?(c|m)[tj]s?(x)"],
-    setupFiles: ["src/tests/setupTests.ts"],
     reporters: ["default", ...(process.env.GITHUB_ACTIONS ? [new GithubActionsReporter()] : [])],
     coverage: {
       include: ["src/**/*.{js,ts}"],
