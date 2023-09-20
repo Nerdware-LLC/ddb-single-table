@@ -1,3 +1,3 @@
-export { DdbSingleTable } from "./DdbSingleTable";
-export { Model } from "./Model";
+export * from "./Table";
+export * from "./Model";
 export * from "./types";
