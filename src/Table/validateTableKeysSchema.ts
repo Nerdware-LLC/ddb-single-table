@@ -1,5 +1,6 @@
-import { SchemaValidationError } from "./utils";
-import type { TableKeysSchemaType, DdbTableConfigs, DdbTableIndexes } from "./types";
+import { SchemaValidationError } from "../utils";
+import type { TableKeysSchemaType } from "../types";
+import type { TableIndexes } from "./types";
 
 /**
  * This function validates the provided `TableKeysSchema`, and if valid, returns an
@@ -12,21 +13,18 @@ import type { TableKeysSchemaType, DdbTableConfigs, DdbTableIndexes } from "./ty
  * 3. Ensure all key/index attribute `type`s are "string", "number", or "Buffer" (S/N/B in the DDB API).
  * 4. Ensure all key/index attributes are `required`.
  * 5. Ensure there are no duplicate index names.
- * 6. If tableConfigs.billingMode is "PAY_PER_REQUEST", ensure indexes don't set `throughput`.
  */
 export const validateTableKeysSchema = function ({
   tableKeysSchema,
-  tableConfigs,
 }: {
   tableKeysSchema: TableKeysSchemaType;
-  tableConfigs: DdbTableConfigs;
 }) {
   const { tableHashKey, tableRangeKey, indexes } = Object.entries(tableKeysSchema).reduce(
     (
       accum: {
         tableHashKey: string | null;
         tableRangeKey: string | null;
-        indexes: DdbTableIndexes;
+        indexes: TableIndexes;
       },
       [keyAttrName, { isHashKey, isRangeKey, index, type, required }]
     ) => {
@@ -74,12 +72,6 @@ export const validateTableKeysSchema = function ({
         if (Object.prototype.hasOwnProperty.call(accum.indexes, index.name)) {
           throw new SchemaValidationError(
             `TableKeysSchema specifies multiple indexes with the same name ("${index.name}").`
-          );
-        }
-        // If tableConfigs.billingMode is "PAY_PER_REQUEST", ensure indexes don't set `throughput`
-        if (tableConfigs.billingMode === "PAY_PER_REQUEST" && index.throughput) {
-          throw new SchemaValidationError(
-            `TableKeysSchema index "${keyAttrName}" cannot specify "throughput" when tableConfigs.billingMode is "PAY_PER_REQUEST".`
           );
         }
         accum.indexes[index.name] = {
