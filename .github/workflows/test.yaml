@@ -33,6 +33,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage-reports
+
+      # TODO rm below step after debug
+      - run: pwd ; ls -lR --ignore=node_modules ./
+      
       - name: Add Coverage Report to PR
         uses: davelosert/vitest-coverage-report-action@v2
 
