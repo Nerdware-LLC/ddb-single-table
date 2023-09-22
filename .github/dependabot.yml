@@ -15,12 +15,12 @@ updates:
     groups:
       # All minor and patch updates are grouped into 1 PR.
       # Any major update is a separate individual PR.
-      bump-deps:
+      minor-and-patch:
         update-types: ["minor", "patch"]
 
     # Metadata for Dependabot's PRs:
     assignees: ["trevor-anderson"]
-    labels: ["dependabot"]
+    labels: ["dependabot 🤖"]
 
     # Behavior of Dependabot's PRs:
     target-branch: "main"
