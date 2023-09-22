@@ -4,7 +4,6 @@ import { handleBatchRequests, type BatchRequestFunction } from "../BatchRequests
 import { DdbClientWrapper } from "../DdbClientWrapper";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions";
 import { hasKey, isRecordObject, ItemInputError } from "../utils";
-import type { WhereQueryParam } from "../Expressions";
 import type { TableIndexes } from "../Table";
 import type {
   // Model schema types:
@@ -826,11 +825,11 @@ export class Model<
     const itemDataReducer: Parameters<typeof ioActions.reduce<ItemData>>[0] = !Array.isArray(
       itemData
     )
-      ? (itemAccum: ItemData, ioAction) => {
-          return ioAction(itemAccum satisfies BaseItem);
+      ? (itemAccum: ItemData & BaseItem, ioAction) => {
+          return ioAction(itemAccum);
         }
-      : (batchItemsAccum: ItemData, ioAction) => {
-          return (batchItemsAccum satisfies Array<BaseItem>).map((item) => ioAction(item));
+      : (batchItemsAccum: ItemData & BaseItem[], ioAction) => {
+          return batchItemsAccum.map((item) => ioAction(item));
         };
 
     // Call reducer, return result

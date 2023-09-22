@@ -155,17 +155,18 @@ export const getAttrErrID = (
 export const stringifyNestedSchema = (nestedSchema: ModelSchemaNestedAttributes, spaces = 2) => {
   return safeJsonStringify(
     nestedSchema,
-    (key: any, value: unknown) => {
-      return [
-        "isHashKey",
-        "isRangeKey",
-        "index",
-        "required",
-        "alias",
-        "default",
-        "validate",
-        "transformValue",
-      ].includes(key)
+    (key: unknown, value: unknown) => {
+      return typeof key === "string" &&
+        [
+          "isHashKey",
+          "isRangeKey",
+          "index",
+          "required",
+          "alias",
+          "default",
+          "validate",
+          "transformValue",
+        ].includes(key)
         ? undefined
         : value;
     },
