@@ -61,11 +61,11 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 2. Create your table:
 
    ```ts
-   import { DdbSingleTable } from "@nerdware/ddb-single-table";
+   import { Table } from "@nerdware/ddb-single-table";
 
-   // OR const { DdbSingleTable } = require("@nerdware/ddb-single-table");
+   // OR const { Table } = require("@nerdware/ddb-single-table");
 
-   export const myTable = new DdbSingleTable({
+   export const myTable = new Table({
      tableName: "my-table-name",
      // The `tableKeysSchema` includes all table and index keys:
      tableKeysSchema: {
