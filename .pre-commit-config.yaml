@@ -7,7 +7,8 @@ repos:
       - id: check-merge-conflict
       - id: check-vcs-permalinks
       - id: forbid-new-submodules
-      # TODO Upon deploying into production, add "no-commit-to-branch" to protect "main".
+      - id: no-commit-to-branch # main branch can only be updated via PR
+        args: [--branch, main]
 
       # Common Errors
       - id: check-executables-have-shebangs
