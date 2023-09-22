@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [1.3.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.2.0...v1.3.0) (2023-09-22)
+
+
+### Bug Fixes
+
+* correct '.vscode' file patterns in gitignore ([6b4008a](https://github.com/Nerdware-LLC/ddb-single-table/commit/6b4008af862ce6120aaadb850ed1d700bb7feca4))
+* correct import path for ModelSchemaType ([5c886da](https://github.com/Nerdware-LLC/ddb-single-table/commit/5c886da44300b6fdbc88983686dd709f37945ccc))
+* **prettier:** add missing 'plugins' key to config ([957245b](https://github.com/Nerdware-LLC/ddb-single-table/commit/957245bcf511c4ba839fd9913c7965408f5eabf2))
+* rm extraneous import ([48aa92d](https://github.com/Nerdware-LLC/ddb-single-table/commit/48aa92d98abe37fc550ac7f5915127e279210287))
+* rm extraneous import ([5e8dcf2](https://github.com/Nerdware-LLC/ddb-single-table/commit/5e8dcf2552e4c237bc69533e4e98068a1c94cee4))
+* rm old export ([e03e181](https://github.com/Nerdware-LLC/ddb-single-table/commit/e03e1813c37bc978125c293dd93b213b417d6e84))
+* rm types files that have been moved ([b295c99](https://github.com/Nerdware-LLC/ddb-single-table/commit/b295c994175e935010b3c512467d0efc1310098b))
+* update name of imported type used by isType utils ([55547fb](https://github.com/Nerdware-LLC/ddb-single-table/commit/55547fbcd6d031a60f0ec196aa7e385f20a3c508))
+* update Table and Model export names ([2af75d3](https://github.com/Nerdware-LLC/ddb-single-table/commit/2af75d3f1f27b83f8ededddad2bac29c6691c989))
+
+
+### Features
+
+* add handler for batch requests ([96747c9](https://github.com/Nerdware-LLC/ddb-single-table/commit/96747c94b8f1cce1f4f358ae6232dcb3a968b229))
+
+
+### Performance Improvements
+
+* streamline generic mapped types ([5b8ef1f](https://github.com/Nerdware-LLC/ddb-single-table/commit/5b8ef1fe48335f2d7d8b1d2dd5258c48a76b404f))
+
+
+### Reverts
+
+* use old '.vscode' gitignore pattern ([8d7af84](https://github.com/Nerdware-LLC/ddb-single-table/commit/8d7af8424ffdd9b0004d1075feff9eb1d88ec002))
+
 # [1.2.0-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.2.0-next.1...v1.2.0-next.2) (2023-09-20)
 
 
