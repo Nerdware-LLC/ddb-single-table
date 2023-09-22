@@ -44,6 +44,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
   - [Q: _Why "single-table-first"?_](#q-why-single-table-first)
   - [Q: _How does DDB-ST interact with the underlying DynamoDB client?_](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client)
   - [Q: _What version of the AWS SDK does DDB-ST use?_](#q-what-version-of-the-aws-sdk-does-ddb-st-use)
+- [🤝 Contributing](#-contributing)
 - [📝 License](#-license)
 - [💬 Contact](#-contact)
 
@@ -321,6 +322,10 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 ### Q: _What version of the AWS SDK does DDB-ST use?_
 
 **A:** Version 3. For the specific minor/patch release, please refer to the [package.json](./package.json).
+
+## 🤝 Contributing
+
+Pull requests are welcome! Before you begin, please check existing [GitHub Issues](https://github.com/Nerdware-LLC/ddb-single-table/issues) and [Pull Requests](https://github.com/Nerdware-LLC/ddb-single-table/pulls) to see if your idea is already in the pipeline. If not, [here's a guide on how to contribute to this project](./CONTRIBUTING.md). Thank you!
 
 ## 📝 License
 
