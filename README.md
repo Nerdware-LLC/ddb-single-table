@@ -100,6 +100,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
          },
        },
      } as const, // For TypeScript, all schema must end with `as const`
+     // You can provide your own DDB client instance, or simply provide configs:
      ddbClientConfigs: {
        // This example shows how to connect to dynamodb-local:
        region: "local",
@@ -112,12 +113,6 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
          accessKeyId: "local",
          secretAccessKey: "local",
        },
-     },
-     // We can auto-create the table if it doesn't exist:
-     tableConfigs: {
-       createIfNotExists: true,
-       billingMode: "PROVISIONED",
-       provisionedThroughput: { read: 20, write: 20 },
      },
    });
    ```
