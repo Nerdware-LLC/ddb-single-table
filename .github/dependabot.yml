@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/" # package.json is in repo root
+
+    # When dependencies are updated:
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00" # 9am UTC
+
+    # Which dependencies are updated:
+    allow:
+      - dependency-type: "all" # deps and devDeps
+    groups:
+      # All minor and patch updates are grouped into 1 PR.
+      # Any major update is a separate individual PR.
+      bump-deps:
+        update-types: ["minor", "patch"]
+
+    # Metadata for Dependabot's PRs:
+    assignees: ["trevor-anderson"]
+    labels: ["dependabot"]
+
+    # Behavior of Dependabot's PRs:
+    target-branch: "main"
+    rebase-strategy: "auto" # rebase open PR when changes occur in main
+    pull-request-branch-name:
+      separator: "/" # dependabot/npm/<package-name>/<version>
