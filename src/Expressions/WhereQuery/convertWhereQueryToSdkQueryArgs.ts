@@ -14,9 +14,9 @@ import type { WhereQueryComparisonObject } from "./types";
  * - `ExpressionAttributeNames`
  * - `ExpressionAttributeValues`
  */
-export const convertWhereQueryToSdkQueryArgs = <ItemType extends BaseItem>({
+export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = BaseItem>({
   where,
-}: WhereQueryParam<ItemType>) => {
+}: WhereQueryParams<ItemParams>) => {
   // Ensure `where` is a Record-like object before providing it to `Object.entries()`
   if (!isType.map(where)) {
     throw new InvalidExpressionError({
@@ -117,7 +117,7 @@ export const convertWhereQueryToSdkQueryArgs = <ItemType extends BaseItem>({
 /**
  * The `WhereQuery` param for {@link convertWhereQueryToSdkQueryArgs}.
  */
-export type WhereQueryParam<ItemType extends BaseItem> = {
+export type WhereQueryParams<ItemParams extends BaseItem = BaseItem> = {
   /**
    * `WhereQuery` is a flexible, dev-friendly syntax used to build `QueryCommand` args:
    * - `KeyConditionExpression`
@@ -136,7 +136,7 @@ export type WhereQueryParam<ItemType extends BaseItem> = {
    * });
    * ```
    */
-  where: ItemWhereQuery<ItemType>;
+  where?: ItemWhereQuery<ItemParams>;
 };
 
 /**
@@ -144,6 +144,6 @@ export type WhereQueryParam<ItemType extends BaseItem> = {
  * or string/number primitive values. If primitives are provided, they are treated
  * as {@link WhereQueryComparisonObject.eq|eq} WhereQuery expressions.
  */
-export type ItemWhereQuery<ItemType extends BaseItem = BaseItem> = {
-  [Key in keyof ItemType]?: string | number | WhereQueryComparisonObject;
+export type ItemWhereQuery<ItemParams extends BaseItem = BaseItem> = {
+  [AttrName in keyof ItemParams]?: string | number | WhereQueryComparisonObject;
 };
