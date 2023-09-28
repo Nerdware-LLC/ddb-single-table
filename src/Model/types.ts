@@ -1,5 +1,5 @@
 import type { Simplify } from "type-fest";
-import type { BatchRetryExponentialBackoffConfigs } from "../BatchRequests";
+import type { BatchOperationParams } from "../BatchRequests";
 import type {
   GetItemInput,
   BatchGetItemsInput,
@@ -10,9 +10,9 @@ import type {
   QueryInput,
   ScanInput,
 } from "../DdbClientWrapper";
-import type { WhereQueryParam, UpdateItemAutoGenUpdateExpressionParams } from "../Expressions";
+import type { WhereQueryParams, UpdateItemAutoGenUpdateExpressionParams } from "../Expressions";
+import type { TableKeysSchemaType, ModelSchemaType, AttributeDefault } from "../Schema";
 import type { BaseItem, AttrAliasOrName } from "../types/itemTypes";
-import type { TableKeysSchemaType, ModelSchemaType, AttributeDefault } from "../types/schemaTypes";
 
 /** A map of attribute names to corresponding aliases, or vice versa. */
 export type AttributesAliasesMap = Record<string, string>;
@@ -22,55 +22,24 @@ export type AttributesAliasesMap = Record<string, string>;
  * that methods like `getItem()` and `deleteItem()` accept as input.
  * @internal
  */
-export type AliasedPrimaryKeys<Schema extends TableKeysSchemaType | ModelSchemaType> = Simplify<
+export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> = Simplify<
   {
     // Required - filter out RangeKey if configured with a functional default
     -readonly [Key in keyof Schema as Schema[Key] extends
       | { isHashKey: true }
       | { isRangeKey: true; default?: undefined }
-      ? AttrAliasOrName<Schema, Key>
-      : never]-?: string;
+      ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
+      : never]-?: string | number;
   } & {
     // This map will set RangeKey to optional if configured with a functional default
     -readonly [Key in keyof Schema as Schema[Key] extends {
       isRangeKey: true;
       default: AttributeDefault;
     }
-      ? AttrAliasOrName<Schema, Key>
-      : never]+?: string;
+      ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
+      : never]+?: string | number;
   }
 >;
-
-/**
- * When `IOActionMethod`s are accessed via an {@link IOActionMethod} like `processItemData.toDB`,
- * the context arguments are provided by a wrapper function, so this call signature only includes
- * `item`.
- */
-export type IOActionSetFn = (item: BaseItem) => BaseItem;
-
-/**
- * Boolean flags for controlling the behavior of IO-Action methods as described below. The default
- * value for each flag is `true` for all methods with the exception of `updateItem`, for which they
- * all default to `false`. Some flags only apply to certain methods, and/or a single `IODirection`
- * (e.g., `shouldSetDefaults` only applies to `toDB`, and therefore only applies to write methods).
- *
- * - **`shouldSetDefaults`** — If `true`, any `default`s defined in the schema are applied.
- *
- * - **`shouldTransformItem`** — If `true`, the `transformItem.toDB` method will be called
- *   if one is defined in the `ModelSchemaOptions`.
- *
- * - **`shouldValidateItem`** — If `true`, the `validateItem` method will be called if one
- *   is defined in the `ModelSchemaOptions`.
- *
- * - **`shouldCheckRequired`** — If `true`, attributes marked `required` in the schema are
- *   checked to ensure the `item` contains a value for each that is not `null`/`undefined`.
- */
-export interface IOBehavioralOpts {
-  shouldSetDefaults?: boolean;
-  shouldTransformItem?: boolean;
-  shouldValidateItem?: boolean;
-  shouldCheckRequired?: boolean;
-}
 
 /**
  * A union of SDK command parameter names which are provided automatically by Model methods,
@@ -88,53 +57,48 @@ type InternallyHandledDdbSdkParameters =
  * modifications to it:
  *
  * - Removes all {@link InternallyHandledDdbSdkParameters | parameters which are provided by Model methods }
- * - If the `IsBatchOperation` type param is `true`, adds {@link BatchRetryExponentialBackoffConfigs}
+ * - Adds any additional parameters provided by the `AdditionalParams` type param.
  *
  * @internal
  */
-type ModifyClientParamForModel<T, IsBatchOperation extends boolean = false> = Simplify<
-  IsBatchOperation extends false
-    ? Omit<T, InternallyHandledDdbSdkParameters>
-    : Omit<T, InternallyHandledDdbSdkParameters> & {
-        exponentialBackoffConfigs?: BatchRetryExponentialBackoffConfigs;
-      }
+type ModifyClientParamsForModel<
+  T,
+  AdditionalParams extends Record<string, unknown> | undefined = undefined,
+> = Simplify<
+  AdditionalParams extends Record<string, unknown>
+    ? Omit<T, InternallyHandledDdbSdkParameters> & AdditionalParams
+    : Omit<T, InternallyHandledDdbSdkParameters>
 >;
 
 // MODEL METHOD PARAM TYPES:
 
-/**
- * Input parameters for the `model.getItem()` method which are passed to the underlying
- * `GetItem` SDK command.
- */
-export type GetItemOpts = ModifyClientParamForModel<GetItemInput>;
+/** `model.getItem()` parameters which are passed to the underlying `GetItem` SDK command. */
+export type GetItemOpts = ModifyClientParamsForModel<GetItemInput>;
 
 /**
- * Input parameters for the `model.batchGetItems()` method which are passed to the underlying
- * `BatchGetItem` SDK command.
+ * `model.batchGetItems()` parameters which are passed to the underlying `BatchGetItem` SDK command.
  *
- * The `model.batchGetItems()` method also supports {@link BatchRetryExponentialBackoffConfigs},
+ * The `model.batchGetItems()` method also supports {@link BatchOperationParams | batch-request parameters },
  * which can optionally be used to customize the retry-behavior of the batch-requests handler.
  */
-export type BatchGetItemsOpts = ModifyClientParamForModel<BatchGetItemsInput, true>;
+export type BatchGetItemsOpts = ModifyClientParamsForModel<
+  BatchGetItemsInput,
+  BatchOperationParams
+>;
 
 /**
- * Input parameters for the `model.createItem()` method which are passed to the underlying
- * `PutItem` SDK command.
+ * `model.createItem()` parameters which are passed to the underlying `PutItem` SDK command.
  *
  * > Since the `model.createItem()` method uses a `ConditionExpression` to prevent overwriting
  *   existing items, this method does not support user-provided ConditionExpressions.
  */
 export type CreateItemOpts = Omit<UpsertItemOpts, "ConditionExpression">;
 
-/**
- * Input parameters for the `model.upsertItem()` method which are passed to the underlying
- * `PutItem` SDK command.
- */
-export type UpsertItemOpts = ModifyClientParamForModel<PutItemInput>;
+/** `model.upsertItem()` parameters which are passed to the underlying `PutItem` SDK command. */
+export type UpsertItemOpts = ModifyClientParamsForModel<PutItemInput>;
 
 /**
- * Input parameters for the `model.updateItem()` method which are passed to the underlying
- * `UpdateItem` SDK command.
+ * `model.updateItem()` parameters which are passed to the underlying `UpdateItem` SDK command.
  *
  * ### Auto-Generation of UpdateExpression
  *
@@ -144,29 +108,27 @@ export type UpsertItemOpts = ModifyClientParamForModel<PutItemInput>;
  * - `update` — The item attributes to be updated.
  * - `updateOptions` — Optional params for the `generateUpdateExpression` function.
  */
-export type UpdateItemOpts<ItemInput extends BaseItem> = ModifyClientParamForModel<
-  UpdateItemInput & UpdateItemAutoGenUpdateExpressionParams<ItemInput>
+export type UpdateItemOpts<ItemParams extends BaseItem> = ModifyClientParamsForModel<
+  UpdateItemInput,
+  UpdateItemAutoGenUpdateExpressionParams<ItemParams>
+>;
+
+/** `model.deleteItem()` parameters which are passed to the underlying `DeleteItem` SDK command. */
+export type DeleteItemOpts = ModifyClientParamsForModel<DeleteItemInput>;
+
+/** Model method parameters which are passed to the underlying `BatchWriteItem` SDK command. */
+export type BatchWriteItemsOpts = ModifyClientParamsForModel<
+  BatchWriteItemsInput,
+  BatchOperationParams
 >;
 
 /**
- * Input parameters for the `model.deleteItem()` method which are passed to the underlying
- * `DeleteItem` SDK command.
- */
-export type DeleteItemOpts = ModifyClientParamForModel<DeleteItemInput>;
-
-/**
- * Input parameters which are passed to the underlying `BatchWriteItem` SDK command.
- */
-export type BatchWriteItemsOpts = ModifyClientParamForModel<BatchWriteItemsInput, true>;
-
-/**
- * Input parameters for the `model.query()` method which are passed to the underlying
- * `Query` SDK command.
+ * `model.query()` parameters which are passed to the underlying `Query` SDK command.
  *
  * ### Auto-Generation of KeyConditionExpression
  *
- * The `model.query()` method also supports {@link WhereQueryParam | `WhereQuery` syntax } which can
- * be used to auto-generate the `KeyConditionExpression`.
+ * The `model.query()` method also supports {@link WhereQueryParams | `WhereQuery` syntax } which
+ * can be used to auto-generate the `KeyConditionExpression`.
  *
  * @example
  * ```ts
@@ -181,15 +143,12 @@ export type BatchWriteItemsOpts = ModifyClientParamForModel<BatchWriteItemsInput
  * });
  * ```
  */
-export type QueryOpts<ItemType extends BaseItem = BaseItem> = ModifyClientParamForModel<
-  QueryInput &
-    Partial<WhereQueryParam<ItemType>> & {
-      limit?: QueryInput["Limit"];
-    }
+export type QueryOpts<ItemParams extends Record<string, unknown>> = ModifyClientParamsForModel<
+  QueryInput,
+  WhereQueryParams<ItemParams> & {
+    limit?: QueryInput["Limit"];
+  }
 >;
 
-/**
- * Input parameters for the `model.scan()` method which are passed to the underlying
- * `Scan` SDK command.
- */
-export type ScanOpts = ModifyClientParamForModel<ScanInput>;
+/** `model.scan()` parameters which are passed to the underlying `Scan` SDK command. */
+export type ScanOpts = ModifyClientParamsForModel<ScanInput>;
