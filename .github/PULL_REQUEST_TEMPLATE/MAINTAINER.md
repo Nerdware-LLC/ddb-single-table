@@ -1,5 +1,5 @@
-<!-- PR TITLE: Merging <src-tag> into main -->
-Merging [<!-- src git tag here (e.g., "v1.2.3") -->][src-tag] into [main][main-branch].
+<!-- PR TITLE: Merge <src-tag> into main -->
+Merge [<!-- src git tag here (e.g., "v1.2.3") -->][src-tag] into [main][main-branch].
 
 Details regarding the included changes are provided in the [release notes][src-tag] and the [CHANGELOG][main-changelog].
 
