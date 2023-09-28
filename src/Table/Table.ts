@@ -8,10 +8,7 @@ import type {
   ModelSchemaType,
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
-  ItemInputType,
-  ItemTypeFromSchema,
-} from "../types";
-import type { TableCtorParams, TableIndexes, TableCreateModelMethod } from "./types";
+} from "../Schema";
 
 /**
  * Table is a wrapper around DdbClientWrapper that provides a higher-level interface for interacting
