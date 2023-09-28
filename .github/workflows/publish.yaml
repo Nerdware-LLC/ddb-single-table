@@ -20,8 +20,17 @@ jobs:
       - run: |
           npm ci --include=dev
           npm run build
-          npm publish --provenance --access public \
-            --tag ${{ github.ref }} \
-            --tag latest
+
+          # TODO rm these once npm-publish issues are addressed
+          ls -l ./dist
+          ls -l ./dist/cjs
+          ls -l ./dist/esm
+
+          if [[ -d ./dist/cjs && -d ./dist/esm ]]; then
+            npm publish --provenance --access public \
+              --tag ${{ github.ref }} \
+              --tag latest
+          fi
+
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_PUBLISH_PUBLIC_ORG_SCOPE }}
