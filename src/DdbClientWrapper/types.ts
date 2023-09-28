@@ -93,7 +93,7 @@ type FixDocClientValueType<
  * @internal
  */
 type FixDocClientType<
-  T extends Record<PropertyKey, any>,
+  Input extends object,
   NestDepth extends NestDepthMax5 = 0,
   T_WithoutLegacyParams extends Omit<T, LegacyDdbSdkParameters> = Omit<T, LegacyDdbSdkParameters>,
 > = Simplify<
