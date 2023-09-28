@@ -1,6 +1,6 @@
 import { isString, isRecordObject } from "./isType";
 import { safeJsonStringify } from "./safeJsonStringify";
-import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../types";
+import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../Schema";
 
 /**
  * This is the base `error` class for custom errors defined in this package. If the
