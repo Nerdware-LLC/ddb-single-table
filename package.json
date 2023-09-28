@@ -1,7 +1,7 @@
 {
   "name": "@nerdware/ddb-single-table",
   "version": "2.0.2",
-  "description": "A DynamoDB modeling tool and client wrapper for NodeJS built for single-table designs.",
+  "description": "A schema-based DynamoDB modeling tool, high-level API, and type-generator built for single-table designs.",
   "author": {
     "name": "Trevor Anderson",
     "email": "trevor@nerdware.cloud"
