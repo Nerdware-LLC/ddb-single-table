@@ -33,20 +33,12 @@ import type {
  * @param ddbClientConfigs - Configs for the DdbClientWrapper.
  * @param waitForActive - Configs for waiting for the table to become active.
  */
-export class Table<TableKeysSchema extends TableKeysSchemaType> {
-  // STATIC METHODS:
-  static readonly validateTableKeysSchema = validateTableKeysSchema;
-
+export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
   // INSTANCE PROPERTIES:
   readonly tableName: string;
-  readonly tableKeysSchema: TableKeysSchema;
-  readonly tableHashKey: string;
-  readonly tableRangeKey: string;
-  /** Map of index configs which can be used to build `query` arguments. */
-  readonly indexes: TableIndexes;
+  readonly tableKeysSchema: TKSchema;
   readonly ddbClient: DdbClientWrapper;
   readonly logger: (str: string) => void;
-  /** Whether the table is active and ready for use. */
   isTableActive: boolean;
 
   constructor({
@@ -56,6 +48,7 @@ export class Table<TableKeysSchema extends TableKeysSchemaType> {
     ddbClientConfigs = {},
     marshallingConfigs = {},
     logger = console.info,
+  }: TableConstructorParams<TKSchema>) {
     // Validate the TableKeysSchema and obtain the table's keys+indexes
     const { tableHashKey, tableRangeKey, indexes } = TableKeysSchema.validate(tableKeysSchema);
 
@@ -91,7 +84,7 @@ export class Table<TableKeysSchema extends TableKeysSchemaType> {
    * ModelSchema which can be provided to the `ItemTypeFromSchema` generic type-gen util to produce
    * a complete Model-item type, even if the ModelSchema does not specify the table's keys.
    */
-  readonly getModelSchema = <ModelSchema extends ModelSchemaType<TableKeysSchema>>(
+  readonly getModelSchema = <ModelSchema extends ModelSchemaType<TKSchema>>(
     modelSchema: ModelSchema
   ) => {
     return TableKeysSchema.getMergedModelSchema<TKSchema, ModelSchema>({
@@ -136,13 +129,13 @@ export class Table<TableKeysSchema extends TableKeysSchemaType> {
    * );
    * ```
    */
-  readonly createModel: TableCreateModelMethod<TableKeysSchema> = <
-    ModelSchema extends ModelSchemaType<TableKeysSchema>,
-    ItemType extends Record<string, any> = ItemTypeFromSchema<
-      MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema>
+  readonly createModel: TableCreateModelMethod<TKSchema> = <
+    ModelSchema extends ModelSchemaType<TKSchema>,
+    ItemType extends BaseItem = ItemTypeFromSchema<
+      MergeModelAndTableKeysSchema<TKSchema, ModelSchema>
     >,
-    ItemInput extends Record<string, any> = ItemInputType<
-      MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema>
+    ItemCreationParams extends BaseItem = ItemCreationParameters<
+      MergeModelAndTableKeysSchema<TKSchema, ModelSchema>
     >,
   >(
     modelName: string,
@@ -150,9 +143,9 @@ export class Table<TableKeysSchema extends TableKeysSchemaType> {
     modelSchemaOptions: ModelSchemaOptions = {}
   ) => {
     return new Model<
-      MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema>,
+      MergeModelAndTableKeysSchema<TKSchema, ModelSchema>,
       ItemType,
-      ItemInput
+      ItemCreationParams
     >(modelName, this.getModelSchema(modelSchema), {
       ...modelSchemaOptions,
       tableName: this.tableName,
