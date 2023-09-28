@@ -1,7 +1,7 @@
 import lodashSet from "lodash.set";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
 import { transformValues } from "./transformValues";
-import type { ModelSchemaType } from "../types";
+import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext, IODirection } from "./types";
 
 describe("IOActionMethod: transformValues", () => {
@@ -37,8 +37,8 @@ describe("IOActionMethod: transformValues", () => {
     FOO: {
       type: "string",
       transformValue: {
-        toDB: (value) => `${value}-toDB-FOO`,
-        fromDB: (value) => `${value}-fromDB-FOO`,
+        toDB: (value: string) => `${value}-toDB-FOO`,
+        fromDB: (value: string) => `${value}-fromDB-FOO`,
       },
     },
     books: {
@@ -68,8 +68,8 @@ describe("IOActionMethod: transformValues", () => {
                         NESTED_FOO: {
                           type: "string",
                           transformValue: {
-                            toDB: (value) => `${value}-toDB-FOO`,
-                            fromDB: (value) => `${value}-fromDB-FOO`,
+                            toDB: (value: string) => `${value}-toDB-FOO`,
+                            fromDB: (value: string) => `${value}-fromDB-FOO`,
                           },
                         },
                       },

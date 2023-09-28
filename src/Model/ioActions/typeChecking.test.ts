@@ -1,7 +1,7 @@
 import lodashSet from "lodash.set";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
 import { typeChecking } from "./typeChecking";
-import type { ModelSchemaType } from "../../types";
+import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext } from "./types";
 
 describe("IOActionMethod: typeChecking", () => {

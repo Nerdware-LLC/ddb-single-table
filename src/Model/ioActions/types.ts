@@ -1,10 +1,10 @@
-import type { BaseItem, SupportedItemValueTypes } from "../../types/itemTypes";
 import type {
   ModelSchemaType,
   ModelSchemaOptions,
   ModelSchemaNestedAttributes,
   SchemaEntries,
-} from "../../types/schemaTypes";
+} from "../../Schema";
+import type { BaseItem } from "../../types/itemTypes";
 import type { AttributesAliasesMap } from "../types";
 
 /**
@@ -23,10 +23,8 @@ interface BaseIOActionContext {
   schemaOptions: ModelSchemaOptions;
   /** `"toDB"` or `"fromDB"` */
   ioDirection: IODirection;
-  /** Map of attribute names to their respective aliases (or name if none). */
-  attributesToAliasesMap: AttributesAliasesMap;
-  /** Map of attribute aliases to their respective attribute names. */
-  aliasesToAttributesMap: AttributesAliasesMap;
+  /** Map of attribute names to/from their respective aliases, depending on the `ioDirection`. */
+  aliasesMap: AttributesAliasesMap;
   /** The parent item to which an attribute belongs. */
   parentItem?: BaseItem;
 }
@@ -53,10 +51,7 @@ export interface RecursiveIOActionContext extends BaseIOActionContext {
   schema: ModelSchemaNestedAttributes;
 }
 
-/**
- * A function that performs an IO-Action.
- * @internal
- */
+/** A function that performs an IO-Action. @internal */
 export type IOActionMethod = (
   this: IOActions,
   item: BaseItem,
@@ -72,15 +67,15 @@ export type RecursiveIOActionMethod = (
   ioAction: IOActionMethod,
   /**
    * The item/items to which the IO-Action should be applied.
-   * @remarks Even though IO-Actions only call `recursivelyApplyIOAction` when `itemValue` is a
+   * @remarks Even though IO-Actions only call `recursivelyApplyIOAction` when `attrValue` is a
    * nested object/array, this is not typed as `BaseItem | BaseItem[]` because that forces the
    * IO-Actions to perform type-checking which already occurs in `recursivelyApplyIOAction`, and
    * non-object/array values will not cause an error - they'd simply be returned as-is. The same
    * reasoning applies to the return type.
    */
-  itemValue: SupportedItemValueTypes,
+  attrValue: unknown,
   ctx: RecursiveIOActionContext
-) => SupportedItemValueTypes;
+) => unknown;
 
 /**
  * A dictionary to which all IO-Action functions belong.
@@ -103,3 +98,15 @@ export type IOActions = Readonly<
     IOActionMethod
   >
 >;
+
+/** An array of enabled {@link IOActionMethod} functions. @internal */
+export type IOActionsSet = Array<IOActionMethod>;
+
+/**
+ * Boolean flags for controlling which IO-Actions to include in a given set. Model methods define
+ * defaults for each flag which suit the methods purpose. For example, the `createItem` method sets
+ * each flag to `true` by default, whereas the `updateItem` method defaults each flag to `false`.
+ * Some flags only apply to certain methods, and/or a single `IODirection` (e.g., `setDefaults` is
+ * only used in `toDB` sets, and therefore only applies to write methods).
+ */
+export type EnabledIOActions = { [IOAction in keyof IOActions]?: boolean };
