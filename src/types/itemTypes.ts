@@ -1,26 +1,27 @@
-import type { ConditionalPick, ConditionalExcept, Simplify, OmitIndexSignature } from "type-fest";
+import type { ConditionalPick, ConditionalExcept, Simplify } from "type-fest";
 import type {
   ModelSchemaType,
-  BaseAttributeConfigProperties,
+  BaseAttributeConfig,
+  AttributeDefault,
   ModelSchemaNestedMap,
   ModelSchemaNestedArray,
-} from "./schemaTypes";
+} from "../Schema";
 import type { NestDepthMax5, IterateNestDepth } from "./utilTypes";
 
 /** An interface representing an Item with supported value types. */
 export interface BaseItem {
-  [key: string]: SupportedItemValueTypes;
+  [key: string]: unknown;
 }
 
-/** Union of supported Item value types. */
-export type SupportedItemValueTypes =
+/** Union of supported Item value types for this package. */
+export type SupportedAttributeValueTypes =
   | string
   | number
   | boolean
-  | BaseItem
-  | Array<SupportedItemValueTypes>
   | Date
   | Buffer
+  | BaseItem
+  | Array<SupportedAttributeValueTypes>
   | null
   | undefined;
 
@@ -29,19 +30,14 @@ export interface ItemKeys {
   [key: string]: string | number;
 }
 
-/**
- * Internal type defining `Opts` type param of item-type generics.
- * @internal
- */
-type ItemTypeOptsParam = {
+/** Internal type defining `Opts` type param of item-type generics. @internal */
+type ItemTypeOpts = {
   /** Whether to use attribute `alias` values for item keys rather than attribute names. */
   aliasKeys?: boolean;
   /** Whether to set item properties to optional if a `default` is provided. */
   optionalIfDefault?: boolean;
   /** Whether to add `null` to optional properties (i.e., convert `{ foo?: string }` to `{ foo?: string | null }`). */
   nullableIfOptional?: boolean;
-  /** Whether JS types should be replaced with Ddb types (i.e., convert `Date` to `number`). */
-  useDdbTypes?: boolean;
 };
 
 /**
@@ -103,16 +99,12 @@ type ItemTypeOptsParam = {
  */
 export type ItemTypeFromSchema<
   T extends ModelSchemaType,
-  Opts extends ItemTypeOptsParam = {
+  Opts extends ItemTypeOpts = {
     aliasKeys: true;
     optionalIfDefault: false;
     nullableIfOptional: true;
-    useDdbTypes: false;
   },
-  NestDepth extends NestDepthMax5 = 0,
-> = Simplify<
-  IterateNestDepth<NestDepth> extends 5 ? never : SchemaMappedToItem<T, Opts, NestDepth>
->;
+> = SchemaMapToItem<T, Opts, 0>;
 
 /**
  * This generic creates a typing for the parameters necessary to create an Item.
@@ -174,60 +166,74 @@ export type ItemTypeFromSchema<
  */
 export type ItemCreationParameters<T extends ModelSchemaType> = ItemTypeFromSchema<
   T,
-  { aliasKeys: true; optionalIfDefault: true; nullableIfOptional: true; useDdbTypes: false }
+  { aliasKeys: true; optionalIfDefault: true; nullableIfOptional: true }
 >;
 
 /**
  * This generic creates a typing for the parameters necessary to update an Item.
  */
-export type ItemParameters<T, NestDepth extends NestDepthMax5 = 0> = Simplify<
-  IterateNestDepth<NestDepth> extends 5
-    ? T
-    : T extends Record<PropertyKey, unknown>
-    ? keyof OmitIndexSignature<T> extends never
-      ? Record<keyof T, ItemParameters<T[keyof T], IterateNestDepth<NestDepth>> | undefined>
-      : { [K in keyof T]?: ItemParameters<T[K]> }
-    : T extends Array<infer El>
-    ? Array<ItemParameters<El, IterateNestDepth<NestDepth>>>
-    : T
+export type ItemParameters<ItemCreationParams extends BaseItem> = Simplify<
+  ItemParametersValue<ItemCreationParams, 0>
 >;
 
 /**
  * This generic creates a typing for the parameters necessary to update an Item.
+ * @internal
  */
-export type DynamoDbItemType<T, NestDepth extends NestDepthMax5 = 0> = Simplify<
-  IterateNestDepth<NestDepth> extends 5
-    ? T
-    : T extends Date
-    ? number
-    : T extends Buffer
-    ? string
-    : T extends Record<PropertyKey, unknown>
-    ? keyof OmitIndexSignature<T> extends never
-      ? Record<keyof T, DynamoDbItemType<T[keyof T], IterateNestDepth<NestDepth>> | undefined>
-      : { [K in keyof T]?: DynamoDbItemType<T[K]> }
-    : T extends Array<infer El>
-    ? Array<DynamoDbItemType<El, IterateNestDepth<NestDepth>>>
-    : T
->;
+type ItemParametersValue<T, NestDepth extends NestDepthMax5> = IterateNestDepth<NestDepth> extends 5
+  ? never
+  : T extends BaseItem
+  ? { [K in keyof T]+?: ItemParametersValue<T[K], IterateNestDepth<NestDepth>> }
+  : T extends Array<infer El>
+  ? Array<ItemParametersValue<El, IterateNestDepth<NestDepth>>>
+  : T;
 
 /**
- * This type maps Item keys to values and makes the following access modifications:
+ * This type maps schema attribute names to values and makes the following access modifications:
  * - Removes readonly
  * - Adds/removes optionality based on "required" attribute configs and `Opts` type param.
+ * @internal
  */
-type SchemaMappedToItem<
-  T extends Record<string, BaseAttributeConfigProperties>,
-  Opts extends ItemTypeOptsParam,
+type SchemaMapToItem<
+  T extends Record<string, BaseAttributeConfig>,
+  Opts extends ItemTypeOpts,
   NestDepth extends NestDepthMax5,
-> = {
+> = Simplify<
+  SchemaMapRequiredAttrs<T, Opts, NestDepth> & SchemaMapOptionalAttrs<T, Opts, NestDepth>
+>;
+
+/** Maps required schema attributes for the purposes of deriving an ItemType. @internal */
+type SchemaMapRequiredAttrs<
+  T extends Record<string, BaseAttributeConfig>,
+  Opts extends ItemTypeOpts,
+  NestDepth extends NestDepthMax5,
+> = Simplify<{
   // prettier-ignore
-  -readonly [K in keyof RequiredKeys<T, Opts> as AttrAliasOrName<T, K, Opts>]-?: AttributeValue<T[K], Opts, NestDepth>;
-} & {
+  -readonly [K in keyof PickRequiredAttrs<T, Opts> as AttrAliasOrName<T, K, Opts>]-?: AttrValue<T[K], Opts, NestDepth>;
+}>;
+
+/** Maps optional schema attributes for the purposes of deriving an ItemType. @internal */
+type SchemaMapOptionalAttrs<
+  T extends Record<string, BaseAttributeConfig>,
+  Opts extends ItemTypeOpts,
+  NestDepth extends NestDepthMax5,
+> = Simplify<{
   -readonly [K in keyof T as AttrAliasOrName<T, K, Opts>]+?: Opts["nullableIfOptional"] extends true
-    ? AttributeValue<T[K], Opts, NestDepth> | null
-    : AttributeValue<T[K], Opts, NestDepth>;
-};
+    ? AttrValue<T[K], Opts, NestDepth> | null
+    : AttrValue<T[K], Opts, NestDepth>;
+}>;
+
+/**
+ * Picks required attributes from schema type `<T>`. If `Opts.optionalIfDefault` is true, then all
+ * attribute configs that specify a `default` are also optional.
+ * @internal
+ */
+type PickRequiredAttrs<
+  T extends Record<string, BaseAttributeConfig>,
+  Opts extends { optionalIfDefault?: boolean },
+> = Opts["optionalIfDefault"] extends true
+  ? ConditionalExcept<ConditionalPick<T, { required: true }>, { default: AttributeDefault }>
+  : ConditionalPick<T, { required: true }>;
 
 /**
  * Returns an attribute's "alias" if `Opts.aliasKeys` is true AND it is configured with an alias,
@@ -235,30 +241,19 @@ type SchemaMappedToItem<
  * @internal
  */
 export type AttrAliasOrName<
-  T extends Record<string, BaseAttributeConfigProperties>,
+  T extends Record<string, BaseAttributeConfig>,
   K extends keyof T,
-  Opts extends { aliasKeys?: boolean } = { aliasKeys: true },
+  Opts extends { aliasKeys?: boolean },
 > = Opts["aliasKeys"] extends true ? (T[K]["alias"] extends string ? T[K]["alias"] : K) : K;
-
-/**
- * Picks required keys from Item `<T>`. If `Opts.optionalIfDefault` is true, then
- * all properties that specify a `default` are also optional.
- * @internal
- */
-type RequiredKeys<
-  T extends Record<string, BaseAttributeConfigProperties>,
-  Opts extends { optionalIfDefault?: boolean },
-> = Opts["optionalIfDefault"] extends true
-  ? ConditionalExcept<ConditionalPick<T, { required: true }>, { default: NonNullable<unknown> }>
-  : ConditionalPick<T, { required: true }>;
 
 /**
  * This generic gets the type from an individual attribute config from a Model schema.
  * > String literal types ftw!
+ * @internal
  */
-type AttributeValue<
-  T extends BaseAttributeConfigProperties,
-  Opts extends ItemTypeOptsParam,
+type AttrValue<
+  T extends BaseAttributeConfig,
+  Opts extends ItemTypeOpts,
   NestDepth extends NestDepthMax5,
 > = IterateNestDepth<NestDepth> extends 5
   ? never
@@ -269,46 +264,13 @@ type AttributeValue<
   : T["type"] extends "boolean"
   ? boolean
   : T["type"] extends "Buffer"
-  ? Opts["useDdbTypes"] extends true
-    ? string // binary string
-    : Buffer
+  ? Buffer
   : T["type"] extends "Date"
-  ? Opts["useDdbTypes"] extends true
-    ? number // numerical unix timestamp
-    : Date
+  ? Date
   : T extends { type: "map"; schema: ModelSchemaNestedMap }
-  ? ItemTypeFromSchema<T["schema"], Opts, IterateNestDepth<NestDepth>>
-  : T extends { type: "array"; schema: ModelSchemaNestedArray }
-  ? Array<AttributeValue<T["schema"][number], Opts, IterateNestDepth<NestDepth>>>
+  ? SchemaMapToItem<T["schema"], Opts, IterateNestDepth<NestDepth>>
+  : T extends { type: "array" | "tuple"; schema: ModelSchemaNestedArray }
+  ? Array<AttrValue<T["schema"][number], Opts, IterateNestDepth<NestDepth>>>
   : T extends { type: "enum"; oneOf: ReadonlyArray<string> }
   ? T["oneOf"][number]
-  : never;
-
-/** `T => T | Partial<T>` @internal */
-type MaybePartialItem<T extends BaseItem> = T | Partial<T>;
-
-/** `T => T | Partial<T> | Array<T> | Array<Partial<T>>` @internal */
-export type OneOrMoreMaybePartialItems<T extends BaseItem> =
-  | MaybePartialItem<T>
-  | Array<MaybePartialItem<T>>;
-
-/**
- * This generic is a bit of a hack to get `Model.processItemData.toDB/fromDB` methods to return
- * desired types for a given input. It's targeted for replacement in a future release.
- * @internal
- */
-export type AscertainItemProcessingReturnType<
-  ItemData extends OneOrMoreMaybePartialItems<BaseItem>,
-  BaseItemType extends BaseItem,
-  ItemTypeToReturn extends BaseItem,
-> = ItemData extends Array<infer BatchItem>
-  ? BatchItem extends BaseItemType
-    ? Array<ItemTypeToReturn>
-    : BatchItem extends Partial<BaseItemType>
-    ? Array<Partial<ItemTypeToReturn>>
-    : never
-  : ItemData extends BaseItemType
-  ? ItemTypeToReturn
-  : ItemData extends Partial<BaseItemType>
-  ? Partial<ItemTypeToReturn>
   : never;
