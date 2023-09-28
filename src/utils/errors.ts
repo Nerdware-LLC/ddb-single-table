@@ -1,4 +1,4 @@
-import { isString, isRecordObject } from "./isType";
+import { isType } from "./isType";
 import { safeJsonStringify } from "./safeJsonStringify";
 import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../Schema";
 
@@ -14,7 +14,7 @@ export class DdbSingleTableError extends Error {
 
   constructor(message?: unknown, fallbackMsg: string = DdbSingleTableError.DEFAULT_MSG) {
     // This ctor allows `message` to be any type, but it's only used if it's a truthy string.
-    super((isString(message) && message) || fallbackMsg);
+    super((isType.string(message) && message) || fallbackMsg);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, DdbSingleTableError);
   }
@@ -30,9 +30,9 @@ export class DdbConnectionError extends DdbSingleTableError {
     "Failed to connect to the provided DynamoDB endpoint";
 
   constructor(arg?: unknown) {
-    let message = (isString(arg) && arg) || DdbConnectionError.DEFAULT_MSG;
+    let message = (isType.string(arg) && arg) || DdbConnectionError.DEFAULT_MSG;
 
-    if (isRecordObject(arg) && isString(arg?.message)) {
+    if (isType.map(arg) && isType.string(arg?.message)) {
       message += ` (${arg.message})`;
     }
 
@@ -102,12 +102,12 @@ export class InvalidExpressionError extends DdbSingleTableError {
 
   constructor(arg?: unknown) {
     const message =
-      isString(arg) && arg
+      isType.string(arg) && arg
         ? arg
-        : isRecordObject(arg) &&
-          isString(arg?.expressionName) &&
-          isString(arg?.invalidValueDescription) &&
-          isString(arg?.problem)
+        : isType.map(arg) &&
+          isType.string(arg?.expressionName) &&
+          isType.string(arg?.invalidValueDescription) &&
+          isType.string(arg?.problem)
         ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n` +
           `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
         : InvalidExpressionError.DEFAULT_MSG;
