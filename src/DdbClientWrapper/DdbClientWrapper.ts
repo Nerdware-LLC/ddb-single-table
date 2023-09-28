@@ -16,7 +16,7 @@ import {
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type {
-  DdbClientWrapperCtorParams,
+  DdbClientWrapperConstructorParams,
   GetItemInput,
   GetItemOutput,
   BatchGetItemsInput,
@@ -60,7 +60,7 @@ export class DdbClientWrapper {
     ddbClient,
     ddbClientConfigs = {},
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
-  }: DdbClientWrapperCtorParams) {
+  }: DdbClientWrapperConstructorParams) {
     // If a `ddbClient` was not provided, instantiate a new one using the provided configs.
     ddbClient ??= new DynamoDBClient(ddbClientConfigs);
 

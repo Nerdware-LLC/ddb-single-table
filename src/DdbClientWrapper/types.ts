@@ -39,7 +39,7 @@ import type { NestDepthMax5, IterateNestDepth } from "../types/utilTypes";
 /**
  * `DdbClientWrapper` class constructor params.
  */
-export type DdbClientWrapperCtorParams = {
+export type DdbClientWrapperConstructorParams = {
   ddbClient?: DynamoDBClient;
   ddbClientConfigs?: DynamoDBClientConfig;
   marshallingConfigs?: TranslateConfig;
