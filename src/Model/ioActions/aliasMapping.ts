@@ -11,14 +11,12 @@ import type { IOActions, IOActionMethod } from "./types";
 export const aliasMapping: IOActionMethod = function (
   this: IOActions,
   item,
-  { schema, schemaOptions, ioDirection, modelName, ...ctx }
+  { aliasesMap, schema, schemaOptions, modelName }
 ) {
-  const aliasMap = ioDirection === "toDB" ? ctx.aliasesToAttributesMap : ctx.attributesToAliasesMap;
-
   return Object.entries(item).reduce((accum: BaseItem, [itemKey, value]) => {
-    if (hasDefinedProperty(aliasMap, itemKey)) {
+    if (hasDefinedProperty(aliasesMap, itemKey)) {
       // If itemKey is in the aliasMap, update the item with the mapped key
-      accum[aliasMap[itemKey]] = value;
+      accum[aliasesMap[itemKey]] = value;
     } else if (
       hasDefinedProperty(schema, itemKey) ||
       schemaOptions.allowUnknownAttributes === true ||
