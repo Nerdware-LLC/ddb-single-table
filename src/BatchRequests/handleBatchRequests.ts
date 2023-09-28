@@ -33,9 +33,9 @@ import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "
  * @param chunkSize The maximum limit set by AWS for the batch operation used in the `submitBatchRequest` function (e.g., `100` for `BatchGetItem`, `25` for `BatchWriteItem`).
  * @param exponentialBackoffConfigs Configs for the exponential-backoff retry strategy.
  */
-export const handleBatchRequests = async (
-  submitBatchRequest: BatchRequestFunction,
-  batchRequestObjects: Array<Record<string, unknown>>,
+export const handleBatchRequests = async <BatchFn extends BatchRequestFunction>(
+  submitBatchRequest: BatchFn,
+  batchRequestObjects: Parameters<BatchFn>[0],
   chunkSize: number,
   exponentialBackoffConfigs?: BatchRetryExponentialBackoffConfigs
 ) => {
