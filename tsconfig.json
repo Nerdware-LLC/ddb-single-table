@@ -15,7 +15,10 @@
     "resolveJsonModule": true,
     "types": ["node", "vitest/globals"],
 
-    // "Completeness" Configs:
+    // Emit:
+    "noEmitOnError": true,
+
+    // Completeness:
     "skipLibCheck": false,
 
     // Output Formatting:
