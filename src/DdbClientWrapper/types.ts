@@ -95,20 +95,17 @@ type FixDocClientValueType<
 type FixDocClientType<
   Input extends object,
   NestDepth extends NestDepthMax5 = 0,
-  T_WithoutLegacyParams extends Omit<T, LegacyDdbSdkParameters> = Omit<T, LegacyDdbSdkParameters>,
+  T extends Omit<Input, LegacyDdbSdkParameters> = Omit<Input, LegacyDdbSdkParameters>,
 > = Simplify<
   // If next NestDepth is 5, return the type as-is to prevent "possibly infinite recursion" error
   IterateNestDepth<NestDepth> extends 5
     ? T
     : {
         // Required properties:
-        [Key in RequiredKeysOf<T_WithoutLegacyParams>]-?: Exclude<
-          FixDocClientValueType<T[Key], NestDepth>,
-          undefined
-        >;
+        [Key in RequiredKeysOf<T>]-?: Exclude<FixDocClientValueType<T[Key], NestDepth>, undefined>;
       } & {
         // Optional properties:
-        [Key in OptionalKeysOf<T_WithoutLegacyParams>]?: FixDocClientValueType<T[Key], NestDepth>;
+        [Key in OptionalKeysOf<T>]?: FixDocClientValueType<T[Key], NestDepth>;
       }
 >;
 
