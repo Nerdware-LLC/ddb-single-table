@@ -9,6 +9,8 @@ import type {
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
 } from "../Schema";
+import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../types";
+import type { TableConstructorParams, TableKeysAndIndexes, TableCreateModelMethod } from "./types";
 
 /**
  * Table is a wrapper around DdbClientWrapper that provides a higher-level interface for interacting
@@ -37,6 +39,9 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
   // INSTANCE PROPERTIES:
   readonly tableName: string;
   readonly tableKeysSchema: TKSchema;
+  readonly tableHashKey: TableKeysAndIndexes["tableHashKey"];
+  readonly tableRangeKey?: TableKeysAndIndexes["tableRangeKey"];
+  readonly indexes?: TableKeysAndIndexes["indexes"];
   readonly ddbClient: DdbClientWrapper;
   readonly logger: (str: string) => void;
   isTableActive: boolean;
@@ -68,10 +73,7 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
 
   // INSTANCE METHODS:
 
-  /**
-   * A `DescribeTable` wrapper for Table instances which call the method with their respective
-   * `tableName`.
-   */
+  /** A `DescribeTable` wrapper for Table instances which call the method with their `tableName`. */
   readonly describeTable = async () => {
     return await this.ddbClient.describeTable({ TableName: this.tableName });
   };
