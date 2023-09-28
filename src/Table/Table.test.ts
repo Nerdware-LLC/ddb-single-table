@@ -28,6 +28,20 @@ describe("Table", () => {
           } as any,
         });
       }).toThrowError(SchemaValidationError);
+      expect(() => {
+        new Table({
+          tableName: "MockTable",
+          tableKeysSchema: {
+            partitionKey: { type: "string", isHashKey: true, required: true },
+            sortKey: {
+              type: "string",
+              isRangeKey: true,
+              required: true,
+              index: {} as any, // <-- invalid index config
+            },
+          },
+        });
+      }).toThrowError(SchemaValidationError);
     });
   });
 
