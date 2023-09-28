@@ -1,4 +1,12 @@
 /**
+ * Parameters for batch operations to control the retry-behavior of the batch-requests handler.
+ * @internal
+ */
+export type BatchOperationParams = {
+  exponentialBackoffConfigs?: BatchRetryExponentialBackoffConfigs;
+};
+
+/**
  * When it's necessary to retry a batch operation (`BatchGetItem` or `BatchWriteItem`), it is
  * retried using an exponential backoff strategy which is configurable via these parameters.
  */
@@ -16,14 +24,14 @@ export type BatchRetryExponentialBackoffConfigs = {
 };
 
 /**
- * A function which takes an array of batch request objects, submits them by invoking a DDB batch
- * operation command, and returns any `UnprocessedItems`/`UnprocessedKeys`. These functions are
- * provided as arguments to the `handleBatchRequests` helper function.
+ * A function which takes an array of {@link BatchRequestObject | batch request objects},
+ * submits them by invoking a DDB batch operation command, and returns any `UnprocessedItems` or
+ * `UnprocessedKeys`. These functions are provided as arguments to the `handleBatchRequests` helper.
  *
  * @example
  * ```ts
  * // Here's an example using the `BatchGetItem` operation command:
- * const submitBatchGetRequest = async (batchReqKeys: Array<Record<string, unknown>>) => {
+ * const submitBatchGetRequest = async (batchReqKeys: Array<BatchRequestObject>) => {
  *   const response = await ddbDocClient.send(
  *     new BatchGetCommand({
  *       RequestItems: {
@@ -45,5 +53,5 @@ export type BatchRetryExponentialBackoffConfigs = {
  * ```
  */
 export type BatchRequestFunction = (
-  batchReqs: Array<Record<string, unknown>>
+  batchRequestObjects: Array<Record<string, unknown>>
 ) => Promise<Array<Record<string, unknown>> | undefined>;
