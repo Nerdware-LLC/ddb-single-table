@@ -40,7 +40,7 @@
     "build": "./scripts/build.sh",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "test:ci": "vitest run --coverage --bail=1 --silent"
+    "test:ci": "eslint src && vitest run --coverage --bail=1 --silent"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.398.0",
