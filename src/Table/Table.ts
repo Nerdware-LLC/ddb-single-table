@@ -1,9 +1,8 @@
 import { createTable } from "./createTable";
 import { ensureTableIsActive } from "./ensureTableIsActive";
-import { getMergedModelSchema } from "./getMergedModelSchema";
-import { validateTableKeysSchema } from "./validateTableKeysSchema";
 import { DdbClientWrapper } from "../DdbClientWrapper";
 import { Model } from "../Model";
+import { TableKeysSchema } from "../Schema";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
@@ -60,17 +59,13 @@ export class Table<TableKeysSchema extends TableKeysSchemaType> {
     ddbClientConfigs = {},
     marshallingConfigs = {},
     logger = console.info,
-  }: TableCtorParams<TableKeysSchema>) {
-    // Initialize high-level table properties
+    // Validate the TableKeysSchema and obtain the table's keys+indexes
+    const { tableHashKey, tableRangeKey, indexes } = TableKeysSchema.validate(tableKeysSchema);
+
     this.tableName = tableName;
     this.tableKeysSchema = tableKeysSchema;
     this.isTableActive = false;
     this.logger = logger;
-
-    // Validate the TableKeysSchema and obtain the table's keys+indexes
-    const { tableHashKey, tableRangeKey, indexes } = validateTableKeysSchema({ tableKeysSchema });
-
-    // Set the keys+indexes, and instantiate the DDB client
     this.tableHashKey = tableHashKey;
     this.tableRangeKey = tableRangeKey;
     this.indexes = indexes;
@@ -102,7 +97,7 @@ export class Table<TableKeysSchema extends TableKeysSchemaType> {
   readonly getModelSchema = <ModelSchema extends ModelSchemaType<TableKeysSchema>>(
     modelSchema: ModelSchema
   ) => {
-    return getMergedModelSchema<TableKeysSchema, ModelSchema>({
+    return TableKeysSchema.getMergedModelSchema<TKSchema, ModelSchema>({
       tableKeysSchema: this.tableKeysSchema,
       modelSchema,
     });
