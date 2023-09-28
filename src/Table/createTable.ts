@@ -1,7 +1,7 @@
 import { Table } from "./Table";
-import { DdbSingleTableError, SchemaValidationError } from "../utils";
+import { DdbSingleTableError } from "../utils";
 import type { CreateTableInput } from "../DdbClientWrapper";
-import type { TableKeysSchemaType } from "../types";
+import type { TableKeysSchemaType } from "../Schema";
 import type { TableCreateTableParameters } from "./types";
 
 /**
@@ -68,21 +68,6 @@ export const createTable = async function <TableKeysSchema extends TableKeysSche
 
       // Indexes
       if (index) {
-        // Ensure index has a unique name
-        if (!index.name) {
-          throw new SchemaValidationError(
-            `Invalid TableKeysSchema: the index for attribute "${keyAttrName}" is missing a "name".`
-          );
-        } else if (
-          [...accum.GlobalSecondaryIndexes, ...accum.LocalSecondaryIndexes].some(
-            (idx) => idx.IndexName === index.name
-          )
-        ) {
-          throw new SchemaValidationError(
-            `Invalid TableKeysSchema: more than one index configured with name "${index.name}".`
-          );
-        }
-
         // Determine GSI or LSI, then push to the respective array in the accum.
         const indexArray =
           index?.global === true ? accum.GlobalSecondaryIndexes : accum.LocalSecondaryIndexes;

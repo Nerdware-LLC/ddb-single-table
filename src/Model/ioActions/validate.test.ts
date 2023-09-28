@@ -1,6 +1,6 @@
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
 import { validate } from "./validate";
-import type { ModelSchemaType } from "../types";
+import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext } from "./types";
 
 describe("IOActionMethod: validate", () => {

@@ -119,34 +119,6 @@ describe("table.ensureTableIsActive()", () => {
     expect(describeTableSpy).toHaveBeenCalled();
   });
 
-  test(`throws a DdbSingleTableError if the table needs to be created, but the "index" values are invalid`, async () => {
-    const mockTable = new Table({
-      tableName: "MockTable",
-      tableKeysSchema: {
-        partitionKey: { type: "string", isHashKey: true, required: true },
-        sortKey: {
-          type: "string",
-          isRangeKey: true,
-          required: true,
-          index: {} as any, // <-- should cause an error
-        },
-      },
-    });
-
-    const describeTableSpy = vi.spyOn(mockTable, "describeTable").mockRejectedValueOnce({
-      name: "ResourceNotFoundException",
-    });
-
-    await expect(() =>
-      ensureTableIsActive.call(mockTable, { createIfNotExists: true })
-    ).rejects.toThrowError(
-      /Invalid TableKeysSchema: the index for attribute "sortKey" is missing a "name"/
-    );
-
-    expect(mockTable.isTableActive).toBe(false);
-    expect(describeTableSpy).toHaveBeenCalled();
-  });
-
   test(`creates a table and sets "isTableActive" to true even if "describeTable" must be called multiple times`, async () => {
     const mockTable = new Table({
       tableName: "MockTable",

@@ -28,26 +28,43 @@ describe("Table", () => {
           } as any,
         });
       }).toThrowError(SchemaValidationError);
+      expect(() => {
+        new Table({
+          tableName: "MockTable",
+          tableKeysSchema: {
+            partitionKey: { type: "string", isHashKey: true, required: true },
+            sortKey: {
+              type: "string",
+              isRangeKey: true,
+              required: true,
+              index: {} as any, // <-- invalid index config
+            },
+          },
+        });
+      }).toThrowError(SchemaValidationError);
     });
   });
 
   describe("table.getModelSchema()", () => {
-    test(`throws an error when called with an invalid "modelSchema" argument`, () => {
+    test(`returns a merged Model and TableKeys schema when called with valid arguments`, () => {
+      // Arrange table instance:
       const table = new Table({
         tableName: "MockTable",
         tableKeysSchema: {
           partitionKey: { type: "string", isHashKey: true, required: true },
           sortKey: { type: "string", isRangeKey: true, required: true },
-        },
+        } as const,
       });
-      expect(() => {
-        table.getModelSchema({
-          fooAttributeName: {
-            type: "string",
-            nonExistentAttrConfig: "", // <-- should cause an error
-          },
-        } as const);
-      }).toThrow(/nonExistentAttrConfig/);
+
+      // Act on the table instance's getModelSchema method:
+      const result = table.getModelSchema({ fooAttribute: { type: "string" } } as const);
+
+      // Assert the result:
+      expect(result).toStrictEqual({
+        partitionKey: { type: "string", required: true },
+        sortKey: { type: "string", required: true },
+        fooAttribute: { type: "string" },
+      });
     });
   });
 

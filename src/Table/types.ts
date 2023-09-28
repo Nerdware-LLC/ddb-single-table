@@ -8,13 +8,11 @@ import type {
   ModelSchemaType,
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
-  ItemTypeFromSchema,
-} from "../types";
+} from "../Schema";
+import type { BaseItem, ItemTypeFromSchema } from "../types/itemTypes";
 
-/**
- * `Table` class constructor params.
- */
-export type TableCtorParams<TableKeysSchema extends TableKeysSchemaType> = {
+/** `Table` class constructor params. */
+export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> = {
   tableName: string;
   tableKeysSchema: TableKeysSchema;
   ddbClient?: DynamoDBClient;
@@ -23,10 +21,15 @@ export type TableCtorParams<TableKeysSchema extends TableKeysSchemaType> = {
   logger?: (str: string) => void;
 };
 
-/**
- * A map of DynamoDB table index names to their respective config objects.
- */
-export type TableIndexes = {
+/** A DynamoDB table's keys and {@link TableIndexes | indexes }. */
+export type TableKeysAndIndexes = {
+  tableHashKey: string;
+  tableRangeKey?: string;
+  indexes?: TableIndexes;
+};
+
+/** A map of DynamoDB table index names to their respective config objects. */
+type TableIndexes = {
   [indexName: string]: {
     name: string;
     type: "GLOBAL" | "LOCAL";
@@ -35,12 +38,10 @@ export type TableIndexes = {
   };
 };
 
-/**
- * This type defines the `createModel` method of Table class instances.
- */
+/** This type defines the `createModel` method of Table class instances. */
 export type TableCreateModelMethod<TableKeysSchema extends TableKeysSchemaType> = <
   ModelSchema extends ModelSchemaType<TableKeysSchema>,
-  ItemType extends Record<string, any> = ItemTypeFromSchema<
+  ItemType extends BaseItem = ItemTypeFromSchema<
     MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema>
   >,
 >(
@@ -51,9 +52,7 @@ export type TableCreateModelMethod<TableKeysSchema extends TableKeysSchemaType> 
   typeof Model<MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema>, ItemType>
 >;
 
-/**
- * Params which govern the behavior of the `table.ensureTableIsActive()` method.
- */
+/** Params which govern the behavior of the `table.ensureTableIsActive()` method. */
 export type EnsureTableIsActiveParams = {
   /** The max number of attempts that should be made to connect to the table (default: 20). */
   maxRetries?: number;
@@ -70,9 +69,7 @@ export type EnsureTableIsActiveParams = {
   createIfNotExists?: boolean | TableCreateTableParameters;
 };
 
-/**
- * Params for the `table.createTable()` method.
- */
+/** Params for the `table.createTable()` method. */
 export type TableCreateTableParameters = Simplify<
   Except<
     CreateTableInput,

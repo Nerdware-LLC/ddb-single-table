@@ -1,6 +1,6 @@
 import { Table } from "./Table";
-import { isRecordObject, DdbSingleTableError, DdbConnectionError } from "../utils";
-import type { TableKeysSchemaType } from "../types";
+import { isType, DdbSingleTableError, DdbConnectionError } from "../utils";
+import type { TableKeysSchemaType } from "../Schema";
 import type { EnsureTableIsActiveParams } from "./types";
 
 /**
@@ -65,7 +65,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       });
     } catch (err: unknown) {
       // Sanity type-check: if `err` somehow does not contain K-V fields, just throw it.
-      if (!isRecordObject(err)) throw err;
+      if (!isType.map(err)) throw err;
 
       // If `err?.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
       if (err?.code === "ECONNREFUSED") throw new DdbConnectionError(err);
@@ -92,7 +92,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
 
       // Create the table (provide `createIfNotExists` if it's a `tableConfigs` object)
       const response = await this.createTable(
-        isRecordObject(createIfNotExists) ? createIfNotExists : undefined
+        isType.map(createIfNotExists) ? createIfNotExists : undefined
       );
 
       // Get the TableStatus from the response

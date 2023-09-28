@@ -34,15 +34,9 @@ describe("IOActionMethod: aliasMapping", () => {
       allowUnknownAttributes: false,
     },
     ioDirection: "toDB",
-    aliasesToAttributesMap: {
-      // toDB
+    aliasesMap: {
       id: "pk",
       name: "sk",
-    },
-    attributesToAliasesMap: {
-      // fromDB
-      pk: "id",
-      sk: "name",
     },
   };
 
@@ -55,6 +49,10 @@ describe("IOActionMethod: aliasMapping", () => {
     const result = aliasMapping.call(mockThis, mockFromDbItem, {
       ...mockToDbCtx,
       ioDirection: "fromDB",
+      aliasesMap: {
+        pk: "id",
+        sk: "name",
+      },
     });
     expect(result).toStrictEqual(mockToDbItem);
   });

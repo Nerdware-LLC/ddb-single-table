@@ -1,5 +1,5 @@
-import { DdbSingleTableError, isRecordObject, safeJsonStringify } from "../utils";
-import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "./types";
+import { DdbSingleTableError, isType, safeJsonStringify } from "../utils";
+import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types";
 
 /**
  * This DynamoDB batch-requests helper handles submission and retry logic for batch operations like
@@ -33,8 +33,8 @@ import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "
  * @param exponentialBackoffConfigs Configs for the exponential backoff retry strategy.
  * @param attemptNumber The current attempt number.
  */
-export const batchRequestWithExponentialBackoff = async (
-  submitBatchRequest: BatchRequestFunction,
+export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRequestFunction>(
+  submitBatchRequest: BatchFn,
   batchRequestObjects: Array<Record<string, unknown>>,
   {
     initialDelay = 100,
@@ -53,7 +53,7 @@ export const batchRequestWithExponentialBackoff = async (
     unprocessedRequestObjects = await submitBatchRequest(batchRequestObjects);
   } catch (err) {
     // If a batch op throws, NONE of the requests were successful, check if `err.code` is retryable.
-    if (!isRecordObject(err) || !ERR_CODE_SHOULD_RETRY?.[(err as any)?.code]) throw err;
+    if (!isType.map(err) || !ERR_CODE_SHOULD_RETRY?.[(err as any)?.code]) throw err;
     // If `err.code` indicates the op should be retried, run again with all batchRequestObjects.
     unprocessedRequestObjects = batchRequestObjects;
   }

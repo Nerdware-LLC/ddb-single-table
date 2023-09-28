@@ -1,11 +1,11 @@
 import type { SetOptional } from "type-fest";
-import type { BaseItem, SupportedItemValueTypes } from "./itemTypes";
+import type { BaseItem, SupportedAttributeValueTypes } from "../types";
 
 ///////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:
 
 /**
- * Union of {@link SupportedItemValueTypes | supported types } represented as string literals.
+ * Union of {@link SupportedAttributeValueTypes | supported types } represented as string literals.
  */
 export type SchemaSupportedTypeStringLiterals =
   | "string"
@@ -19,14 +19,16 @@ export type SchemaSupportedTypeStringLiterals =
   | "enum";
 
 /**
- * Union of supported types for {@link BaseAttributeConfigProperties.default | schema `default` configs }.
+ * Union of supported types for {@link BaseAttributeConfig.default | schema `default` configs }.
  */
-export type AttributeDefault = SupportedItemValueTypes | ((item: any) => SupportedItemValueTypes);
+export type AttributeDefault =
+  | SupportedAttributeValueTypes
+  | ((item: any) => SupportedAttributeValueTypes);
 
 /**
- * Base attribute config properties common to all attribute types.
+ * Base attribute configs common to all attribute types.
  */
-export interface BaseAttributeConfigProperties {
+export interface BaseAttributeConfig {
   /**
    * The attribute's name outside of the database (e.g., alias "id" for attribute "pk").
    * During write operations, if the object provided to the Model method contains a key
@@ -94,9 +96,9 @@ export interface BaseAttributeConfigProperties {
   /** Methods for transforming the attribute value to/from the DB. */
   readonly transformValue?: {
     /** Fn to modify value before `validate` fn is called; use for normalization. */
-    readonly toDB?: (inputValue: SupportedItemValueTypes) => SupportedItemValueTypes;
+    readonly toDB?: (inputValue: any) => SupportedAttributeValueTypes;
     /** Fn to modify value returned from DDB client; use to format/prettify values. */
-    readonly fromDB?: (dbValue: SupportedItemValueTypes) => SupportedItemValueTypes;
+    readonly fromDB?: (dbValue: any) => SupportedAttributeValueTypes;
   };
   /**
    * Custom attribute value validation function called for every write operation. The
@@ -113,7 +115,7 @@ export interface BaseAttributeConfigProperties {
    * Note: `"enum"` attributes are validated using the array specified in the `oneOf`
    * attribute-config, and therefore do not require a custom `validate` function.
    */
-  readonly validate?: (value: SupportedItemValueTypes) => boolean;
+  readonly validate?: (value: any) => boolean;
   /**
    * Optional boolean flag indicating whether a value is required for create-operations.
    * If `true`, an error will be thrown if the attribute value is `undefined` or `null`.
@@ -132,8 +134,8 @@ export interface BaseAttributeConfigProperties {
 ///////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG TYPES:
 
-/** Type for a key attribute config. */
-export interface KeyAttributeConfig extends BaseAttributeConfigProperties {
+/** Key attribute configs. */
+export interface KeyAttributeConfig extends BaseAttributeConfig {
   /** The key attribute's DynamoDB type (keys can only be S, N, or B). */
   readonly type: "string" | "number" | "Buffer";
   /** Is attribute-value required flag (must be `true` for key attributes). */
@@ -157,8 +159,8 @@ export interface KeyAttributeConfig extends BaseAttributeConfigProperties {
   };
 }
 
-/** Type for a non-key attribute config. */
-export interface ModelSchemaAttributeConfig extends BaseAttributeConfigProperties {
+/** Non-key attribute configs. */
+export interface ModelSchemaAttributeConfig extends BaseAttributeConfig {
   /**
    * An attribute's nested schema. This property is only valid for attributes of type
    * `"map"`, `"array"`, or `"tuple"`.
@@ -299,3 +301,21 @@ export interface ModelSchemaOptions {
  * - Ensure that key attributes are always processed before non-key attributes.
  */
 export type SchemaEntries = Array<[string, ModelSchemaAttributeConfig]>;
+
+/** Base type for Schema metadata properties. @internal */
+export interface SchemaMetadata {
+  schemaType: "ModelSchema" | "TableKeysSchema";
+  name?: string;
+  version?: string;
+}
+
+/** ModelSchema {@link SchemaMetadata | metadata properties }. @internal */
+export interface ModelSchemaMetadata extends SchemaMetadata {
+  schemaType: "ModelSchema";
+  name: string;
+}
+
+/** TableKeysSchema {@link SchemaMetadata | metadata properties }. @internal */
+export interface TableKeysSchemaMetadata extends SchemaMetadata {
+  schemaType: "TableKeysSchema";
+}

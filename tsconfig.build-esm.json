@@ -5,14 +5,7 @@
 
   "include": ["src"],
 
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/tests/**/*",
-    "src/**/__mocks__/**/*"
-  ],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"],
 
   "compilerOptions": {
     // General build settings used for both ESM and CommonJS builds:
@@ -21,7 +14,6 @@
 
     // ESM build settings:
     "module": "ESNext",
-    "outDir": "dist/esm",
-    "target": "ESNext"
+    "outDir": "dist/esm"
   }
 }

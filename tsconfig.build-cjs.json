@@ -5,7 +5,6 @@
 
   "compilerOptions": {
     "module": "CommonJS",
-    "outDir": "dist/cjs",
-    "target": "ESNext"
+    "outDir": "dist/cjs"
   }
 }

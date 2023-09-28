@@ -1,4 +1,4 @@
-import type { SchemaSupportedTypeStringLiterals } from "../types";
+import type { SchemaSupportedTypeStringLiterals } from "../Schema";
 
 /** `string` type guard function */
 export const isString = (value?: unknown): value is string => {
@@ -6,23 +6,19 @@ export const isString = (value?: unknown): value is string => {
 };
 
 /**
- * Type guard function for `type: "number"` which returns `true` for safe numeric integers.
+ * `number` type guard function
  *
- * **This function will return `false` for the following "number" values:**
- * - `NaN`
- * - `Infinity` / `-Infinity`
- * - `0.1 + 0.2` (which is `0.30000000000000004`)
- * - `Number.MAX_SAFE_INTEGER + 1` (which is `9007199254740992`)
- * - `Number.MIN_SAFE_INTEGER - 1` (which is `-9007199254740992`)
- * - `Number.MAX_VALUE` (which is `1.7976931348623157e+308`)
- * - `Number.MIN_VALUE` (which is `5e-324`)
- * - `Number.EPSILON` (which is `2.220446049250313e-16`)
- * - `Number.POSITIVE_INFINITY` (which is `Infinity`)
- * - `Number.NEGATIVE_INFINITY` (which is `-Infinity`)
- * - `Number.NaN` (which is `NaN`)
+ * ### DynamoDB Numbers
+ *
+ * - Can be positive, negative, or zero.
+ * - Can have up to 38 digits of precision (JS only supports up to 16 digits of precision).
+ * - Has a positive range of 1E-130 to 9.9999999999999999999999999999999999999E+125
+ * - Has a negative range of -9.9999999999999999999999999999999999999E+125 to -1E-130
+ * - Leading and trailing zeroes are trimmed.
  */
 export const isNumber = (value?: unknown): value is number => {
-  return Number.isSafeInteger(value);
+  // isFinite returns false for NaN, Infinity, -Infinity
+  return typeof value === "number" && Number.isFinite(value);
 };
 
 /** `boolean` type guard function */
@@ -84,9 +80,14 @@ export const isRecordObject = <KeyTypes extends PropertyKey = string>(
   return typeof value === "object" && Object.prototype.toString.call(value) === "[object Object]";
 };
 
-/** Type guard function for `type: "tuple"` */
+/**
+ * Type guard function for `type: "tuple"`
+ *
+ * > **Note:** This function does not check the types of values _within_ the provided tuple - that
+ *   is accomplished by the `typeChecking` IO-Action which is applied recursively to nested values
+ *   via `recursivelyApplyIOAction`.
+ */
 export const isTuple = (value?: unknown, nestedSchema?: unknown): value is [...unknown[]] => {
-  // TODO Add type-checking for values within the tuple
   return (
     Array.isArray(value) && Array.isArray(nestedSchema) && value.length === nestedSchema.length
   );
@@ -106,10 +107,7 @@ export const isEnumMember = <EnumValues extends ReadonlyArray<string>>(
 export const isType = Object.freeze({
   /** Type guard function for `type: "string"` */
   string: isString,
-  /**
-   * Type guard function for `type: "number"` which returns `true` for safe numeric integers.
-   * @see {@link isNumber} for more information.
-   */
+  /** Type guard function for `type: "number"` */
   number: isNumber,
   /** Type guard function for `type: "boolean"` */
   boolean: isBoolean,
@@ -125,7 +123,7 @@ export const isType = Object.freeze({
   tuple: isTuple,
   /** Type guard function for `type: "enum"` */
   enum: isEnumMember,
-}) satisfies Record<
+} as const) satisfies Record<
   SchemaSupportedTypeStringLiterals,
-  (value: unknown, nestedSchema?: unknown) => boolean
+  (value?: unknown, ...args: unknown[]) => boolean
 >;

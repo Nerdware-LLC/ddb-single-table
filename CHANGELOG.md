@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.0.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.3.1...v2.0.0-next.1) (2023-09-28)
+
+
+### Bug Fixes
+
+* change TKSchema type param to not conflict w class ([28b8000](https://github.com/Nerdware-LLC/ddb-single-table/commit/28b80009360258c1d546972d67acf8b2495368ae))
+* ensure isNumber works for all DDB number types ([46cdc01](https://github.com/Nerdware-LLC/ddb-single-table/commit/46cdc0162c4bad6448c5bf78ff57ca5a0de4612c))
+* have Input extend 'object' for DDB types w/o index sig ([afef500](https://github.com/Nerdware-LLC/ddb-single-table/commit/afef5005bf9ea9d53835c643ae2f8ef2278b39c8))
+* impl new import path for Schema types ([a73e60d](https://github.com/Nerdware-LLC/ddb-single-table/commit/a73e60dbe7cbfc06b0f9093f060de3a8a6d65682))
+* impl new import path for Schema types ([5c4a2db](https://github.com/Nerdware-LLC/ddb-single-table/commit/5c4a2dbbeb9d1ff8f8f9c13cc58cde66c8fafb94))
+* rm export of mv'd schemaTypes ([e835266](https://github.com/Nerdware-LLC/ddb-single-table/commit/e835266f111c8663d1b697e2851472af67fe073a))
+* update Schema types import path ([5d73365](https://github.com/Nerdware-LLC/ddb-single-table/commit/5d733654ecc02e8937ed85dc666d782de13ecbde))
+
+
+### Code Refactoring
+
+* ensure Model ItemType doesn't cause tsc OOM issue ([a8b8d93](https://github.com/Nerdware-LLC/ddb-single-table/commit/a8b8d93ef7cab4266a6f49ab68f19d1f32cd545a))
+
+
+### Features
+
+* add base Schema class, mv shared validation here ([77bb180](https://github.com/Nerdware-LLC/ddb-single-table/commit/77bb18036f9a6fc64d7b8967ece6dd23c2f6951a))
+* add BatchOperationParams ([f45df6e](https://github.com/Nerdware-LLC/ddb-single-table/commit/f45df6e8adf1cb1fc02c32b59869d7a630574a93))
+* add index file for Schema exports ([128cb9e](https://github.com/Nerdware-LLC/ddb-single-table/commit/128cb9e90fb1217221de885f4d5ed8f6c1bba971))
+* add ModelSchema class, mv validation here ([5273f5c](https://github.com/Nerdware-LLC/ddb-single-table/commit/5273f5c086c51f1d8107210b16fe7bb5e7c22f59))
+* add TableKeysAndIndexes, update Table types ([b14f648](https://github.com/Nerdware-LLC/ddb-single-table/commit/b14f648538f6146649b00b9c98637ee8b95c2d91))
+* add TK Schema class, mv validation here ([0b10623](https://github.com/Nerdware-LLC/ddb-single-table/commit/0b106230ea6271a9799225c94d5919d5643f1d4c))
+* add usage of unified 'aliasesMap' ctx param ([113bb29](https://github.com/Nerdware-LLC/ddb-single-table/commit/113bb295b215f9820cf4488c82ca71395d8d409f))
+
+
+### Performance Improvements
+
+* replace mapped ItemParams w BaseItem ([f182c73](https://github.com/Nerdware-LLC/ddb-single-table/commit/f182c738397aff19b66acf2544cf623a41660ff4))
+
+
+### BREAKING CHANGES
+
+* Model API has been changed to fix tsc OOM issue.
+
 ## [1.3.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.3.0...v1.3.1) (2023-09-22)
 
 # [1.3.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.2.0...v1.3.0) (2023-09-22)

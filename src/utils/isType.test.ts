@@ -44,26 +44,28 @@ describe("isType", () => {
     });
   });
   describe("isType.number", () => {
-    test(`returns true when called with a safe integer`, () => {
-      expect(isType.number(1)).toBe(true);
+    test("returns true when called with a valid number", () => {
       expect(isType.number(0)).toBe(true);
+      expect(isType.number(123)).toBe(true);
+      expect(isType.number(-123)).toBe(true);
+      expect(isType.number(1.23)).toBe(true);
+      expect(isType.number(0x7b)).toBe(true); //   123
+      expect(isType.number(1.23e2)).toBe(true); // 123
+      expect(isType.number(Number.MAX_VALUE)).toBe(true);
+      expect(isType.number(Number.MIN_VALUE)).toBe(true);
+      expect(isType.number(Number.MAX_SAFE_INTEGER)).toBe(true);
+      expect(isType.number(Number.MIN_SAFE_INTEGER)).toBe(true);
     });
-    test("returns false when called with a non-safe-integer argument", () => {
+    test("returns false when called with anything other than a valid number", () => {
       expect(isType.number()).toBe(false);
       expect(isType.number("number")).toBe(false);
       expect(isType.number("")).toBe(false);
-      expect(isType.number(0.1)).toBe(false);
       expect(isType.number(NaN)).toBe(false);
       expect(isType.number(Number.NaN)).toBe(false);
       expect(isType.number(Infinity)).toBe(false);
       expect(isType.number(-Infinity)).toBe(false);
       expect(isType.number(Number.POSITIVE_INFINITY)).toBe(false);
       expect(isType.number(Number.NEGATIVE_INFINITY)).toBe(false);
-      expect(isType.number(Number.MAX_SAFE_INTEGER + 1)).toBe(false);
-      expect(isType.number(Number.MIN_SAFE_INTEGER - 1)).toBe(false);
-      expect(isType.number(Number.MAX_VALUE)).toBe(false);
-      expect(isType.number(Number.MIN_VALUE)).toBe(false);
-      expect(isType.number(Number.EPSILON)).toBe(false);
       expect(isType.number(true)).toBe(false);
       expect(isType.number(false)).toBe(false);
       expect(isType.number(null)).toBe(false);
@@ -306,26 +308,28 @@ describe("isString", () => {
 });
 
 describe("isNumber", () => {
-  test("returns true when called with a safe integer", () => {
-    expect(isNumber(1)).toBe(true);
+  test("returns true when called with a valid number", () => {
     expect(isNumber(0)).toBe(true);
+    expect(isNumber(123)).toBe(true);
+    expect(isNumber(-123)).toBe(true);
+    expect(isNumber(1.23)).toBe(true);
+    expect(isNumber(0x7b)).toBe(true); //   123
+    expect(isNumber(1.23e2)).toBe(true); // 123
+    expect(isNumber(Number.MAX_VALUE)).toBe(true);
+    expect(isNumber(Number.MIN_VALUE)).toBe(true);
+    expect(isNumber(Number.MAX_SAFE_INTEGER)).toBe(true);
+    expect(isNumber(Number.MIN_SAFE_INTEGER)).toBe(true);
   });
-  test("returns false when called with a non-safe-integer argument", () => {
+  test("returns false when called with anything other than a valid number", () => {
     expect(isNumber()).toBe(false);
     expect(isNumber("number")).toBe(false);
     expect(isNumber("")).toBe(false);
-    expect(isNumber(0.1)).toBe(false);
     expect(isNumber(NaN)).toBe(false);
     expect(isNumber(Number.NaN)).toBe(false);
     expect(isNumber(Infinity)).toBe(false);
     expect(isNumber(-Infinity)).toBe(false);
     expect(isNumber(Number.POSITIVE_INFINITY)).toBe(false);
     expect(isNumber(Number.NEGATIVE_INFINITY)).toBe(false);
-    expect(isNumber(Number.MAX_SAFE_INTEGER + 1)).toBe(false);
-    expect(isNumber(Number.MIN_SAFE_INTEGER - 1)).toBe(false);
-    expect(isNumber(Number.MAX_VALUE)).toBe(false);
-    expect(isNumber(Number.MIN_VALUE)).toBe(false);
-    expect(isNumber(Number.EPSILON)).toBe(false);
     expect(isNumber(true)).toBe(false);
     expect(isNumber(false)).toBe(false);
     expect(isNumber(null)).toBe(false);

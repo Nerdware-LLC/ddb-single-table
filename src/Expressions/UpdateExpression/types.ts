@@ -1,8 +1,6 @@
-import type { BaseItem, ItemParameters } from "../../types/itemTypes";
+import type { BaseItem } from "../../types/itemTypes";
 
-/**
- * Option parameters for `generateUpdateExpression`.
- */
+/** Parameters for `generateUpdateExpression`. */
 export interface GenerateUpdateExpressionOpts {
   /**
    * Defines the `UpdateExpression` clause to which `null` values are added:
@@ -22,9 +20,9 @@ export interface GenerateUpdateExpressionOpts {
  * - `ExpressionAttributeNames`
  * - `ExpressionAttributeValues`
  */
-export type UpdateItemAutoGenUpdateExpressionParams<ItemInputType extends BaseItem = BaseItem> = {
+export type UpdateItemAutoGenUpdateExpressionParams<ItemParams extends BaseItem> = {
   /** The item attributes to be updated. */
-  update?: ItemParameters<ItemInputType>;
+  update?: ItemParams;
   /** Optional params for the `generateUpdateExpression` function. */
   updateOptions?: GenerateUpdateExpressionOpts;
 };
