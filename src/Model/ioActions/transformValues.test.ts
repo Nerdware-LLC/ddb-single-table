@@ -4,7 +4,7 @@ import { transformValues } from "./transformValues";
 import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext, IODirection } from "./types";
 
-describe("IOActionMethod: transformValues", () => {
+describe("IOAction: transformValues", () => {
   // Mock `this` context with bound methods: `transformValues` and `recursivelyApplyIOAction`
   const mockThis = {} as IOActions;
   (mockThis as any).transformValues = transformValues.bind(mockThis);

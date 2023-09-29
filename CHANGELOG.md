@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.0.4-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.3...v2.0.4-next.1) (2023-09-29)
+
+
+### Bug Fixes
+
+* add 'npx' before 'tsc' invocations ([1bd4fdf](https://github.com/Nerdware-LLC/ddb-single-table/commit/1bd4fdffe4783920574a40ce456967e4b5e7ca8a))
+
 ## [2.0.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.0...v2.0.1) (2023-09-28)
 
 # [2.0.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.3.1...v2.0.0) (2023-09-28)

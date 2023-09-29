@@ -1,11 +1,11 @@
 import { ItemInputError } from "../../utils";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` uses the `validateItem` method provided in the
+ * This `IOAction` uses the `validateItem` method provided in the
  * Model schema options to validate an item in its entirety.
  */
-export const validateItem: IOActionMethod = function (
+export const validateItem: IOAction = function (
   this: IOActions,
   item,
   { schemaOptions, modelName }

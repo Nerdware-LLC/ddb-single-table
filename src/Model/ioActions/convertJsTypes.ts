@@ -1,9 +1,9 @@
 import dayjs from "dayjs";
 import { hasDefinedProperty, isConvertibleToDate, isType } from "../../utils";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` converts JS types to DynamoDB types and vice versa.
+ * This `IOAction` converts JS types to DynamoDB types and vice versa.
  *
  * - `"Date"` Attributes
  *   - `toDB`: JS Date objects are converted to unix timestamps
@@ -13,7 +13,7 @@ import type { IOActions, IOActionMethod } from "./types";
  *   - `toDB`: NodeJS Buffers are converted to binary strings
  *   - `fromDB`: Binary data is converted into NodeJS Buffers
  */
-export const convertJsTypes: IOActionMethod = function (
+export const convertJsTypes: IOAction = function (
   this: IOActions,
   item,
   { schemaEntries, ioDirection, ...ctx }

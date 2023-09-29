@@ -13,27 +13,15 @@ import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../ty
 import type { TableConstructorParams, TableKeysAndIndexes, TableCreateModelMethod } from "./types";
 
 /**
- * Table is a wrapper around DdbClientWrapper that provides a higher-level interface for interacting
- * with a single DynamoDB table.
- *
- * #### Table Keys Schema
- *
- * The table's primary and sort keys are defined in the {@link tableKeysSchema} argument. When a new
- * `Table` instance is created, the following validations are performed on the `tableKeysSchema`:
- *
- *   1. Ensure all key/index attributes specify `isHashKey`, `isRangeKey`, or `index`.
- *   2. Ensure exactly 1 table hash key, and 1 table range key are specified.
- *   3. Ensure all key/index attribute `type`s are "string", "number", or "Buffer" (S/N/B in the DDB API).
- *   4. Ensure all key/index attributes are `required`.
- *   5. Ensure there are no duplicate index names.
- *   6. If tableConfigs.billingMode is "PAY_PER_REQUEST", ensure indexes don't set `throughput`.
+ * `Table` provides an easy-to-use API for managing your DynamoDB table and the
+ * {@link Model | Models } that use it. It is the primary entry point for DDBST.
  *
  * @class Table
  * @param tableName - The name of the DynamoDB table.
  * @param tableKeysSchema - The schema of the table's primary and sort keys.
- * @param tableConfigs - Configs for the table.
- * @param ddbClientConfigs - Configs for the DdbClientWrapper.
- * @param waitForActive - Configs for waiting for the table to become active.
+ * @param ddbClient - Either an existing DynamoDBClient instance, or arguments for instantiating a new one.
+ * @param marshallingConfigs - Marshalling configs for the DynamoDBDocumentClient instance.
+ * @param logger - A custom function to use for logging (defaults to `console.info`).
  */
 export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
   // INSTANCE PROPERTIES:
@@ -49,8 +37,7 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
   constructor({
     tableName,
     tableKeysSchema,
-    ddbClient,
-    ddbClientConfigs = {},
+    ddbClient = {},
     marshallingConfigs = {},
     logger = console.info,
   }: TableConstructorParams<TKSchema>) {
@@ -64,11 +51,7 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
     this.tableHashKey = tableHashKey;
     this.tableRangeKey = tableRangeKey;
     this.indexes = indexes;
-    this.ddbClient = new DdbClientWrapper({
-      ddbClient,
-      ddbClientConfigs,
-      marshallingConfigs,
-    });
+    this.ddbClient = new DdbClientWrapper({ ddbClient, marshallingConfigs });
   }
 
   // INSTANCE METHODS:

@@ -4,7 +4,7 @@ import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
 import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext } from "./types";
 
-describe("IOActionMethod: convertJsTypes", () => {
+describe("IOAction: convertJsTypes", () => {
   // Mock `this` context with bound methods: `convertJsTypes` and `recursivelyApplyIOAction`
   const mockThis = {} as IOActions;
   (mockThis as any).convertJsTypes = convertJsTypes.bind(mockThis);

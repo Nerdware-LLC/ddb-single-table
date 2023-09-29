@@ -284,7 +284,7 @@ export interface ModelSchemaOptions {
    * defined in the schema.
    */
   readonly autoAddCreatedAt?: {
-    // TODO Consider renaming this to something like `autoAddTimestamps`
+    // TODO Refactor this to `autoAddTimestamps`, add `updatedAt` support
     enabled?: boolean;
     attrName?: string;
   };
@@ -294,9 +294,9 @@ export interface ModelSchemaOptions {
  * Schema entries are created by each Model upon instantiation using
  * `Object.entries(schema)` to achieve the following:
  *
- * - Ensure `IOActionMethod`s aren't needlessly re-creating schema entries
+ * - Ensure `IOAction`s aren't needlessly re-creating schema entries
  *   using `Object.entries(schema)` on every call.
- * - Ensure that the order of attributes processed by `IOActionMethod`s is
+ * - Ensure that the order of attributes processed by `IOAction`s is
  *   always consistent.
  * - Ensure that key attributes are always processed before non-key attributes.
  */

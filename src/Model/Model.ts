@@ -30,22 +30,20 @@ import type {
 } from "./types";
 
 /**
- * Each Model instance is provided with a set of CRUD methods featuring parameter and return types
- * which reflect the Model's schema. Model instance methods wrap a corresponding method of the
- * DdbClientWrapper instance with sets of "{@link IOActionSetFn|IO-Actions}" which use the Model's
- * schema to provide functionality related to database-IO like alias mapping, value validation, etc.
+ * Each Model instance is provided with CRUD methods featuring parameter and return types which
+ * reflect the Model's schema. Model methods wrap DynamoDBDocumentClient command operations with
+ * sets of schema-aware middleware called {@link ioActions | "IO-Actions" } which provide rich
+ * functionality for database-IO like alias mapping, value validation, user-defined transforms, etc.
  *
- * There are two sets of IO-Actions, grouped by data flow directionality:
- * 1. **`toDB`**: IO-Actions executed on objects being _sent to_ the database.
- *    - Only used for _write_ operations.
- * 2. **`fromDB`**: IO-Actions executed on objects being _returned from_ the database.
- *    - Used for both _read_ AND _write_ operations which return 1+ items.
+ * IO-Actions are grouped into two sets based on the request/response cycle:
+ * - **`toDB`**: IO-Actions performed on _request arguments_.
+ * - **`fromDB`**: IO-Actions performed on _response values_.
  *
  * The IO-Actions undertaken for each set are listed below in order of execution. Note that some
  * IO-Actions are skipped by certain methods, depending on the method's purpose. For example, item
  * values provided to `Model.updateItem` are not subjected to `"required"` checks, since the method
- * is intended to update individual properties of existing items. _See **{@link IOActions}** for
- * more info an any of the IO-Actions listed below._
+ * is intended to update individual properties of existing items.
+ * _See **{@link ioActions | IO-Actions}** for more info an any of the IO-Actions listed below._
  *
  * **`toDB`**:
  *   1. **`Alias Mapping`** — Replaces "alias" keys with attribute names.
@@ -65,21 +63,20 @@ import type {
  *   4. **`Alias Mapping`** — Replaces attribute names with "alias" keys.
  *
  * #### Ordering of Attributes
- * Both `toDB` and `fromDB` IO-Actions which process individual attributes always process attributes
- * in the same order:
+ * IO-Actions which process individual attributes always process attributes in the same order:
  *   1. The table hash key is always processed first.
  *   2. The table sort key is always processed second.
  *   3. Any index PKs are processed after the table SK.
  *   4. All other attributes are then processed in the order they are defined in the schema.
  *
  * Aside from ensuring predictable execution, this consistency also opens up design opportunities
- * for your various schema. For example, if you have a schema which uses a function to dynamically
- * generate a default value for an `id` attribute which is used as the table hash key, other non-key
+ * for your schema. For example, if you have a schema which uses a function to dynamically generate
+ * a default value for an `id` attribute which is used as the table hash key, other non-key
  * attributes may be defined using the item's generated `id` value.
  *
  * @class
- * @template Schema - The Model's schema type.
- * @template ItemType - The type of items returned by the Model's methods.
+ * @template Schema - The Model's readonly schema (_don't forget to use `as const`_).
+ * @template ItemType - A type which reflects a complete instance of a Model item.
  * @template ItemCreationParams - The parameters used to create a new item instance.
  * @param {string} modelName - The name of the Model.
  * @param {Schema} modelSchema - The Model's schema.

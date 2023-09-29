@@ -1,7 +1,7 @@
 import { validateItem } from "./validateItem";
 import type { IOActions, IOActionContext } from "./types";
 
-describe("IOActionMethod: validateItem", () => {
+describe("IOAction: validateItem", () => {
   // Mock `this` context can be empty bc validateItem doesn't access any other IOActionMethods
   const mockThis = {} as IOActions;
 

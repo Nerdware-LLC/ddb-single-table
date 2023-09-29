@@ -8,7 +8,8 @@ import type { BaseItem } from "../../types/itemTypes";
 import type { AttributesAliasesMap } from "../types";
 
 /**
- * Labels indicating the direction data is flowing - either to or from the database.
+ * Labels corresponding to the request/response cycle which indicate the "direction" data is flowing
+ * - either to or from the database.
  */
 export type IODirection = "toDB" | "fromDB";
 
@@ -41,7 +42,7 @@ export interface IOActionContext extends BaseIOActionContext {
 
 /**
  * This extension of the {@link BaseIOActionContext} adds a `schema` property for the
- * {@link RecursiveIOActionMethod} which is set to the [`schema` of a nested attribute][nested-schema] .
+ * {@link IOActionRecursiveApplicator} which is set to the [`schema` of a nested attribute][nested-schema] .
  *
  * [nested-schema]: {@link ModelSchemaNestedAttributes}
  *
@@ -52,19 +53,15 @@ export interface RecursiveIOActionContext extends BaseIOActionContext {
 }
 
 /** A function that performs an IO-Action. @internal */
-export type IOActionMethod = (
-  this: IOActions,
-  item: BaseItem,
-  context: IOActionContext
-) => BaseItem;
+export type IOAction = (this: IOActions, item: BaseItem, context: IOActionContext) => BaseItem;
 
 /**
  * A function that recursively applies a given IO-Action to an item and its nested attributes.
  * @internal
  */
-export type RecursiveIOActionMethod = (
+export type IOActionRecursiveApplicator = (
   this: IOActions,
-  ioAction: IOActionMethod,
+  ioAction: IOAction,
   /**
    * The item/items to which the IO-Action should be applied.
    * @remarks Even though IO-Actions only call `recursivelyApplyIOAction` when `attrValue` is a
@@ -84,7 +81,7 @@ export type RecursiveIOActionMethod = (
  */
 export type IOActions = Readonly<
   {
-    recursivelyApplyIOAction: RecursiveIOActionMethod;
+    recursivelyApplyIOAction: IOActionRecursiveApplicator;
   } & Record<
     | "aliasMapping"
     | "setDefaults"
@@ -95,18 +92,18 @@ export type IOActions = Readonly<
     | "validateItem"
     | "convertJsTypes"
     | "checkRequired",
-    IOActionMethod
+    IOAction
   >
 >;
 
-/** An array of enabled {@link IOActionMethod} functions. @internal */
-export type IOActionsSet = Array<IOActionMethod>;
+/** An array of enabled {@link IOAction} functions. @internal */
+export type IOActionsSet = Array<IOAction>;
 
 /**
- * Boolean flags for controlling which IO-Actions to include in a given set. Model methods define
- * defaults for each flag which suit the methods purpose. For example, the `createItem` method sets
- * each flag to `true` by default, whereas the `updateItem` method defaults each flag to `false`.
- * Some flags only apply to certain methods, and/or a single `IODirection` (e.g., `setDefaults` is
- * only used in `toDB` sets, and therefore only applies to write methods).
+ * Boolean flags for controlling which IO-Actions to use for a request or response. Model methods
+ * define defaults for each flag which suit the methods purpose. For example, the `createItem`
+ * method sets each flag to `true` by default, whereas the `updateItem` method defaults each flag
+ * to `false`. Some flags only apply to certain methods, and/or a single `IODirection` (e.g.,
+ * `setDefaults` is only applied to request arguments).
  */
 export type EnabledIOActions = { [IOAction in keyof IOActions]?: boolean };

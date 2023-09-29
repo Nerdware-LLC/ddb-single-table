@@ -1,11 +1,11 @@
 import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../../utils";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` validates an item's individual properties using
+ * This `IOAction` validates an item's individual properties using
  * attribute's respective `"validate"` functions provided in the schema.
  */
-export const validate: IOActionMethod = function (
+export const validate: IOAction = function (
   this: IOActions,
   item,
   { schemaEntries, modelName, ...ctx }

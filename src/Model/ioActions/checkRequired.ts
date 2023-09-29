@@ -1,8 +1,8 @@
 import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../../utils";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` checks an item for the existence of properties
+ * This `IOAction` checks an item for the existence of properties
  * marked `required` in the schema, and throws an error if a required property is
  * not present (as indicated by `hasOwnProperty`), or its value is `null` or
  * `undefined`. This check occurs by default for the following Model methods:
@@ -12,7 +12,7 @@ import type { IOActions, IOActionMethod } from "./types";
  * - `batchUpsertItems`
  * - `batchUpsertAndDeleteItems` (only the `upsertItems` clause)
  */
-export const checkRequired: IOActionMethod = function (
+export const checkRequired: IOAction = function (
   this: IOActions,
   item,
   { schemaEntries, modelName, ...ctx }

@@ -2,8 +2,8 @@ import lodashSet from "lodash.set";
 import { aliasMapping } from "./aliasMapping";
 import type { IOActions, IOActionContext } from "./types";
 
-describe("IOActionMethod: aliasMapping", () => {
-  // Mock `this` context can be empty bc aliasMapping doesn't access any other IOActionMethods
+describe("IOAction: aliasMapping", () => {
+  // Mock `this` context can be empty bc aliasMapping doesn't use any other IOActions
   const mockThis = {} as IOActions;
 
   // Mock items for testing `toDB and `fromDB` (no need to include any nested attributes here)

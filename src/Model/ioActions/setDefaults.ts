@@ -1,15 +1,15 @@
 import { hasDefinedProperty, hasKey } from "../../utils";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` applies any `"default"`s defined in the schema in
+ * This `IOAction` applies any `"default"`s defined in the schema in
  * the course of "create" operations. Attribute default values/functions are used
  * when the item either does not have the attribute (as determined by
  * `hasOwnProperty`), or the attribute value is `null` or `undefined`.
  *
  * > `UpdateItem` skips this action by default, since it is not a "create" operation.
  */
-export const setDefaults: IOActionMethod = function (
+export const setDefaults: IOAction = function (
   this: IOActions,
   item,
   { schemaEntries, parentItem = item, ...ctx }

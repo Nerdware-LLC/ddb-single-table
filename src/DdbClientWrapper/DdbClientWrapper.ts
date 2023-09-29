@@ -58,14 +58,13 @@ export class DdbClientWrapper {
 
   constructor({
     ddbClient,
-    ddbClientConfigs = {},
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
   }: DdbClientWrapperConstructorParams) {
-    // If a `ddbClient` was not provided, instantiate a new one using the provided configs.
-    ddbClient ??= new DynamoDBClient(ddbClientConfigs);
+    // `ddbClient` must be either an existing client instance, or args to instantiate a new one.
+    this._ddbClient =
+      ddbClient instanceof DynamoDBClient ? ddbClient : new DynamoDBClient(ddbClient);
 
-    // Assign `ddbClient` property, and attach proc exit handler which calls destroy method.
-    this._ddbClient = ddbClient;
+    // Attach proc exit handler which calls destroy method
     process.on("exit", () => this._ddbClient.destroy());
 
     // Instantiate the doc-client
