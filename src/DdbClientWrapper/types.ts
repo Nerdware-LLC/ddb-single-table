@@ -114,48 +114,48 @@ type FixDocClientType<
       }
 >;
 
-/** Input params for `DdbClientWrapper` methods which implement the `GetItem` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `GetItem` command. @public */
 export type GetItemInput = FixDocClientType<_GetCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `BatchGetItem` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `BatchGetItem` command. @public */
 export type BatchGetItemsInput = FixDocClientType<_BatchGetCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `PutItem` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `PutItem` command. @public */
 export type PutItemInput = FixDocClientType<_PutCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `UpdateItem` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `UpdateItem` command. @public */
 export type UpdateItemInput = FixDocClientType<_UpdateCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `DeleteItem` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `DeleteItem` command. @public */
 export type DeleteItemInput = FixDocClientType<_DeleteCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `BatchWriteItem` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `BatchWriteItem` command. @public */
 export type BatchWriteItemsInput = FixDocClientType<_BatchWriteCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `Query` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `Query` command. @public */
 export type QueryInput = FixDocClientType<_QueryCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `Scan` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `Scan` command. @public */
 export type ScanInput = FixDocClientType<_ScanCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `DescribeTable` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `DescribeTable` command. @public */
 export type DescribeTableInput = FixDocClientType<_DescribeTableInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `CreateTable` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `CreateTable` command. @public */
 export type CreateTableInput = FixDocClientType<_CreateTableInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `ListTables` command. */
+/** Input params for `DdbClientWrapper` methods which implement the `ListTables` command. @public */
 export type ListTablesInput = FixDocClientType<_ListTablesInput>;
 
-/** Output from `DdbClientWrapper` methods which implement the `GetItem` command. */
+/** Output from `DdbClientWrapper` methods which implement the `GetItem` command. @public */
 export type GetItemOutput = FixDocClientType<_GetCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `BatchGetItem` command. */
+/** Output from `DdbClientWrapper` methods which implement the `BatchGetItem` command. @public */
 export type BatchGetItemsOutput = FixDocClientType<_BatchGetCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `PutItem` command. */
+/** Output from `DdbClientWrapper` methods which implement the `PutItem` command. @public */
 export type PutItemOutput = FixDocClientType<_PutCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `UpdateItem` command. */
+/** Output from `DdbClientWrapper` methods which implement the `UpdateItem` command. @public */
 export type UpdateItemOutput = FixDocClientType<_UpdateCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `DeleteItem` command. */
+/** Output from `DdbClientWrapper` methods which implement the `DeleteItem` command. @public */
 export type DeleteItemOutput = FixDocClientType<_DeleteCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `BatchWriteItem` command. */
+/** Output from `DdbClientWrapper` methods which implement the `BatchWriteItem` command. @public */
 export type BatchWriteItemsOutput = FixDocClientType<_BatchWriteCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `Query` command. */
+/** Output from `DdbClientWrapper` methods which implement the `Query` command. @public */
 export type QueryOutput = FixDocClientType<_QueryCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `Scan` command. */
+/** Output from `DdbClientWrapper` methods which implement the `Scan` command. @public */
 export type ScanOutput = FixDocClientType<_ScanCommandOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `DescribeTable` command. */
+/** Output from `DdbClientWrapper` methods which implement the `DescribeTable` command. @public */
 export type DescribeTableOutput = FixDocClientType<_DescribeTableOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `CreateTable` command. */
+/** Output from `DdbClientWrapper` methods which implement the `CreateTable` command. @public */
 export type CreateTableOutput = FixDocClientType<_CreateTableOutput>;
-/** Output from `DdbClientWrapper` methods which implement the `ListTables` command. */
+/** Output from `DdbClientWrapper` methods which implement the `ListTables` command. @public */
 export type ListTablesOutput = FixDocClientType<_ListTablesOutput>;
