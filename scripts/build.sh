@@ -12,11 +12,11 @@ fi
 [ -d "./dist" ] && rm -rf ./dist
 
 # Make the ESM build
-tsc --project tsconfig.build-esm.json
+npx tsc --project tsconfig.build-esm.json
 echo '{ "type": "module" }' > dist/esm/package.json
 
 # Make the CJS build
-tsc --project tsconfig.build-cjs.json
+npx tsc --project tsconfig.build-cjs.json
 echo '{ "type": "commonjs" }' > dist/cjs/package.json
 
 ############################################################
