@@ -1,11 +1,11 @@
 import { isType } from "../../utils";
 import type { ModelSchemaType, SchemaEntries } from "../../Schema";
-import type { IOActions, RecursiveIOActionMethod } from "./types";
+import type { IOActions, IOActionRecursiveApplicator } from "./types";
 
 /**
- * Applies any given `ioAction` to nested attributes of type "map" or "array".
+ * Applies the provided `ioAction` to nested attribute types.
  */
-export const recursivelyApplyIOAction: RecursiveIOActionMethod = function (
+export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
   this: IOActions,
   ioAction,
   attrValue,
@@ -16,7 +16,7 @@ export const recursivelyApplyIOAction: RecursiveIOActionMethod = function (
   that `ioAction` must be called using the `call` prototype method to ensure the fn
   doesn't lose its "this" context. */
   if (isType.array(nestedSchema) && isType.array(attrValue)) {
-    /* For both ARRAYs and TUPLEs, since `IOActionMethod`s require `item` to
+    /* For both ARRAYs and TUPLEs, since `IOAction`s require `item` to
     be an object, array values and their respective nested schema are provided as
     the value to a wrapper object with an arbitrary key of "_".  */
 

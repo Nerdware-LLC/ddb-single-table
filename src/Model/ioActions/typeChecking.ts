@@ -1,13 +1,13 @@
 import { hasDefinedProperty, safeJsonStringify, isType } from "../../utils";
 import { ItemInputError, getAttrErrID, stringifyNestedSchema } from "../../utils/errors";
 import type { ModelSchemaNestedAttributes as NestedAttributes } from "../../Schema";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` checks item properties for conformance with their
+ * This `IOAction` checks item properties for conformance with their
  * respective attribute "type" as defined in the schema.
  */
-export const typeChecking: IOActionMethod = function (
+export const typeChecking: IOAction = function (
   this: IOActions,
   item,
   { schemaEntries, modelName, ...ctx }

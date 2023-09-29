@@ -1,7 +1,7 @@
 import { transformItem } from "./transformItem";
 import type { IOActions, IOActionContext, IODirection } from "./types";
 
-describe("IOActionMethod: transformItem", () => {
+describe("IOAction: transformItem", () => {
   // Mock `this` context can be empty bc transformItem doesn't access any other IOActionMethods
   const mockThis = {} as IOActions;
 

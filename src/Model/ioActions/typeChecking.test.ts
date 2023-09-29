@@ -4,7 +4,7 @@ import { typeChecking } from "./typeChecking";
 import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext } from "./types";
 
-describe("IOActionMethod: typeChecking", () => {
+describe("IOAction: typeChecking", () => {
   // Mock `this` context with bound methods: `typeChecking` and `recursivelyApplyIOAction`
   const mockThis = {} as IOActions;
   (mockThis as any).typeChecking = typeChecking.bind(mockThis);

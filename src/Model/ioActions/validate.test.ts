@@ -3,7 +3,7 @@ import { validate } from "./validate";
 import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext } from "./types";
 
-describe("IOActionMethod: validate", () => {
+describe("IOAction: validate", () => {
   // Mock `this` context with bound methods: `validate` and `recursivelyApplyIOAction`
   const mockThis = {} as IOActions;
   (mockThis as any).validate = validate.bind(mockThis);

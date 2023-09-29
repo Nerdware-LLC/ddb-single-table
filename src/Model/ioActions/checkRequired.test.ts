@@ -4,7 +4,7 @@ import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
 import type { ModelSchemaType } from "../../Schema";
 import type { IOActions, IOActionContext } from "./types";
 
-describe("IOActionMethod: checkRequired", () => {
+describe("IOAction: checkRequired", () => {
   // Mock `this` context with bound methods: `checkRequired` and `recursivelyApplyIOAction`
   const mockThis = {} as IOActions;
   (mockThis as any).checkRequired = checkRequired.bind(mockThis);

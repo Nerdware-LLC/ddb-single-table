@@ -1,12 +1,12 @@
 import { hasKey } from "../../utils";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` uses `transformValue` functions (if defined) to
+ * This `IOAction` uses `transformValue` functions (if defined) to
  * transform attribute values before they are validated, converted to DynamoDB
  * types, etc.
  */
-export const transformValues: IOActionMethod = function (
+export const transformValues: IOAction = function (
   this: IOActions,
   item,
   { schemaEntries, ioDirection, ...ctx }

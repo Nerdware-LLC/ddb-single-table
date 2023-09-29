@@ -1,14 +1,14 @@
 import { hasDefinedProperty, ItemInputError } from "../../utils";
 import type { BaseItem } from "../../types/itemTypes";
-import type { IOActions, IOActionMethod } from "./types";
+import type { IOActions, IOAction } from "./types";
 
 /**
- * This `IOActionMethod` swaps attribute-names with their corresponding
+ * This `IOAction` swaps attribute-names with their corresponding
  * aliases:
  * - `toDB`: replaces "alias" keys with attribute names
  * - `fromDB`: replaces attribute names with "alias" keys
  */
-export const aliasMapping: IOActionMethod = function (
+export const aliasMapping: IOAction = function (
   this: IOActions,
   item,
   { aliasesMap, schema, schemaOptions, modelName }
