@@ -1,7 +1,5 @@
-import type { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
-import type { TranslateConfig } from "@aws-sdk/lib-dynamodb";
 import type { Simplify, Except } from "type-fest";
-import type { CreateTableInput } from "../DdbClientWrapper";
+import type { DdbClientWrapperConstructorParams, CreateTableInput } from "../DdbClientWrapper";
 import type { Model } from "../Model";
 import type {
   TableKeysSchemaType,
@@ -11,30 +9,27 @@ import type {
 } from "../Schema";
 import type { BaseItem, ItemTypeFromSchema } from "../types/itemTypes";
 
-/** `Table` class constructor params. */
-export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> = {
-  tableName: string;
-  tableKeysSchema: TableKeysSchema;
-  ddbClient?: DynamoDBClient;
-  ddbClientConfigs?: Simplify<DynamoDBClientConfig>;
-  marshallingConfigs?: Simplify<TranslateConfig>;
-  logger?: (str: string) => void;
-};
+/** `Table` class constructor params. @public */
+export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> = Simplify<
+  {
+    tableName: string;
+    tableKeysSchema: TableKeysSchema;
+    logger?: (str: string) => void;
+  } & DdbClientWrapperConstructorParams
+>;
 
-/** A DynamoDB table's keys and {@link TableIndexes | indexes }. */
+/** A config object specifying the table's keys and indexes. */
 export type TableKeysAndIndexes = {
   tableHashKey: string;
   tableRangeKey?: string;
-  indexes?: TableIndexes;
-};
-
-/** A map of DynamoDB table index names to their respective config objects. */
-type TableIndexes = {
-  [indexName: string]: {
-    name: string;
-    type: "GLOBAL" | "LOCAL";
-    indexPK: string;
-    indexSK?: string;
+  /** A map of DynamoDB table index names to their respective config objects. */
+  indexes?: {
+    [indexName: string]: {
+      name: string;
+      type: "GLOBAL" | "LOCAL";
+      indexPK: string;
+      indexSK?: string;
+    };
   };
 };
 

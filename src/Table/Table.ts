@@ -31,9 +31,9 @@ import type { TableConstructorParams, TableKeysAndIndexes, TableCreateModelMetho
  * @class Table
  * @param tableName - The name of the DynamoDB table.
  * @param tableKeysSchema - The schema of the table's primary and sort keys.
- * @param tableConfigs - Configs for the table.
- * @param ddbClientConfigs - Configs for the DdbClientWrapper.
- * @param waitForActive - Configs for waiting for the table to become active.
+ * @param ddbClient - Either an existing DynamoDBClient instance, or arguments for instantiating a new one.
+ * @param marshallingConfigs - Marshalling configs for the DynamoDBDocumentClient instance.
+ * @param logger - A custom function to use for logging (defaults to `console.info`).
  */
 export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
   // INSTANCE PROPERTIES:
@@ -49,8 +49,7 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
   constructor({
     tableName,
     tableKeysSchema,
-    ddbClient,
-    ddbClientConfigs = {},
+    ddbClient = {},
     marshallingConfigs = {},
     logger = console.info,
   }: TableConstructorParams<TKSchema>) {
@@ -64,11 +63,7 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
     this.tableHashKey = tableHashKey;
     this.tableRangeKey = tableRangeKey;
     this.indexes = indexes;
-    this.ddbClient = new DdbClientWrapper({
-      ddbClient,
-      ddbClientConfigs,
-      marshallingConfigs,
-    });
+    this.ddbClient = new DdbClientWrapper({ ddbClient, marshallingConfigs });
   }
 
   // INSTANCE METHODS:

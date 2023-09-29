@@ -36,13 +36,18 @@ import type {
 } from "type-fest";
 import type { NestDepthMax5, IterateNestDepth } from "../types/utilTypes";
 
-/**
- * `DdbClientWrapper` class constructor params.
- */
+/** `DdbClientWrapper` class constructor params. @public */
 export type DdbClientWrapperConstructorParams = {
-  ddbClient?: DynamoDBClient;
-  ddbClientConfigs?: DynamoDBClientConfig;
-  marshallingConfigs?: TranslateConfig;
+  /**
+   * Either an existing {@link DynamoDBClient} instance, or {@link DynamoDBClientConfig|arguments}
+   * for instantiating a new one.
+   */
+  ddbClient: DynamoDBClient | DynamoDBClientConfig;
+  /**
+   * Marshalling/unmarshalling configs for the DynamoDBDocumentClient instance.
+   * @see {@link TranslateConfig}
+   */
+  marshallingConfigs?: Simplify<TranslateConfig>;
 };
 
 /**
