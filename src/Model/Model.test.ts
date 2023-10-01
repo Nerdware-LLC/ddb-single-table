@@ -1,9 +1,7 @@
 import { Model } from "./Model";
 import * as batchRequestsModule from "../BatchRequests";
-import * as updateExpressionModule from "../Expressions/UpdateExpression";
 import * as whereQueryModule from "../Expressions/WhereQuery";
 import { Table } from "../Table";
-import { ItemInputError } from "../utils";
 import type { ItemTypeFromSchema } from "../types";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
