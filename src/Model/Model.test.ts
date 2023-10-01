@@ -40,7 +40,7 @@ describe("Model", () => {
         },
       },
     } as const,
-    ddbClientConfigs: {
+    ddbClient: {
       region: "local",
       endpoint: "http://localhost:8000",
       credentials: {
