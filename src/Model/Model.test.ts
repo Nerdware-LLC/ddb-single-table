@@ -1,9 +1,7 @@
 import { Model } from "./Model";
 import * as batchRequestsModule from "../BatchRequests";
-import * as updateExpressionModule from "../Expressions/UpdateExpression";
 import * as whereQueryModule from "../Expressions/WhereQuery";
 import { Table } from "../Table";
-import { ItemInputError } from "../utils";
 import type { ItemTypeFromSchema } from "../types";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
@@ -40,7 +38,7 @@ describe("Model", () => {
         },
       },
     } as const,
-    ddbClientConfigs: {
+    ddbClient: {
       region: "local",
       endpoint: "http://localhost:8000",
       credentials: {
@@ -182,15 +180,17 @@ describe("Model", () => {
   describe("Model.batchGetItems()", () => {
     test(`calls IO-Actions and "ddbClient.batchGetItems" and returns mockItems when called with valid arguments`, async () => {
       /*
-        Arrange ddbDocClient to mock the following two responses:
-          - First call:
+        Arrange ddbDocClient to mock the following three responses:
+          - First call:         <throw retryable error>
+          - Second call:
             `Responses`:        includes all unaliasedMockItems except the first one
             `UnprocessedKeys`:  includes unaliasedMockItemsKeys[0]
-          - Second call:
+          - Third call:
             `Responses`:        includes unaliasedMockItems[0]
             `UnprocessedKeys`:  <undefined>
       */
       vi.spyOn(ddbDocClientSpyTarget, "send")
+        .mockRejectedValueOnce({ code: "ProvisionedThroughputExceeded" })
         .mockResolvedValueOnce({
           Responses: { [mockTableName]: [...unaliasedMockItems].splice(1) },
           UnprocessedKeys: { [mockTableName]: { Keys: [unaliasedMockItemsKeys[0]] } },
@@ -225,11 +225,11 @@ describe("Model", () => {
       ]);
 
       // Assert `batchGetItems` was called twice with expected args
-      expect(spies.clientBatchGetItems).toHaveBeenCalledTimes(2);
-      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(1, {
+      expect(spies.clientBatchGetItems).toHaveBeenCalledTimes(3);
+      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(2, {
         RequestItems: { [mockTableName]: { Keys: unaliasedMockItemsKeys } },
       });
-      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(2, {
+      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(3, {
         RequestItems: { [mockTableName]: { Keys: [unaliasedMockItemsKeys[0]] } },
       });
 
@@ -339,7 +339,6 @@ describe("Model", () => {
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledOnce();
       expect(spies.clientPutItem).toHaveBeenCalledWith({
-        ReturnValues: "ALL_OLD", // default set internally by method
         TableName: mockTable.tableName,
         Item: { ...unaliasedMockItem, createdAt: expect.any(Number) },
       });
@@ -470,41 +469,6 @@ describe("Model", () => {
         ReturnValues: "ALL_NEW",
       });
     });
-    test(`does not call "generateUpdateExpression" if UpdateExpression is provided`, async () => {
-      // Arrange ddbDocClient to return an empty object
-      vi.spyOn(ddbDocClientSpyTarget, "send").mockResolvedValueOnce({ Attributes: {} });
-
-      // Arrange spies
-      const spies = {
-        generateUpdateExpression: vi.spyOn(updateExpressionModule, "generateUpdateExpression"),
-      };
-
-      await mockModel.updateItem(mockItemKeys, {
-        UpdateExpression: "SET handle = @NEW_HANDLE", // <-- should cause generateUpdateExpression to not be called
-      });
-
-      // Assert that `generateUpdateExpression` was not called
-      expect(spies.generateUpdateExpression).not.toHaveBeenCalled();
-    });
-    test(`throws an ItemInputError if neither "UpdateExpression" nor "update" are provided`, async () => {
-      await expect(() => mockModel.updateItem(mockItemKeys, {})).rejects.toThrow();
-    });
-    test(`throws an ItemInputError if "update" and "ExpressionAttributeNames" are both provided`, async () => {
-      await expect(() =>
-        mockModel.updateItem(mockItemKeys, {
-          update: {},
-          ExpressionAttributeNames: {},
-        })
-      ).rejects.toThrowError(ItemInputError);
-    });
-    test(`throws an ItemInputError if "update" and "ExpressionAttributeValues" are both provided`, async () => {
-      await expect(() =>
-        mockModel.updateItem(mockItemKeys, {
-          update: {},
-          ExpressionAttributeValues: {},
-        })
-      ).rejects.toThrowError(ItemInputError);
-    });
   });
 
   describe("Model.deleteItem()", () => {
@@ -531,10 +495,6 @@ describe("Model", () => {
         Key: unaliasedMockItemKeys,
         ReturnValues: "ALL_OLD",
       });
-    });
-    test(`returns undefined when called with valid arguments but nothing is returned`, async () => {
-      const result = await mockModel.deleteItem(mockItemKeys);
-      expect(result).toBeUndefined();
     });
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       await expect(() => mockModel.deleteItem({} as any)).rejects.toThrowError(/required .* "id"/i);

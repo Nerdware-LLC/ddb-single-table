@@ -3,7 +3,7 @@ import { handleBatchRequests, type BatchRequestFunction } from "../BatchRequests
 import { DdbClientWrapper } from "../DdbClientWrapper";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions";
 import { ModelSchema } from "../Schema";
-import { isType, ItemInputError } from "../utils";
+import { ItemInputError } from "../utils";
 import type { SetOptional } from "type-fest";
 import type { ModelSchemaType, ModelSchemaOptions, SchemaEntries } from "../Schema";
 import type { TableKeysAndIndexes } from "../Table";
@@ -176,10 +176,8 @@ export class Model<
       Key: unaliasedKeys,
     });
 
-    const item = response?.Item;
-
-    if (item) {
-      return this.processItemAttributes.fromDB<ItemType>(item);
+    if (response?.Item) {
+      return this.processItemAttributes.fromDB<ItemType>(response.Item);
     }
   };
 
@@ -274,7 +272,7 @@ export class Model<
    *
    * @param item The item to create.
    * @param createItemOpts Options for the underlying `PutItem` operation.
-   * @returns The provided `item` with any schema-defined defaults and transformations applied.
+   * @returns The provided `item` with any schema-defined defaults and transforms applied.
    */
   readonly createItem = async (
     item: ItemCreationParams,
@@ -296,14 +294,13 @@ export class Model<
       TableName: this.tableName,
       Item: toDBitem,
       ConditionExpression: `attribute_not_exists(${this.tableHashKey})`,
-      /* Note that appending "AND attribute_not_exists(sk)" to the
-      above expression would be extraneous, since DDB PutItem first
-      looks for an Item with the specified item's keys, and THEN it
-      applies the condition expression if it finds one.          */
+      /* Note that appending "AND attribute_not_exists(sk)" to the above ConditionExpression
+      would be superfluous, since PutItem operations are conducted by first finding an Item with
+      the specified Item's keys, and THEN it applies the ConditionExpression if it finds one. */
     });
 
-    /* Since the above DDB operation will never return anything, `processItemAttributes.fromDB`
-    is called with the `toDBitem`, which will have schema-defined defaults and whatnot.*/
+    /* Since the above PutItem operation will never return anything, `processItemAttributes.fromDB`
+    is called with the `toDBitem` to return an item with schema-defined defaults and transforms. */
     return this.processItemAttributes.fromDB<ItemType>(toDBitem);
   };
 
@@ -315,7 +312,7 @@ export class Model<
    *
    * @param item The item to upsert.
    * @param upsertItemOpts Options for the underlying `PutItem` operation.
-   * @returns The provided `item` with any schema-defined defaults and transformations applied.
+   * @returns The provided `item` with any schema-defined defaults and transforms applied.
    */
   readonly upsertItem = async (
     item: ItemCreationParams,
@@ -324,7 +321,6 @@ export class Model<
     const toDBitem = this.processItemAttributes.toDB(item);
 
     await this.ddbClient.putItem({
-      ReturnValues: "ALL_OLD", // overridable default
       ...upsertItemOpts,
       TableName: this.tableName,
       Item: toDBitem,
@@ -358,83 +354,34 @@ export class Model<
   };
 
   /**
-   * [`UpdateItem`][ddb-docs-update-item] operation wrapper. If an `UpdateExpression` is not
-   * provided, this method can auto-generate one for you using the `updateAttributes` param's keys
-   * and values to form SET and REMOVE clauses as needed.
+   * [`UpdateItem`][ddb-docs-update-item] operation wrapper. This method uses the `update` param
+   * to generate the following `UpdateItem` arguments:
    *
-   * The function which generates the `UpdateExpression` also creates `ExpressionAttributeValues`
-   * and `ExpressionAttributeNames`. Consequently, if you provide an explicit EAV argument (e.g.,
-   * for a `ConditionExpression`) _without_ also providing an `UpdateExpression`, the function
-   * will currently throw an error. This is a known issue and will be addressed in a future release.
+   * - `UpdateExpression` (may include `"SET"` and/or `"REMOVE"` clauses)
+   * - `ExpressionAttributeNames`
+   * - `ExpressionAttributeValues`
    *
    * [ddb-docs-update-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
    *
    * @param primaryKeys The primary keys of the item to update.
-   * @param updateAttributes The attributes to update.
-   * @param updateItemOpts Options for the underlying `UpdateItem` operation.
-   * @throws {ItemInputError} if `UpdateExpression` is not provided and one cannot be auto-generated.
-   * @returns The updated item.
+   * @param updateItemOpts The `update` object and options for the underlying `UpdateItem` operation.
+   * @returns The updated item with new/updated values.
    */
   readonly updateItem = async (
     primaryKeys: KeyParameters<Schema>,
-    {
-      UpdateExpression,
-      ExpressionAttributeNames,
-      ExpressionAttributeValues,
-      ReturnValues = "ALL_NEW",
-      // Auto-gen opts:
-      update,
-      updateOptions,
-      ...updateItemOpts
-    }: UpdateItemOpts<ItemParameters<ItemCreationParams>>
-  ): Promise<ItemParameters<ItemCreationParams>> => {
-    /* Init var to hold `toDBupdateAttributes` (see below) for the edge case whereby the caller
-    uses an auto-gen'd `UpdateExpression` and also provides an explicit `ReturnValues` of "NONE".
-    In this case, the `toDBupdateAttributes` is provided to the `processItemAttributes.fromDB` call
-    to ensure this function will at least return schema-defined defaults and transforms, even if
-    the caller configures the actual DDB API call to return nothing. */
-    const toDBupdateAttributes: BaseItem = {};
+    { update, updateOptions, ...updateItemOpts }: UpdateItemOpts<ItemParameters<ItemCreationParams>>
+  ): Promise<ItemType> => {
+    // Run `update` through `processItemAttributes.toDB`
+    const toDBupdateAttributes = this.processItemAttributes.toDB(update, {
+      setDefaults: false,
+      transformItem: false,
+      validateItem: false,
+      checkRequired: false,
+    });
 
-    // If an explicit `UpdateExpression` is not provided, check `update`
-    if (!UpdateExpression) {
-      // If neither are provided, throw an error
-      if (!isType.map(update)) {
-        throw new ItemInputError(
-          `[updateItem] For auto-generated "UpdateExpression"s, the "update" parameter must ` +
-            `be provided. Alternatively, an explicit "UpdateExpression" may be provided.`
-        );
-      }
-      /* Ensure neither `ExpressionAttributeNames` nor `ExpressionAttributeValues` are provided.
-      Currently, auto-gen will overwrite EA-Names/Values, so an error is thrown to ensure the caller
-      hasn't provided them. This all-or-nothing approach is not ideal, but it's the simplest way to
-      handle this for now.
-
-      IDEA Consider how auto-gen'd values in this case could be merged with provided values.
-
-      - One way would be to filter the `attributesToUpdate` arg to remove any keys which are already
-        present in the provided `ExpressionAttributeNames` object. This would allow the caller to
-        provide EA-Names/Values for some attributes, and let the rest be auto-gen'd.
-      - This logic could also be simply moved out of this method and placed elsewhere. */
-
-      if (ExpressionAttributeNames || ExpressionAttributeValues) {
-        throw new ItemInputError(
-          `[updateItem] When using auto-generated "UpdateExpression"s, the following parameters ` +
-            `must not be provided: "ExpressionAttributeNames", "ExpressionAttributeValues".`
-        );
-      }
-
-      // Run `updateAttributes` through `processItemAttributes.toDB`
-      const toDBupdateAttributes = this.processItemAttributes.toDB(update, {
-        setDefaults: false,
-        transformItem: false,
-        validateItem: false,
-        checkRequired: false,
-      });
-
-      // Generate the `UpdateExpression` and `ExpressionAttribute{Names,Values}`
-      ({ UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues } =
-        generateUpdateExpression(toDBupdateAttributes, updateOptions));
-    }
+    // Generate the `UpdateExpression` and `ExpressionAttribute{Names,Values}`
+    const { UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues } =
+      generateUpdateExpression(toDBupdateAttributes, updateOptions);
 
     const unaliasedKeys = this.processKeyArgs(primaryKeys);
 
@@ -445,12 +392,10 @@ export class Model<
       UpdateExpression,
       ExpressionAttributeNames,
       ExpressionAttributeValues,
-      ReturnValues,
+      ReturnValues: "ALL_NEW",
     });
 
-    return this.processItemAttributes.fromDB<ItemParameters<ItemCreationParams>>(
-      response?.Attributes ?? toDBupdateAttributes
-    );
+    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
   };
 
   /**
@@ -460,26 +405,22 @@ export class Model<
    *
    * @param primaryKeys The primary keys of the item to delete.
    * @param deleteItemOpts Options for the underlying `DeleteItem` operation.
-   * @returns The deleted item if `ReturnValues` is set to `"ALL_OLD"` (default), else `undefined`.
+   * @returns The deleted item.
    */
   readonly deleteItem = async (
     primaryKeys: KeyParameters<Schema>,
     deleteItemOpts: DeleteItemOpts = {}
-  ): Promise<Partial<ItemType> | undefined> => {
+  ): Promise<ItemType> => {
     const unaliasedKeys: ItemKeys = this.processKeyArgs(primaryKeys);
 
     const response = await this.ddbClient.deleteItem({
-      ReturnValues: "ALL_OLD", // overridable default
       ...deleteItemOpts,
       TableName: this.tableName,
       Key: unaliasedKeys,
+      ReturnValues: "ALL_OLD",
     });
 
-    const itemAttributes = response?.Attributes;
-
-    if (itemAttributes) {
-      return this.processItemAttributes.fromDB<Partial<ItemType>>(itemAttributes);
-    }
+    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
   };
 
   /**

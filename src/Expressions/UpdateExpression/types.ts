@@ -13,7 +13,7 @@ export interface GenerateUpdateExpressionOpts {
 }
 
 /**
- * Input parameters for the `updateItem()` method which can be used to auto-generate the
+ * Input parameters for the `updateItem()` method which are used to auto-generate the
  * following `UpdateItem` arguments:
  *
  * - `UpdateExpression` (may include `"SET"` and/or `"REMOVE"` clauses)
@@ -22,7 +22,7 @@ export interface GenerateUpdateExpressionOpts {
  */
 export type UpdateItemAutoGenUpdateExpressionParams<ItemParams extends BaseItem> = {
   /** The item attributes to be updated. */
-  update?: ItemParams;
+  update: ItemParams;
   /** Optional params for the `generateUpdateExpression` function. */
   updateOptions?: GenerateUpdateExpressionOpts;
 };
