@@ -42,15 +42,26 @@ export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> 
 >;
 
 /**
- * A union of SDK command parameter names which are provided automatically by Model methods,
- * and are therefore omitted from the method parameter typings.
+ * A union of SDK command parameter names which are handled by Model methods and are therefore
+ * omitted from the method parameter typings.
+ *
+ * @remarks
+ * - `ReturnValues` - Providing a custom ReturnValues arg to a Model method will often (but not
+ *   _always_) change the attributes present in the returned object. Therefore, every Model method
+ *   which uses a DDB operation which supports this param would require a generic return type to
+ *   properly support this. If there's sufficient demand for this feature, it can be targeted for a
+ *   future release, but considering users have direct access to the underlying DDB operations via
+ *   the `DdbClientWrapper` (which passes all args directly to the SDK command), the Model class
+ *   will not support custom `ReturnValues` at this time.
+ *
  * @internal
  */
 type InternallyHandledDdbSdkParameters =
-  | "TableName" //            Handled by Model methods
-  | "Key" //                  Handled by Model methods
-  | "Item" //                 Handled by Model methods
-  | "RequestItems"; //        Handled by Model methods
+  | "TableName"
+  | "Key"
+  | "Item"
+  | "RequestItems"
+  | "ReturnValues";
 
 /**
  * This internal generic util takes a DdbClientWrapper input type `<T>` and applies the following
@@ -92,7 +103,13 @@ export type BatchGetItemsOpts = ModifyClientParamsForModel<
  * > Since the `model.createItem()` method uses a `ConditionExpression` to prevent overwriting
  *   existing items, this method does not support user-provided ConditionExpressions.
  */
-export type CreateItemOpts = Omit<UpsertItemOpts, "ConditionExpression">;
+export type CreateItemOpts = ModifyClientParamsForModel<
+  Omit<
+    UpsertItemOpts,
+    "ConditionExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
+    // The ommission of ConditionExpression makes EAN/EAV unneccessary
+  >
+>;
 
 /** `model.upsertItem()` parameters which are passed to the underlying `PutItem` SDK command. */
 export type UpsertItemOpts = ModifyClientParamsForModel<PutItemInput>;
@@ -102,14 +119,18 @@ export type UpsertItemOpts = ModifyClientParamsForModel<PutItemInput>;
  *
  * ### Auto-Generation of UpdateExpression
  *
- * The `model.updateItem()` method also supports the following
- * {@link UpdateItemAutoGenUpdateExpressionParams | parameters which can be used to auto-generate the `UpdateExpression` }:
+ * The `model.updateItem()` method uses the `update` param to auto-generate arguments for the
+ * underlying `UpdateItem` operation - specifically `UpdateExpression`, `ExpressionAttributeNames`,
+ * and `ExpressionAttributeValues`.
  *
  * - `update` — The item attributes to be updated.
- * - `updateOptions` — Optional params for the `generateUpdateExpression` function.
+ * - `updateOptions` — {@link UpdateItemAutoGenUpdateExpressionParams | Optional params for the `generateUpdateExpression` function }.
  */
 export type UpdateItemOpts<ItemParams extends BaseItem> = ModifyClientParamsForModel<
-  UpdateItemInput,
+  Omit<
+    UpdateItemInput,
+    "UpdateExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
+  >,
   UpdateItemAutoGenUpdateExpressionParams<ItemParams>
 >;
 
