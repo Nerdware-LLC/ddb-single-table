@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.0.5](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.4...v2.0.5) (2023-10-01)
+
+
+### Bug Fixes
+
+* correct Model method return typings ([2ae1044](https://github.com/Nerdware-LLC/ddb-single-table/commit/2ae10449f3a2cbcb23deba995f63b52d7cf0f4f0))
+
 ## [2.0.5-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.4...v2.0.5-next.1) (2023-10-01)
 
 
