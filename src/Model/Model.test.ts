@@ -182,15 +182,17 @@ describe("Model", () => {
   describe("Model.batchGetItems()", () => {
     test(`calls IO-Actions and "ddbClient.batchGetItems" and returns mockItems when called with valid arguments`, async () => {
       /*
-        Arrange ddbDocClient to mock the following two responses:
-          - First call:
+        Arrange ddbDocClient to mock the following three responses:
+          - First call:         <throw retryable error>
+          - Second call:
             `Responses`:        includes all unaliasedMockItems except the first one
             `UnprocessedKeys`:  includes unaliasedMockItemsKeys[0]
-          - Second call:
+          - Third call:
             `Responses`:        includes unaliasedMockItems[0]
             `UnprocessedKeys`:  <undefined>
       */
       vi.spyOn(ddbDocClientSpyTarget, "send")
+        .mockRejectedValueOnce({ code: "ProvisionedThroughputExceeded" })
         .mockResolvedValueOnce({
           Responses: { [mockTableName]: [...unaliasedMockItems].splice(1) },
           UnprocessedKeys: { [mockTableName]: { Keys: [unaliasedMockItemsKeys[0]] } },
@@ -225,11 +227,11 @@ describe("Model", () => {
       ]);
 
       // Assert `batchGetItems` was called twice with expected args
-      expect(spies.clientBatchGetItems).toHaveBeenCalledTimes(2);
-      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(1, {
+      expect(spies.clientBatchGetItems).toHaveBeenCalledTimes(3);
+      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(2, {
         RequestItems: { [mockTableName]: { Keys: unaliasedMockItemsKeys } },
       });
-      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(2, {
+      expect(spies.clientBatchGetItems).toHaveBeenNthCalledWith(3, {
         RequestItems: { [mockTableName]: { Keys: [unaliasedMockItemsKeys[0]] } },
       });
 
