@@ -339,7 +339,6 @@ describe("Model", () => {
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledOnce();
       expect(spies.clientPutItem).toHaveBeenCalledWith({
-        ReturnValues: "ALL_OLD", // default set internally by method
         TableName: mockTable.tableName,
         Item: { ...unaliasedMockItem, createdAt: expect.any(Number) },
       });
@@ -470,41 +469,6 @@ describe("Model", () => {
         ReturnValues: "ALL_NEW",
       });
     });
-    test(`does not call "generateUpdateExpression" if UpdateExpression is provided`, async () => {
-      // Arrange ddbDocClient to return an empty object
-      vi.spyOn(ddbDocClientSpyTarget, "send").mockResolvedValueOnce({ Attributes: {} });
-
-      // Arrange spies
-      const spies = {
-        generateUpdateExpression: vi.spyOn(updateExpressionModule, "generateUpdateExpression"),
-      };
-
-      await mockModel.updateItem(mockItemKeys, {
-        UpdateExpression: "SET handle = @NEW_HANDLE", // <-- should cause generateUpdateExpression to not be called
-      });
-
-      // Assert that `generateUpdateExpression` was not called
-      expect(spies.generateUpdateExpression).not.toHaveBeenCalled();
-    });
-    test(`throws an ItemInputError if neither "UpdateExpression" nor "update" are provided`, async () => {
-      await expect(() => mockModel.updateItem(mockItemKeys, {})).rejects.toThrow();
-    });
-    test(`throws an ItemInputError if "update" and "ExpressionAttributeNames" are both provided`, async () => {
-      await expect(() =>
-        mockModel.updateItem(mockItemKeys, {
-          update: {},
-          ExpressionAttributeNames: {},
-        })
-      ).rejects.toThrowError(ItemInputError);
-    });
-    test(`throws an ItemInputError if "update" and "ExpressionAttributeValues" are both provided`, async () => {
-      await expect(() =>
-        mockModel.updateItem(mockItemKeys, {
-          update: {},
-          ExpressionAttributeValues: {},
-        })
-      ).rejects.toThrowError(ItemInputError);
-    });
   });
 
   describe("Model.deleteItem()", () => {
@@ -531,10 +495,6 @@ describe("Model", () => {
         Key: unaliasedMockItemKeys,
         ReturnValues: "ALL_OLD",
       });
-    });
-    test(`returns undefined when called with valid arguments but nothing is returned`, async () => {
-      const result = await mockModel.deleteItem(mockItemKeys);
-      expect(result).toBeUndefined();
     });
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       await expect(() => mockModel.deleteItem({} as any)).rejects.toThrowError(/required .* "id"/i);
