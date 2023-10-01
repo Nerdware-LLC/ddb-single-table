@@ -100,8 +100,8 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
          },
        },
      } as const, // For TypeScript, all schema must end with `as const`
-     // You can provide your own DDB client instance, or simply provide configs:
-     ddbClientConfigs: {
+     // You can provide your own DDB client instance or configs for a new one:
+     ddbClient: {
        // This example shows how to connect to dynamodb-local:
        region: "local",
        endpoint: "http://localhost:8000",
