@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.0.7-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.7-next.1...v2.0.7-next.2) (2023-10-02)
+
+
+### Bug Fixes
+
+* set transformItem fns to return BaseItem ([eb773a5](https://github.com/Nerdware-LLC/ddb-single-table/commit/eb773a567a6cb01f376588944877669dbe76dcc3))
+
 ## [2.0.7-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.6...v2.0.7-next.1) (2023-10-02)
 
 
