@@ -1,5 +1,5 @@
 import type { SetOptional } from "type-fest";
-import type { BaseItem, SupportedAttributeValueTypes } from "../types";
+import type { SupportedAttributeValueTypes } from "../types";
 
 ///////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:
@@ -96,9 +96,9 @@ export interface BaseAttributeConfig {
   /** Methods for transforming the attribute value to/from the DB. */
   readonly transformValue?: {
     /** Fn to modify value before `validate` fn is called; use for normalization. */
-    readonly toDB?: (inputValue: any) => SupportedAttributeValueTypes;
+    readonly toDB?: (inputValue: any) => unknown;
     /** Fn to modify value returned from DDB client; use to format/prettify values. */
-    readonly fromDB?: (dbValue: any) => SupportedAttributeValueTypes;
+    readonly fromDB?: (dbValue: any) => unknown;
   };
   /**
    * Custom attribute value validation function called for every write operation. The
@@ -265,12 +265,12 @@ export interface ModelSchemaOptions {
   /** Item-level transformations to/from the DB. */
   readonly transformItem?: {
     /** Fn to modify entire Item before `validate` fn is called. */
-    readonly toDB?: (item: BaseItem) => BaseItem;
+    readonly toDB?: (item: any) => unknown;
     /** Fn to modify entire Item returned from DDB client. */
-    readonly fromDB?: (item: BaseItem) => BaseItem;
+    readonly fromDB?: (item: any) => unknown;
   };
   /** Item-level custom validation function. */
-  readonly validateItem?: (item: BaseItem) => boolean;
+  readonly validateItem?: (item: any) => boolean;
   /**
    * Whether the `createItem` method should auto-add a `"createdAt"` timestamp field to
    * items upon invocation (default: `{ enabled: true, attrName: "createdAt" }`). Use
