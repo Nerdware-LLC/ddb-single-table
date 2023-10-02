@@ -62,7 +62,7 @@ export class DdbClientWrapper {
   }: DdbClientWrapperConstructorParams) {
     // `ddbClient` must be either an existing client instance, or args to instantiate a new one.
     this._ddbClient =
-      ddbClient instanceof DynamoDBClient ? ddbClient : new DynamoDBClient(ddbClient);
+      ddbClient instanceof DynamoDBClient ? ddbClient : new DynamoDBClient(ddbClient ?? {});
 
     // Attach proc exit handler which calls destroy method
     process.on("exit", () => this._ddbClient.destroy());
