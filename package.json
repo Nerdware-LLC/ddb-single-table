@@ -1,6 +1,6 @@
 {
   "name": "@nerdware/ddb-single-table",
-  "version": "2.0.7-next.2",
+  "version": "2.0.7",
   "description": "A schema-based DynamoDB modeling tool, high-level API, and type-generator built for single-table designs.",
   "author": {
     "name": "Trevor Anderson",

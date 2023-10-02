@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.0.7](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.6...v2.0.7) (2023-10-02)
+
+
+### Bug Fixes
+
+* make 'ddbClient' optional to allow env-var configs ([a7fa8f3](https://github.com/Nerdware-LLC/ddb-single-table/commit/a7fa8f3e5bad06d68cc8d8a8361f39b9454afa04))
+* replace 'SupportedValues' w unknown in transformValue ([02d0238](https://github.com/Nerdware-LLC/ddb-single-table/commit/02d023836b90acd3dd36c7f9680b1d2e4d210e26))
+* set transformItem fns to return BaseItem ([eb773a5](https://github.com/Nerdware-LLC/ddb-single-table/commit/eb773a567a6cb01f376588944877669dbe76dcc3))
+
 ## [2.0.7-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.7-next.1...v2.0.7-next.2) (2023-10-02)
 
 
