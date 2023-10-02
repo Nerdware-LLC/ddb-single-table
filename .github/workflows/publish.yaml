@@ -2,7 +2,7 @@ name: Publish Workflow
 
 on:
   release:
-    types: [published]
+    types: [released] # excludes prereleases
 
 jobs:
   publish:
