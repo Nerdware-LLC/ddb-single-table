@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.0.6](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.5...v2.0.6) (2023-10-02)
+
+
+### Bug Fixes
+
+* add export all from Schema ([e8865b7](https://github.com/Nerdware-LLC/ddb-single-table/commit/e8865b7623ffec5c42d54eb8aeffc840091f4e61))
+
 ## [2.0.5](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.4...v2.0.5) (2023-10-01)
 
 
