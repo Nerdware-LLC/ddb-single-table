@@ -1,5 +1,5 @@
 import type { SetOptional } from "type-fest";
-import type { SupportedAttributeValueTypes } from "../types";
+import type { BaseItem, SupportedAttributeValueTypes } from "../types";
 
 ///////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:
@@ -265,9 +265,9 @@ export interface ModelSchemaOptions {
   /** Item-level transformations to/from the DB. */
   readonly transformItem?: {
     /** Fn to modify entire Item before `validate` fn is called. */
-    readonly toDB?: (item: any) => unknown;
+    readonly toDB?: (item: any) => BaseItem;
     /** Fn to modify entire Item returned from DDB client. */
-    readonly fromDB?: (item: any) => unknown;
+    readonly fromDB?: (item: any) => BaseItem;
   };
   /** Item-level custom validation function. */
   readonly validateItem?: (item: any) => boolean;
