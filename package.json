@@ -37,10 +37,11 @@
   ],
   "scripts": {
     "lint": "eslint src",
-    "build": "./scripts/build.sh",
     "test": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:ci": "eslint src && vitest run --coverage --bail=1 --silent"
+    "test:ci": "eslint src && vitest run --coverage --bail=1 --silent",
+    "test:types": "tsc --project tsconfig.json --noEmit --skipLibCheck",
+    "prebuild": "[ -d dist ] && rm -rf dist || true",
+    "build": "./scripts/build.sh"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.398.0",
