@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.1.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.1.0...v2.1.1-next.1) (2023-10-07)
+
+
+### Bug Fixes
+
+* correct typeof KeyParam fn default ([378bb84](https://github.com/Nerdware-LLC/ddb-single-table/commit/378bb8408280ad8fda271f89ae4e5e8dc895e3d2))
+* strip 'Configs' suffix from 'ddbClient' key ([2573080](https://github.com/Nerdware-LLC/ddb-single-table/commit/2573080452e0e01991644e67993c98acac3fbb42))
+
 # [2.1.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.7...v2.1.0) (2023-10-07)
 
 
