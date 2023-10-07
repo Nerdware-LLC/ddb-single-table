@@ -111,10 +111,10 @@ export class Model<
       tableRangeKey,
       indexes,
       ddbClient,
-      allowUnknownAttributes,
+      autoAddTimestamps = ModelSchema.DEFAULT_OPTIONS.autoAddTimestamps,
+      allowUnknownAttributes = ModelSchema.DEFAULT_OPTIONS.allowUnknownAttributes,
       transformItem,
       validateItem,
-      autoAddCreatedAt = {},
     }: TableKeysAndIndexes &
       ModelSchemaOptions & {
         tableName: string;
@@ -127,16 +127,15 @@ export class Model<
     });
 
     this.modelName = modelName;
-    this.schema = modelSchema;
+    this.schema = {
+      ...modelSchema,
+      ...(autoAddTimestamps && ModelSchema.TIMESTAMP_ATTRIBUTES),
+    };
     this.schemaOptions = {
+      autoAddTimestamps,
+      allowUnknownAttributes,
       transformItem,
       validateItem,
-      allowUnknownAttributes:
-        allowUnknownAttributes ?? ModelSchema.DEFAULT_OPTIONS.allowUnknownAttributes,
-      autoAddCreatedAt: {
-        ...ModelSchema.DEFAULT_OPTIONS.autoAddCreatedAt,
-        ...autoAddCreatedAt,
-      },
     };
 
     this.attributesToAliasesMap = attributesToAliasesMap;
@@ -278,12 +277,12 @@ export class Model<
     item: ItemCreationParams,
     createItemOpts: CreateItemOpts = {}
   ): Promise<ItemType> => {
-    // Get "createdAt" auto-add options from schemaOptions
-    const { enabled = true, attrName = "createdAt" } = this.schemaOptions.autoAddCreatedAt || {};
-
-    // Add "createdAt" timestamp if not disabled
+    // Process `item`, and add timestamps if `autoAddTimestamps` is enabled
     const toDBitem = this.processItemAttributes.toDB({
-      ...(enabled && { [attrName]: new Date() }),
+      ...(this.schemaOptions.autoAddTimestamps && {
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
       ...item,
     });
 
@@ -308,6 +307,8 @@ export class Model<
    * A [`PutItem`][ddb-docs-put-item] operation wrapper which will either update an existing item or
    * create a new one if an item with the specified keys does not yet exist.
    *
+   * > This method will overwrite an existing item with the specified keys if one exists.
+   *
    * [ddb-docs-put-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
    *
    * @param item The item to upsert.
@@ -318,7 +319,14 @@ export class Model<
     item: ItemCreationParams,
     upsertItemOpts: UpsertItemOpts = {}
   ): Promise<ItemType> => {
-    const toDBitem = this.processItemAttributes.toDB(item);
+    // Process `item`, and add timestamps if `autoAddTimestamps` is enabled
+    const toDBitem = this.processItemAttributes.toDB({
+      ...(this.schemaOptions.autoAddTimestamps && {
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+      ...item,
+    });
 
     await this.ddbClient.putItem({
       ...upsertItemOpts,
@@ -371,13 +379,19 @@ export class Model<
     primaryKeys: KeyParameters<Schema>,
     { update, updateOptions, ...updateItemOpts }: UpdateItemOpts<ItemParameters<ItemCreationParams>>
   ): Promise<ItemType> => {
-    // Run `update` through `processItemAttributes.toDB`
-    const toDBupdateAttributes = this.processItemAttributes.toDB(update, {
-      setDefaults: false,
-      transformItem: false,
-      validateItem: false,
-      checkRequired: false,
-    });
+    // Process `update`, and add `updatedAt` timestamp if `autoAddTimestamps` is enabled
+    const toDBupdateAttributes = this.processItemAttributes.toDB(
+      {
+        ...update,
+        ...(this.schemaOptions.autoAddTimestamps && { updatedAt: new Date() }),
+      },
+      {
+        setDefaults: false,
+        transformItem: false,
+        validateItem: false,
+        checkRequired: false,
+      }
+    );
 
     // Generate the `UpdateExpression` and `ExpressionAttribute{Names,Values}`
     const { UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues } =
@@ -502,10 +516,20 @@ export class Model<
       throw new ItemInputError("batchUpsertAndDeleteItems was called without valid arguments.");
     }
 
+    // Process any `upsertItems`, and add timestamps if `autoAddTimestamps` is enabled
     const toDBupsertItems: Array<BaseItem> = Array.isArray(upsertItems)
-      ? upsertItems.map((item) => this.processItemAttributes.toDB(item))
+      ? upsertItems.map((item) =>
+          this.processItemAttributes.toDB({
+            ...(this.schemaOptions.autoAddTimestamps && {
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }),
+            ...item,
+          })
+        )
       : [];
 
+    // Process any `deleteItems`
     const toDBunaliasedKeysToDelete: Array<ItemKeys> = Array.isArray(deleteItems)
       ? deleteItems.map((pks) => this.processKeyArgs(pks))
       : [];

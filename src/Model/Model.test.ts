@@ -1,6 +1,7 @@
 import { Model } from "./Model";
 import * as batchRequestsModule from "../BatchRequests";
 import * as whereQueryModule from "../Expressions/WhereQuery";
+import { ModelSchema } from "../Schema";
 import { Table } from "../Table";
 import type { ItemTypeFromSchema } from "../types";
 
@@ -64,7 +65,7 @@ describe("Model", () => {
         photoUrl: { type: "string" },
       },
     },
-    createdAt: { type: "Date", required: true, default: () => new Date() },
+    ...ModelSchema.TIMESTAMP_ATTRIBUTES,
   } as const);
 
   type MockItem = ItemTypeFromSchema<typeof mockModelSchema>;
@@ -90,7 +91,7 @@ describe("Model", () => {
   ].reduce(
     (
       accum: {
-        mockItems: Array<Omit<MockItem, "createdAt">>;
+        mockItems: Array<Omit<MockItem, "createdAt" | "updatedAt">>;
         mockItemsKeys: Array<Pick<MockItem, "id" | "handle">>;
         unaliasedMockItems: Array<{ pk: string; sk: string } & Pick<MockItem, "data" | "profile">>;
         unaliasedMockItemsKeys: Array<{ pk: string; sk: string }>;
@@ -131,6 +132,7 @@ describe("Model", () => {
       expect(mockModel.indexes).toStrictEqual(mockTable.indexes);
       expect(mockModel.ddbClient).toStrictEqual(mockTable.ddbClient);
       expect(mockModel.schemaOptions.allowUnknownAttributes).toBe(false);
+      expect(mockModel.schemaOptions.autoAddTimestamps).toBe(true);
     });
   });
 
@@ -275,24 +277,34 @@ describe("Model", () => {
       const result = await mockModel.createItem(mockItem);
 
       // Assert the result
-      expect(result).toStrictEqual({ ...mockItem, createdAt: expect.any(Date) });
+      expect(result).toStrictEqual({
+        ...mockItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
 
       // Assert `processItemAttributes.toDB` was called with the `item` and `createdAt` key
       expect(spies.processItemAttributesToDB).toHaveBeenCalledOnce();
       expect(spies.processItemAttributesToDB).toHaveBeenCalledWith({
         ...mockItem,
         createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
       expect(spies.processItemAttributesToDB).toHaveReturnedWith({
         ...unaliasedMockItem,
         createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
       });
 
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledOnce();
       expect(spies.clientPutItem).toHaveBeenCalledWith({
         TableName: mockTable.tableName,
-        Item: { ...unaliasedMockItem, createdAt: expect.any(Number) },
+        Item: {
+          ...unaliasedMockItem,
+          createdAt: expect.any(Number),
+          updatedAt: expect.any(Number),
+        },
         ConditionExpression: "attribute_not_exists(pk)",
       });
 
@@ -301,10 +313,12 @@ describe("Model", () => {
       expect(spies.processItemAttributesFromDB).toHaveBeenCalledWith({
         ...unaliasedMockItem,
         createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
       });
       expect(spies.processItemAttributesFromDB).toHaveReturnedWith({
         ...mockItem,
         createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
     });
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
@@ -326,21 +340,34 @@ describe("Model", () => {
       const result = await mockModel.upsertItem(mockItem);
 
       // Assert the result
-      expect(result).toStrictEqual({ ...mockItem, createdAt: expect.any(Date) });
+      expect(result).toStrictEqual({
+        ...mockItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
 
       // Assert `processItemAttributes.toDB` was called with the `item`
       expect(spies.processItemAttributesToDB).toHaveBeenCalledOnce();
-      expect(spies.processItemAttributesToDB).toHaveBeenCalledWith(mockItem);
+      expect(spies.processItemAttributesToDB).toHaveBeenCalledWith({
+        ...mockItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
       expect(spies.processItemAttributesToDB).toHaveReturnedWith({
         ...unaliasedMockItem,
         createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
       });
 
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledOnce();
       expect(spies.clientPutItem).toHaveBeenCalledWith({
         TableName: mockTable.tableName,
-        Item: { ...unaliasedMockItem, createdAt: expect.any(Number) },
+        Item: {
+          ...unaliasedMockItem,
+          createdAt: expect.any(Number),
+          updatedAt: expect.any(Number),
+        },
       });
 
       // Assert `processItemAttributes.fromDB` was called and returned the expected result
@@ -348,10 +375,12 @@ describe("Model", () => {
       expect(spies.processItemAttributesFromDB).toHaveBeenCalledWith({
         ...unaliasedMockItem,
         createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
       });
       expect(spies.processItemAttributesFromDB).toHaveReturnedWith({
         ...mockItem,
         createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
     });
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
@@ -365,7 +394,13 @@ describe("Model", () => {
     test(`calls IO-Actions and "ddbClient.batchWriteItems" and returns "upsertItems" when called with valid arguments`, async () => {
       // Arrange expected BatchWriteItem PutRequest objects
       const expectedMockBatchWriteReqs = unaliasedMockItems.map((item) => ({
-        PutRequest: { Item: { ...item, createdAt: expect.any(Number) } },
+        PutRequest: {
+          Item: {
+            ...item,
+            createdAt: expect.any(Number),
+            updatedAt: expect.any(Number),
+          },
+        },
       }));
 
       /*
@@ -394,7 +429,13 @@ describe("Model", () => {
 
       // Assert the result (arrayContaining because the order of the items is not guaranteed)
       expect(result).toStrictEqual(
-        expect.arrayContaining(mockItems.map((item) => ({ ...item, createdAt: expect.any(Date) })))
+        expect.arrayContaining(
+          mockItems.map((item) => ({
+            ...item,
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+          }))
+        )
       );
 
       // Assert `processKeyArgs` was not called
@@ -443,7 +484,12 @@ describe("Model", () => {
     test(`calls IO-Actions and "ddbClient.updateItem" and returns updated mockItem when called with valid arguments`, async () => {
       // Arrange ddbDocClient to return unaliasedMockItem with updated sk/handle
       vi.spyOn(ddbDocClientSpyTarget, "send").mockResolvedValueOnce({
-        Attributes: { ...unaliasedMockItem, sk: mockUpdatedHandle },
+        Attributes: {
+          ...unaliasedMockItem,
+          sk: mockUpdatedHandle,
+          createdAt: Math.floor(new Date().getTime() / 1000),
+          updatedAt: Math.floor(new Date().getTime() / 1000),
+        },
       });
 
       // Arrange spies
@@ -456,16 +502,20 @@ describe("Model", () => {
       });
 
       // Assert the result
-      expect(result).toStrictEqual(mockUpdatedItem);
+      expect(result).toStrictEqual({
+        ...mockUpdatedItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
 
       // Assert `updateItem` was called with expected args
       expect(spies.clientUpdateItem).toHaveBeenCalledOnce();
       expect(spies.clientUpdateItem).toHaveBeenCalledWith({
         TableName: mockTable.tableName,
         Key: unaliasedMockItemKeys,
-        UpdateExpression: "SET #sk = :sk",
-        ExpressionAttributeNames: { "#sk": "sk" },
-        ExpressionAttributeValues: { ":sk": mockUpdatedHandle },
+        UpdateExpression: "SET #sk = :sk, #updatedAt = :updatedAt",
+        ExpressionAttributeNames: { "#sk": "sk", "#updatedAt": "updatedAt" },
+        ExpressionAttributeValues: { ":sk": mockUpdatedHandle, ":updatedAt": expect.any(Number) },
         ReturnValues: "ALL_NEW",
       });
     });
@@ -572,7 +622,9 @@ describe("Model", () => {
       // Arrange BatchWriteItem request objects
       const expectedMockBatchWriteReqs = [
         ...unaliasedMockItems.map((item) => ({
-          PutRequest: { Item: { ...item, createdAt: expect.any(Number) } },
+          PutRequest: {
+            Item: { ...item, createdAt: expect.any(Number), updatedAt: expect.any(Number) },
+          },
         })),
         ...unaliasedMockItemsKeys.map((keys) => ({ DeleteRequest: { Key: keys } })),
       ];
@@ -610,7 +662,11 @@ describe("Model", () => {
       // Assert the result (arrayContaining because the order of the items is not guaranteed)
       expect(result).toStrictEqual({
         upsertItems: expect.arrayContaining(
-          mockItems.map((item) => ({ ...item, createdAt: expect.any(Date) }))
+          mockItems.map((item) => ({
+            ...item,
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+          }))
         ),
         deleteItems: expect.arrayContaining(mockItemsKeys),
       });

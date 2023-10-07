@@ -256,6 +256,18 @@ export type MergeModelAndTableKeysSchema<
 /** Model config options to define item-level transformations and validations. */
 export interface ModelSchemaOptions {
   /**
+   * Whether write methods should add `"createdAt"` and `"updatedAt"` operation timestamps to
+   * item parameters when creating or updating items respectively (default: `true`). Currently
+   * only numerical unix timestamps are supported, but other formats like ISO-8601 strings may
+   * be supported in the future if there is demand for it.
+   *
+   * When enabled, timestamp fields are added _before_ any `default` functions defined in your
+   * schema are called, so your `default` functions can access the timestamp values for use cases
+   * like UUID generation. For example, your schema could define a `"pk"` attribute with a `default`
+   * function which generates a timestamp-based UUID using the `createdAt` value.
+   */
+  readonly autoAddTimestamps?: boolean;
+  /**
    * Whether the Model allows items to include properties which aren't defined in its
    * schema on create/upsert operations (default: `false`). This may also be set to
    * an array of strings to only allow certain attributes - this can be useful if the
@@ -271,23 +283,6 @@ export interface ModelSchemaOptions {
   };
   /** Item-level custom validation function. */
   readonly validateItem?: (item: any) => boolean;
-  /**
-   * Whether the `createItem` method should auto-add a `"createdAt"` timestamp field to
-   * items upon invocation (default: `{ enabled: true, attrName: "createdAt" }`). Use
-   * `"attrName"` to specify an attribute name other than `"createdAt"`. Unless `"enabled"`
-   * is set to `false` to disable this behavior, the timestamp field is added _before_ any
-   * IOActions are called, thereby facilitating the use of timestamp-based values in
-   * the schema. For example, your schema could define a `"pk"` attribute with a `default`
-   * function which generates a timestamp-based UUID using the `createdAt` value.
-   * Note that this config has no impact on Model typings created with DdbST generics like
-   * `ItemTypeFromSchema`; to utilize auto-add behavior, the timestamp attribute must be
-   * defined in the schema.
-   */
-  readonly autoAddCreatedAt?: {
-    // TODO Refactor this to `autoAddTimestamps`, add `updatedAt` support
-    enabled?: boolean;
-    attrName?: string;
-  };
 }
 
 /**

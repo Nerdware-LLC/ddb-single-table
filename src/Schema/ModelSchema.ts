@@ -22,8 +22,13 @@ import type {
 export class ModelSchema extends Schema {
   static readonly DEFAULT_OPTIONS: ModelSchemaOptions = {
     allowUnknownAttributes: false,
-    autoAddCreatedAt: { enabled: true, attrName: "createdAt" },
+    autoAddTimestamps: true,
   };
+
+  static readonly TIMESTAMP_ATTRIBUTES = {
+    createdAt: { type: "Date", required: true, default: () => new Date() },
+    updatedAt: { type: "Date", required: true, default: () => new Date() },
+  } as const;
 
   /**
    * This function validates the provided `modelSchema`, and if valid, returns an
