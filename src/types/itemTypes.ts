@@ -30,6 +30,12 @@ export interface ItemKeys {
   [key: string]: string | number;
 }
 
+/** Operation timestamp attributes. */
+export type TimestampAttributes = {
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 /** Internal type defining `Opts` type param of item-type generics. @internal */
 type ItemTypeOpts = {
   /** Whether to use attribute `alias` values for item keys rather than attribute names. */
@@ -38,6 +44,8 @@ type ItemTypeOpts = {
   optionalIfDefault?: boolean;
   /** Whether to add `null` to optional properties (i.e., convert `{ foo?: string }` to `{ foo?: string | null }`). */
   nullableIfOptional?: boolean;
+  /** Whether to add `"createdAt"` and `"updatedAt"` timestamp attributes. */
+  autoAddTimestamps?: boolean;
 };
 
 /**
@@ -103,8 +111,13 @@ export type ItemTypeFromSchema<
     aliasKeys: true;
     optionalIfDefault: false;
     nullableIfOptional: true;
+    autoAddTimestamps: true;
   },
-> = SchemaMapToItem<T, Opts, 0>;
+> = Simplify<
+  Opts["autoAddTimestamps"] extends true
+    ? SchemaMapToItem<T, Opts, 0> & TimestampAttributes
+    : SchemaMapToItem<T, Opts, 0>
+>;
 
 /**
  * This generic creates a typing for the parameters necessary to create an Item.
@@ -166,7 +179,7 @@ export type ItemTypeFromSchema<
  */
 export type ItemCreationParameters<T extends ModelSchemaType> = ItemTypeFromSchema<
   T,
-  { aliasKeys: true; optionalIfDefault: true; nullableIfOptional: true }
+  { aliasKeys: true; optionalIfDefault: true; nullableIfOptional: true; autoAddTimestamps: false }
 >;
 
 /**
