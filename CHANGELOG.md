@@ -7,14 +7,24 @@ All notable changes to this project will be documented in this file.
 # [2.1.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.7-next.1...v2.1.0-next.1) (2023-10-07)
 
 
-### Bug Fixes
-
-* set transformItem fns to return BaseItem ([eb773a5](https://github.com/Nerdware-LLC/ddb-single-table/commit/eb773a567a6cb01f376588944877669dbe76dcc3))
-
-
 ### Features
 
 * add 'autoAddTimestamps' to ModelSchema ([2ecfcd2](https://github.com/Nerdware-LLC/ddb-single-table/commit/2ecfcd2c36525cb8e6fcd1b2354c9b348fabce2b))
+
+## [2.0.7](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.6...v2.0.7) (2023-10-02)
+
+
+### Bug Fixes
+
+* make 'ddbClient' optional to allow env-var configs ([a7fa8f3](https://github.com/Nerdware-LLC/ddb-single-table/commit/a7fa8f3e5bad06d68cc8d8a8361f39b9454afa04))
+* replace 'SupportedValues' w unknown in transformValue ([02d0238](https://github.com/Nerdware-LLC/ddb-single-table/commit/02d023836b90acd3dd36c7f9680b1d2e4d210e26))
+
+## [2.0.7-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.7-next.1...v2.0.7-next.2) (2023-10-02)
+
+
+### Bug Fixes
+
+* set transformItem fns to return BaseItem ([eb773a5](https://github.com/Nerdware-LLC/ddb-single-table/commit/eb773a567a6cb01f376588944877669dbe76dcc3))
 
 ## [2.0.7-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.6...v2.0.7-next.1) (2023-10-02)
 
@@ -166,11 +176,6 @@ All notable changes to this project will be documented in this file.
 
 * streamline generic mapped types ([5b8ef1f](https://github.com/Nerdware-LLC/ddb-single-table/commit/5b8ef1fe48335f2d7d8b1d2dd5258c48a76b404f))
 
-
-### Reverts
-
-* use old '.vscode' gitignore pattern ([8d7af84](https://github.com/Nerdware-LLC/ddb-single-table/commit/8d7af8424ffdd9b0004d1075feff9eb1d88ec002))
-
 # [1.2.0-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v1.2.0-next.1...v1.2.0-next.2) (2023-09-20)
 
 
@@ -184,7 +189,6 @@ All notable changes to this project will be documented in this file.
 ### Reverts
 
 * use old '.vscode' gitignore pattern ([8d7af84](https://github.com/Nerdware-LLC/ddb-single-table/commit/8d7af8424ffdd9b0004d1075feff9eb1d88ec002))
-=======
 * correct '.vscode' file patterns in gitignore ([dd7dcb2](https://github.com/Nerdware-LLC/ddb-single-table/commit/dd7dcb20c17f4df250e1c5d070839554ac61e344))
 * **prettier:** add missing 'plugins' key to config ([458e64d](https://github.com/Nerdware-LLC/ddb-single-table/commit/458e64dc22cac7266dcadad029b9cc0a384e49f6))
 * rm old export ([9cbf213](https://github.com/Nerdware-LLC/ddb-single-table/commit/9cbf213616323e18400b5f760a5705c5586a56e6))
