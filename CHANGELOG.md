@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.1.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.7...v2.1.0) (2023-10-07)
+
+
+### Features
+
+* add 'autoAddTimestamps' to ModelSchema ([2ecfcd2](https://github.com/Nerdware-LLC/ddb-single-table/commit/2ecfcd2c36525cb8e6fcd1b2354c9b348fabce2b))
+
 # [2.1.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.0.7-next.1...v2.1.0-next.1) (2023-10-07)
 
 
