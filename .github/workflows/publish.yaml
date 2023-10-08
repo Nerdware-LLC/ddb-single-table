@@ -2,7 +2,7 @@ name: Publish Workflow
 
 on:
   release:
-    types: [released] # excludes prereleases
+    types: [published]
 
 jobs:
   publish:
@@ -20,8 +20,15 @@ jobs:
       - run: |
           npm ci --include=dev
           npm run build
+
+          if [ ${{ github.event.release.prerelease }} == true ]; then
+            latest_or_next_tag=next
+          else
+            latest_or_next_tag=latest
+          fi
+
           npm publish --provenance --access public \
             --tag ${{ github.ref }} \
-            --tag latest
+            --tag $latest_or_next_tag
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_PUBLISH_PUBLIC_ORG_SCOPE }}
