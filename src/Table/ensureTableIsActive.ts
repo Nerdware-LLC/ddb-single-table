@@ -64,14 +64,14 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
         setTimeout(resolve, frequencyMilliseconds);
       });
     } catch (err: unknown) {
-      // Sanity type-check: if `err` somehow does not contain K-V fields, just throw it.
-      if (!isType.map(err)) throw err;
+      // Sanity type-check: ensure `err` is an object.
+      if (!err || typeof err !== "object") throw err;
 
       // If `err?.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
-      if (err?.code === "ECONNREFUSED") throw new DdbConnectionError(err);
+      if ((err as Record<string, any>)?.code === "ECONNREFUSED") throw new DdbConnectionError(err);
 
       // If `err` is a "ResourceNotFoundException", Table doesn't exist - see if it should be created.
-      if (err?.name !== "ResourceNotFoundException") throw err;
+      if ((err as Record<string, any>)?.name !== "ResourceNotFoundException") throw err;
 
       // If Table doesn't exist AND !createIfNotExists, throw error.
       if (!createIfNotExists) {
