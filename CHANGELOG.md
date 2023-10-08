@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.1.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.1.1...v2.1.2) (2023-10-08)
+
+
+### Bug Fixes
+
+* correct err type check logic ([a67451c](https://github.com/Nerdware-LLC/ddb-single-table/commit/a67451c7fce9baca2cef20b52695d43328bbdc31))
+
 ## [2.1.2-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.1.1...v2.1.2-next.1) (2023-10-08)
 
 
