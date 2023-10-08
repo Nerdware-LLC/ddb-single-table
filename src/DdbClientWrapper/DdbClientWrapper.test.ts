@@ -23,7 +23,7 @@ describe("DdbClientWrapper", () => {
   // Mock DdbClientWrapper inputs:
   const mockTableName = "MockTable";
   const mockClassCtorInputs: DdbClientWrapperConstructorParams = {
-    ddbClientConfigs: {
+    ddbClient: {
       region: "local",
       endpoint: "http://localhost:8000",
       credentials: {

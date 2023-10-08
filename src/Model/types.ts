@@ -11,8 +11,8 @@ import type {
   ScanInput,
 } from "../DdbClientWrapper";
 import type { WhereQueryParams, UpdateItemAutoGenUpdateExpressionParams } from "../Expressions";
-import type { TableKeysSchemaType, ModelSchemaType, AttributeDefault } from "../Schema";
-import type { BaseItem, AttrAliasOrName } from "../types/itemTypes";
+import type { TableKeysSchemaType, ModelSchemaType } from "../Schema";
+import type { BaseItem, AttrAliasOrName, SupportedAttributeValueTypes } from "../types/itemTypes";
 
 /** A map of attribute names to corresponding aliases, or vice versa. */
 export type AttributesAliasesMap = Record<string, string>;
@@ -22,24 +22,22 @@ export type AttributesAliasesMap = Record<string, string>;
  * that methods like `getItem()` and `deleteItem()` accept as input.
  * @internal
  */
-export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> = Simplify<
-  {
-    // Required - filter out RangeKey if configured with a functional default
-    -readonly [Key in keyof Schema as Schema[Key] extends
-      | { isHashKey: true }
-      | { isRangeKey: true; default?: undefined }
-      ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
-      : never]-?: string | number;
-  } & {
-    // This map will set RangeKey to optional if configured with a functional default
-    -readonly [Key in keyof Schema as Schema[Key] extends {
-      isRangeKey: true;
-      default: AttributeDefault;
-    }
-      ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
-      : never]+?: string | number;
+export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> = {
+  // Required - filter out RangeKey if configured with a functional default
+  -readonly [Key in keyof Schema as Schema[Key] extends
+    | { isHashKey: true }
+    | { isRangeKey: true; default?: undefined }
+    ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
+    : never]-?: string | number;
+} & {
+  // This map will set RangeKey to optional if configured with a functional default
+  -readonly [Key in keyof Schema as Schema[Key] extends {
+    isRangeKey: true;
+    default: (item: any) => SupportedAttributeValueTypes;
   }
->;
+    ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
+    : never]+?: string | number;
+};
 
 /**
  * A union of SDK command parameter names which are handled by Model methods and are therefore

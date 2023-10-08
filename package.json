@@ -1,6 +1,6 @@
 {
   "name": "@nerdware/ddb-single-table",
-  "version": "2.1.0",
+  "version": "2.1.1-next.1",
   "description": "A schema-based DynamoDB modeling tool, high-level API, and type-generator built for single-table designs.",
   "author": {
     "name": "Trevor Anderson",
@@ -37,10 +37,11 @@
   ],
   "scripts": {
     "lint": "eslint src",
-    "build": "./scripts/build.sh",
     "test": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:ci": "eslint src && vitest run --coverage --bail=1 --silent"
+    "test:ci": "eslint src && vitest run --coverage --bail=1 --silent",
+    "test:types": "tsc --project tsconfig.json --noEmit --skipLibCheck",
+    "prebuild": "[ -d dist ] && rm -rf dist || true",
+    "build": "./scripts/build.sh"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.398.0",
