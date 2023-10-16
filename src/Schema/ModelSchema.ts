@@ -20,10 +20,10 @@ import type {
  * @internal
  */
 export class ModelSchema extends Schema {
-  static readonly DEFAULT_OPTIONS: ModelSchemaOptions = {
+  static readonly DEFAULT_OPTIONS = {
     allowUnknownAttributes: false,
     autoAddTimestamps: true,
-  };
+  } as const satisfies ModelSchemaOptions;
 
   static readonly TIMESTAMP_ATTRIBUTES = {
     createdAt: { type: "Date", required: true, default: () => new Date() },

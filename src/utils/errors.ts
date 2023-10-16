@@ -10,7 +10,7 @@ import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "..
  */
 export class DdbSingleTableError extends Error {
   static readonly DEFAULT_MSG: string = "An unknown error occurred";
-  readonly name: string;
+  override readonly name: string;
 
   constructor(message?: unknown, fallbackMsg: string = DdbSingleTableError.DEFAULT_MSG) {
     // This ctor allows `message` to be any type, but it's only used if it's a truthy string.

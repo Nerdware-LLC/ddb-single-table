@@ -30,6 +30,9 @@
     "forceConsistentCasingInFileNames": true,
 
     // Type Checking:
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
     "strict": true
   }
 }

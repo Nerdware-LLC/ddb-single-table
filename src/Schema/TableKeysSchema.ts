@@ -142,8 +142,8 @@ export class TableKeysSchema extends Schema {
 
     return {
       tableHashKey,
-      tableRangeKey,
-      indexes,
+      ...(tableRangeKey && { tableRangeKey }),
+      ...(indexes && { indexes }),
     };
   };
 

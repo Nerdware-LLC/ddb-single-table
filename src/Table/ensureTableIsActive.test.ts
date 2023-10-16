@@ -1,5 +1,4 @@
 import { Table } from "./Table";
-import { ensureTableIsActive } from "./ensureTableIsActive";
 import { DdbSingleTableError } from "../utils";
 import type { TableCreateTableParameters } from "./types";
 
@@ -30,7 +29,7 @@ describe("table.ensureTableIsActive()", () => {
       return Promise.resolve({ Table: { TableStatus: "" } });
     });
 
-    await expect(() => ensureTableIsActive.call(mockTable, { timeout: 1 })).rejects.toThrowError(
+    await expect(() => mockTable.ensureTableIsActive({ timeout: 1 })).rejects.toThrowError(
       /ensureTableIsActive has timed out/
     );
 
@@ -51,7 +50,7 @@ describe("table.ensureTableIsActive()", () => {
       Table: { TableStatus: "ACTIVE" },
     });
 
-    const result = await ensureTableIsActive.call(mockTable);
+    const result = await mockTable.ensureTableIsActive();
 
     expect(result).toBeUndefined();
     expect(mockTable.isTableActive).toBe(true);
@@ -71,7 +70,7 @@ describe("table.ensureTableIsActive()", () => {
       .spyOn(mockTable.ddbClient, "describeTable")
       .mockRejectedValueOnce({ code: "ECONNREFUSED" });
 
-    await expect(() => ensureTableIsActive.call(mockTable)).rejects.toThrowError(
+    await expect(() => mockTable.ensureTableIsActive()).rejects.toThrowError(
       /Failed to connect to the provided DynamoDB endpoint/
     );
 
@@ -92,7 +91,7 @@ describe("table.ensureTableIsActive()", () => {
       .spyOn(mockTable.ddbClient, "describeTable")
       .mockRejectedValueOnce("FOO_ERROR");
 
-    await expect(() => ensureTableIsActive.call(mockTable)).rejects.toThrowError("FOO_ERROR");
+    await expect(() => mockTable.ensureTableIsActive()).rejects.toThrowError("FOO_ERROR");
 
     expect(mockTable.isTableActive).toBe(false);
     expect(describeTableSpy).toHaveBeenCalled();
@@ -111,9 +110,7 @@ describe("table.ensureTableIsActive()", () => {
       name: "ResourceNotFoundException",
     });
 
-    await expect(() => ensureTableIsActive.call(mockTable)).rejects.toThrowError(
-      DdbSingleTableError
-    );
+    await expect(() => mockTable.ensureTableIsActive()).rejects.toThrowError(DdbSingleTableError);
 
     expect(mockTable.isTableActive).toBe(false);
     expect(describeTableSpy).toHaveBeenCalled();
@@ -145,7 +142,7 @@ describe("table.ensureTableIsActive()", () => {
     };
 
     await expect(
-      ensureTableIsActive.call(mockTable, { createIfNotExists: true, frequency: 1 })
+      mockTable.ensureTableIsActive({ createIfNotExists: true, frequency: 1 })
     ).resolves.toBeUndefined();
 
     expect(mockTable.isTableActive).toBe(true);
@@ -212,7 +209,7 @@ describe("table.ensureTableIsActive()", () => {
     };
 
     await expect(
-      ensureTableIsActive.call(mockTable, { createIfNotExists: createTableInputs, frequency: 1 })
+      mockTable.ensureTableIsActive({ createIfNotExists: createTableInputs, frequency: 1 })
     ).resolves.toBeUndefined();
 
     expect(mockTable.isTableActive).toBe(true);

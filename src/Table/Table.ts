@@ -133,11 +133,11 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
       ItemCreationParams
     >(modelName, this.getModelSchema(modelSchema), {
       ...modelSchemaOptions,
+      ddbClient: this.ddbClient,
       tableName: this.tableName,
       tableHashKey: this.tableHashKey,
-      tableRangeKey: this.tableRangeKey,
-      indexes: this.indexes,
-      ddbClient: this.ddbClient,
+      ...(this.tableRangeKey && { tableRangeKey: this.tableRangeKey }),
+      ...(this.indexes && { indexes: this.indexes }),
     });
   };
 }
