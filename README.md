@@ -32,7 +32,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 [semantic-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-6601ff.svg "github.com: semantic-release"
 [gh-test-badge]: https://github.com/Nerdware-LLC/ddb-single-table/actions/workflows/test.yaml/badge.svg?branch=main "github.com: Test Workflow"
 [pre-commit-badge]: https://img.shields.io/badge/pre--commit-7A8B80.svg?logo=pre-commit&logoColor=F8B424&labelColor=gray "pre-commit.com"
-[npm-badge]: https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40nerdware%2Fddb-single-table&query=%2Fhtml%2Fbody%2Fdiv%2Fdiv%2Fdiv%5B2%5D%2Fmain%2Fdiv%2Fdiv%5B3%5D%2Fdiv%5B4%5D%2Fdiv%2Fp&prefix=v&logo=npm&label=npm%40latest "npmjs.com: @nerdware/ddb-single-table"
+[npm-badge]: https://img.shields.io/npm/v/%40nerdware/ddb-single-table?logo=npm&label=npm%40latest "npmjs.com: @nerdware/ddb-single-table"
 
 </div>
 
