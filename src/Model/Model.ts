@@ -134,8 +134,8 @@ export class Model<
     this.schemaOptions = {
       autoAddTimestamps,
       allowUnknownAttributes,
-      transformItem,
-      validateItem,
+      ...(transformItem && { transformItem }),
+      ...(validateItem && { validateItem }),
     };
 
     this.attributesToAliasesMap = attributesToAliasesMap;
@@ -149,8 +149,8 @@ export class Model<
     // Cache sorted schema entries for IO-Actions
     this.schemaEntries = ModelSchema.getSortedSchemaEntries(modelSchema, {
       tableHashKey,
-      tableRangeKey,
-      indexes,
+      ...(tableRangeKey && { tableRangeKey }),
+      ...(indexes && { indexes }),
     });
   }
 
@@ -567,7 +567,7 @@ export class Model<
     // BatchWrite does not return items, so the input params are formatted for return.
     return {
       upsertItems: toDBupsertItems.map((item) => this.processItemAttributes.fromDB<ItemType>(item)),
-      deleteItems,
+      ...(deleteItems && { deleteItems }),
     };
   };
 
@@ -631,10 +631,10 @@ export class Model<
     const response = await this.ddbClient.query({
       ...queryOpts,
       TableName: this.tableName,
-      KeyConditionExpression,
-      ExpressionAttributeNames,
-      ExpressionAttributeValues,
-      IndexName,
+      ...(KeyConditionExpression && { KeyConditionExpression }),
+      ...(ExpressionAttributeNames && { ExpressionAttributeNames }),
+      ...(ExpressionAttributeValues && { ExpressionAttributeValues }),
+      ...(IndexName && { IndexName }),
       ...(!!limit && { Limit: limit }),
     });
 
