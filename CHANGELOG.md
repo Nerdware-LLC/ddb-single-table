@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.2.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.1.3...v2.2.0) (2023-10-16)
+
+
+### Bug Fixes
+
+* add explicit 'override' to err name prop ([b63768c](https://github.com/Nerdware-LLC/ddb-single-table/commit/b63768c22c24f1c38b44af2958bf50bbe9d521fd))
+* add type cast to getAttrErrID dest test ([13caecc](https://github.com/Nerdware-LLC/ddb-single-table/commit/13caecc96028b2cc347c8475a7350a3dfeb55144))
+* update props to account for exactOptionalPropertyTypes ([931932e](https://github.com/Nerdware-LLC/ddb-single-table/commit/931932e645046f99059d77211f824bb99c1eae4a))
+
+
+### Features
+
+* expand itemType nest-depth to 32 ([38c4096](https://github.com/Nerdware-LLC/ddb-single-table/commit/38c40962ae66b52682dcef5fc293c43642fda2c8))
+
 # [2.2.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.1.3...v2.2.0-next.1) (2023-10-16)
 
 
