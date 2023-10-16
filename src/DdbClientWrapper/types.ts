@@ -34,7 +34,6 @@ import type {
   OptionalKeysOf,
   IsAny,
 } from "type-fest";
-import type { NestDepthMax5, IterateNestDepth } from "../types/utilTypes";
 
 /** `DdbClientWrapper` class constructor params. @public */
 export type DdbClientWrapperConstructorParams = {
@@ -67,22 +66,57 @@ type LegacyDdbSdkParameters =
 
 /**
  * This internal generic util-type is used by {@link FixDocClientType} to handle mapped values.
+ *
+ * @remarks The nest-depth counter workaround is currently necessary when recursively mapping
+ * object types in order to prevent ts2589 errors ("Type instantiation is excessively deep and
+ * possibly infinite"). I've tried refactoring this to be tail-recursive to benefit from
+ * [tail-recursion elimination on conditional types][ts-tail-rec], but this does not currently
+ * seem to be possible for mapped _object_ types/interfaces - only mapped tuples - since the
+ * implementation relies on applying the spread operator to an accumulator of the relevant type,
+ * and the spread operator cannot currently be used on object types/interfaces - only tuples.
+ *
+ * [ts-tail-rec]: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html#tail-recursion-elimination-on-conditional-types
  * @internal
  */
 type FixDocClientValueType<
   T,
-  NestDepth extends NestDepthMax5,
-> = IterateNestDepth<NestDepth> extends 5
+  NestDepth extends NestDepthMax10,
+> = IterateNestDepthMax10<NestDepth> extends 5
   ? T
   : T extends Record<PropertyKey, unknown>
   ? keyof OmitIndexSignature<T> extends never // <-- If it only contains an index signature, don't map it.
-    ? Record<keyof T, FixDocClientValueType<T[keyof T], IterateNestDepth<NestDepth>>>
-    : FixDocClientType<T, IterateNestDepth<NestDepth>>
+    ? Record<keyof T, FixDocClientValueType<T[keyof T], IterateNestDepthMax10<NestDepth>>>
+    : FixDocClientType<T, IterateNestDepthMax10<NestDepth>>
   : T extends Array<infer El>
-  ? Array<FixDocClientValueType<El, IterateNestDepth<NestDepth>>>
+  ? Array<FixDocClientValueType<El, IterateNestDepthMax10<NestDepth>>>
   : IsAny<T> extends true
   ? unknown
   : T;
+
+/**
+ * The nest-depth of DDB client params, up to a maximum of 10.
+ * @internal
+ */
+type NestDepthMax10 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+/**
+ * This internal generic takes a {@link NestDepthMax10|NestDepth} type parameter and returns the
+ * next nest-depth value, up to a maximum of `10`.
+ * @internal
+ */
+// prettier-ignore
+type IterateNestDepthMax10<NestDepth extends NestDepthMax10 = 0> =
+  NestDepth extends 0 ? 1
+  : NestDepth extends 1 ? 2
+  : NestDepth extends 2 ? 3
+  : NestDepth extends 3 ? 4
+  : NestDepth extends 4 ? 5
+  : NestDepth extends 5 ? 6
+  : NestDepth extends 6 ? 7
+  : NestDepth extends 7 ? 8
+  : NestDepth extends 8 ? 9
+  : NestDepth extends 9 ? 10
+  : 10;
 
 /**
  * This internal generic util type takes a DynamoDBDocumentClient command input/output type `<T>`
@@ -99,11 +133,11 @@ type FixDocClientValueType<
  */
 type FixDocClientType<
   Input extends object,
-  NestDepth extends NestDepthMax5 = 0,
+  NestDepth extends NestDepthMax10 = 0,
   T extends Omit<Input, LegacyDdbSdkParameters> = Omit<Input, LegacyDdbSdkParameters>,
 > = Simplify<
   // If next NestDepth is 5, return the type as-is to prevent "possibly infinite recursion" error
-  IterateNestDepth<NestDepth> extends 5
+  IterateNestDepthMax10<NestDepth> extends 5
     ? T
     : {
         // Required properties:
