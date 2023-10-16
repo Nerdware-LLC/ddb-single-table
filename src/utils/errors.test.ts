@@ -92,10 +92,11 @@ describe("InvalidExpressionError", () => {
 });
 
 describe("getAttrErrID", () => {
+  // prettier-ignore
   test("returns a string with the correct format", () => {
     expect(getAttrErrID("MyModel", "pk", {})).toBe(`MyModel property "pk"`);
     expect(getAttrErrID("MyModel", "pk", { alias: "" })).toBe(`MyModel property "pk"`);
-    expect(getAttrErrID("MyModel", "pk", { alias: undefined })).toBe(`MyModel property "pk"`);
+    expect(getAttrErrID("MyModel", "pk", { alias: undefined as any })).toBe(`MyModel property "pk"`);
     expect(getAttrErrID("MyModel", "pk", { alias: "foo" })).toBe(`MyModel property "foo"`);
   });
 });
