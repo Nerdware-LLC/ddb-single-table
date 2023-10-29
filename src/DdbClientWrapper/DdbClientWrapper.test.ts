@@ -14,7 +14,7 @@ import {
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { DdbClientWrapper } from "./DdbClientWrapper";
-import type { DdbClientWrapperConstructorParams } from "./types";
+import type { DdbClientWrapperConstructorParams, CreateTableInput, UpdateItemInput } from "./types";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
@@ -168,7 +168,7 @@ describe("DdbClientWrapper", () => {
     const mockUpdatedItem = { ...mockItem, name: mockUpdatedName };
 
     // Valid UpdateItem input:
-    const updateItemValidInput = {
+    const updateItemValidInput: UpdateItemInput = {
       TableName: mockTableName,
       Key: { id: mockItem.id },
       UpdateExpression: "SET #name = :name",
@@ -376,7 +376,7 @@ describe("DdbClientWrapper", () => {
 
   describe("DdbClientWrapper.createTable()", () => {
     // Valid CreateTable input:
-    const createTableValidInput = {
+    const createTableValidInput: CreateTableInput = {
       TableName: mockTableName,
       AttributeDefinitions: [
         { AttributeName: "pk", AttributeType: "S" },

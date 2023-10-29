@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.2.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.2.0...v2.2.1-next.1) (2023-10-29)
+
+
+### Bug Fixes
+
+* correct ts-eslint rules impl for flatconfig ([5a5aef3](https://github.com/Nerdware-LLC/ddb-single-table/commit/5a5aef3331f1aa6a9546034f295663185df8841e))
+
 # [2.2.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.1.3...v2.2.0) (2023-10-16)
 
 

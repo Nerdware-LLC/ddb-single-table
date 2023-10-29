@@ -26,7 +26,7 @@ describe("table.ensureTableIsActive()", () => {
     // This spy just advances the mock-timer to trigger the timeout.
     vi.spyOn(mockTable.ddbClient, "describeTable").mockImplementation(() => {
       vi.advanceTimersByTime(2000);
-      return Promise.resolve({ Table: { TableStatus: "" } });
+      return Promise.resolve({ Table: { TableStatus: "ACTIVE" as const } });
     });
 
     await expect(() => mockTable.ensureTableIsActive({ timeout: 1 })).rejects.toThrowError(
@@ -134,7 +134,7 @@ describe("table.ensureTableIsActive()", () => {
         // Until the 3rd attempt, throw ResourceNotFoundException:
         if (mockConnectionAttempts < 3) throw { name: "ResourceNotFoundException" };
         // return "ACTIVE" on the 3rd attempt:
-        return Promise.resolve({ Table: { TableStatus: "ACTIVE" } });
+        return Promise.resolve({ Table: { TableStatus: "ACTIVE" as const } });
       }),
       createTable: vi.spyOn(mockTable.ddbClient, "createTable").mockResolvedValue({
         TableDescription: { TableStatus: "CREATING" },
