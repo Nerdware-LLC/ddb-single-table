@@ -21,9 +21,12 @@ export default [
       sourceType: "module",
       parser: tsEslintParser,
       parserOptions: {
-        project: ["./tsconfig.json"],
+        project: "./tsconfig.json",
         ecmaVersion: "latest",
         sourceType: "module",
+        ecmaFeatures: {
+          globalReturn: false,
+        },
       },
     },
     plugins: {
@@ -35,15 +38,12 @@ export default [
       ...eslintJS.configs.recommended.rules,
       ...importPlugin.configs.recommended.rules,
       ...importPlugin.configs["typescript"].rules,
-      ...nodePlugin.configs.recommended.rules,
-      ...tsEslintPlugin.configs["eslint-recommended"].rules,
-      ...tsEslintPlugin.configs.recommended.rules,
-      ...tsEslintPlugin.configs["recommended-requiring-type-checking"].rules,
+      ...tsEslintPlugin.configs["eslint-recommended"].overrides[0].rules, // turns off base eslint rules covered by ts-eslint
+      ...tsEslintPlugin.configs["recommended-type-checked"].rules,
+      "default-case": "error",
+      "default-case-last": "error",
       eqeqeq: ["error", "always"],
       "no-console": ["warn", { allow: ["info", "warn", "error"] }],
-      "no-dupe-class-members": "off", // used instead: @typescript-eslint/no-dupe-class-members
-      "no-redeclare": "off", //          used instead: @typescript-eslint/no-redeclare
-      "no-unused-vars": "off", //        used instead: @typescript-eslint/no-unused-vars
       "prefer-const": "warn",
       semi: ["error", "always"],
       "node/no-missing-import": [
