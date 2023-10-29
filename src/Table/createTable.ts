@@ -79,7 +79,9 @@ export const createTable = async function <TableKeysSchema extends TableKeysSche
               AttributeName: keyAttrName,
               KeyType: "HASH",
             },
-            ...(index?.rangeKey ? [{ AttributeName: index.rangeKey, KeyType: "RANGE" }] : []),
+            ...(index?.rangeKey
+              ? [{ AttributeName: index.rangeKey, KeyType: "RANGE" as const }]
+              : []),
           ],
           Projection: {
             ProjectionType: !index?.project // if undefined or false, default "KEYS_ONLY"
