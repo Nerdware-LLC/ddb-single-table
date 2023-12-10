@@ -7,6 +7,7 @@ import {
   isDate,
   isArray,
   isPlainObject,
+  isErrorObject,
   isTuple,
   isEnumMember,
   isFunction,
@@ -483,6 +484,36 @@ describe("isPlainObject", () => {
     expect(isPlainObject(() => "")).toBe(false);
   });
 });
+
+describe("isErrorObject", () => {
+  test("returns true when called with an error object", () => {
+    expect(isErrorObject(new Error())).toBe(true);
+    expect(isErrorObject(new EvalError())).toBe(true);
+    expect(isErrorObject(new RangeError())).toBe(true);
+    expect(isErrorObject(new ReferenceError())).toBe(true);
+    expect(isErrorObject(new SyntaxError())).toBe(true);
+    expect(isErrorObject(new TypeError())).toBe(true);
+    expect(isErrorObject(new URIError())).toBe(true);
+  });
+  test("returns false when called with an argument which is not an error object", () => {
+    expect(isErrorObject()).toBe(false);
+    expect(isErrorObject("object")).toBe(false);
+    expect(isErrorObject("")).toBe(false);
+    expect(isErrorObject(1)).toBe(false);
+    expect(isErrorObject(0)).toBe(false);
+    expect(isErrorObject(NaN)).toBe(false);
+    expect(isErrorObject(true)).toBe(false);
+    expect(isErrorObject(false)).toBe(false);
+    expect(isErrorObject(null)).toBe(false);
+    expect(isErrorObject(undefined)).toBe(false);
+    expect(isErrorObject([])).toBe(false);
+    expect(isErrorObject({})).toBe(false);
+    expect(isErrorObject(new Date())).toBe(false);
+    expect(isErrorObject(new Map())).toBe(false);
+    expect(isErrorObject(new Set())).toBe(false);
+    expect(isErrorObject(Symbol(""))).toBe(false);
+    expect(isErrorObject(BigInt(1))).toBe(false);
+    expect(isErrorObject(() => "")).toBe(false);
   });
 });
 
