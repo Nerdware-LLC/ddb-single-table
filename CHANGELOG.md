@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.3.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.2.1...v2.3.0) (2023-12-11)
+
+
+### Features
+
+* **utils:** add isErrorObject ([d84b1c2](https://github.com/Nerdware-LLC/ddb-single-table/commit/d84b1c22c48cf7f85c66979ed3386dc1dab54207))
+
 # [2.3.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.2.1...v2.3.0-next.1) (2023-12-10)
 
 
