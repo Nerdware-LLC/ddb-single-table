@@ -1,5 +1,5 @@
 import { Table } from "./Table";
-import { isType, DdbSingleTableError, DdbConnectionError } from "../utils";
+import { isPlainObject, isErrorObject, DdbSingleTableError, DdbConnectionError } from "../utils";
 import type { TableKeysSchemaType } from "../Schema";
 import type { EnsureTableIsActiveParams } from "./types";
 
@@ -65,13 +65,13 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       });
     } catch (err: unknown) {
       // Sanity type-check: ensure `err` is an object.
-      if (!err || typeof err !== "object") throw err;
+      if (!isErrorObject(err) && !isPlainObject(err)) throw err;
 
       // If `err?.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
-      if ((err as Record<string, any>)?.code === "ECONNREFUSED") throw new DdbConnectionError(err);
+      if ((err as { code?: unknown })?.code === "ECONNREFUSED") throw new DdbConnectionError(err);
 
       // If `err` is a "ResourceNotFoundException", Table doesn't exist - see if it should be created.
-      if ((err as Record<string, any>)?.name !== "ResourceNotFoundException") throw err;
+      if (err?.name !== "ResourceNotFoundException") throw err;
 
       // If Table doesn't exist AND !createIfNotExists, throw error.
       if (!createIfNotExists) {
@@ -92,7 +92,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
 
       // Create the table (provide `createIfNotExists` if it's a `tableConfigs` object)
       const response = await this.createTable(
-        isType.map(createIfNotExists) ? createIfNotExists : undefined
+        isPlainObject(createIfNotExists) ? createIfNotExists : undefined
       );
 
       // Get the TableStatus from the response

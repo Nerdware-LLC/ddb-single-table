@@ -6,7 +6,8 @@ import {
   isBuffer,
   isDate,
   isArray,
-  isRecordObject,
+  isPlainObject,
+  isErrorObject,
   isTuple,
   isEnumMember,
   isFunction,
@@ -457,30 +458,62 @@ describe("isArray", () => {
   });
 });
 
-describe("isRecordObject", () => {
+describe("isPlainObject", () => {
   test("returns true when called with a record-like object", () => {
-    expect(isRecordObject({})).toBe(true);
-    expect(isRecordObject(Object.create(null))).toBe(true);
+    expect(isPlainObject({})).toBe(true);
+    expect(isPlainObject(Object.create(null))).toBe(true);
   });
   test("returns false when called with a non-record-like argument", () => {
-    expect(isRecordObject()).toBe(false);
-    expect(isRecordObject("object")).toBe(false);
-    expect(isRecordObject("")).toBe(false);
-    expect(isRecordObject(1)).toBe(false);
-    expect(isRecordObject(0)).toBe(false);
-    expect(isRecordObject(NaN)).toBe(false);
-    expect(isRecordObject(true)).toBe(false);
-    expect(isRecordObject(false)).toBe(false);
-    expect(isRecordObject(null)).toBe(false);
-    expect(isRecordObject(undefined)).toBe(false);
-    expect(isRecordObject([])).toBe(false);
-    expect(isRecordObject(new Date())).toBe(false);
-    expect(isRecordObject(new Map())).toBe(false);
-    expect(isRecordObject(new Set())).toBe(false);
-    expect(isRecordObject(Buffer.from(""))).toBe(false);
-    expect(isRecordObject(Symbol(""))).toBe(false);
-    expect(isRecordObject(BigInt(1))).toBe(false);
-    expect(isRecordObject(() => "")).toBe(false);
+    expect(isPlainObject()).toBe(false);
+    expect(isPlainObject("object")).toBe(false);
+    expect(isPlainObject("")).toBe(false);
+    expect(isPlainObject(1)).toBe(false);
+    expect(isPlainObject(0)).toBe(false);
+    expect(isPlainObject(NaN)).toBe(false);
+    expect(isPlainObject(true)).toBe(false);
+    expect(isPlainObject(false)).toBe(false);
+    expect(isPlainObject(null)).toBe(false);
+    expect(isPlainObject(undefined)).toBe(false);
+    expect(isPlainObject([])).toBe(false);
+    expect(isPlainObject(new Date())).toBe(false);
+    expect(isPlainObject(new Map())).toBe(false);
+    expect(isPlainObject(new Set())).toBe(false);
+    expect(isPlainObject(Buffer.from(""))).toBe(false);
+    expect(isPlainObject(Symbol(""))).toBe(false);
+    expect(isPlainObject(BigInt(1))).toBe(false);
+    expect(isPlainObject(() => "")).toBe(false);
+  });
+});
+
+describe("isErrorObject", () => {
+  test("returns true when called with an error object", () => {
+    expect(isErrorObject(new Error())).toBe(true);
+    expect(isErrorObject(new EvalError())).toBe(true);
+    expect(isErrorObject(new RangeError())).toBe(true);
+    expect(isErrorObject(new ReferenceError())).toBe(true);
+    expect(isErrorObject(new SyntaxError())).toBe(true);
+    expect(isErrorObject(new TypeError())).toBe(true);
+    expect(isErrorObject(new URIError())).toBe(true);
+  });
+  test("returns false when called with an argument which is not an error object", () => {
+    expect(isErrorObject()).toBe(false);
+    expect(isErrorObject("object")).toBe(false);
+    expect(isErrorObject("")).toBe(false);
+    expect(isErrorObject(1)).toBe(false);
+    expect(isErrorObject(0)).toBe(false);
+    expect(isErrorObject(NaN)).toBe(false);
+    expect(isErrorObject(true)).toBe(false);
+    expect(isErrorObject(false)).toBe(false);
+    expect(isErrorObject(null)).toBe(false);
+    expect(isErrorObject(undefined)).toBe(false);
+    expect(isErrorObject([])).toBe(false);
+    expect(isErrorObject({})).toBe(false);
+    expect(isErrorObject(new Date())).toBe(false);
+    expect(isErrorObject(new Map())).toBe(false);
+    expect(isErrorObject(new Set())).toBe(false);
+    expect(isErrorObject(Symbol(""))).toBe(false);
+    expect(isErrorObject(BigInt(1))).toBe(false);
+    expect(isErrorObject(() => "")).toBe(false);
   });
 });
 

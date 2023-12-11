@@ -1,4 +1,4 @@
-import { DdbSingleTableError, isType, safeJsonStringify } from "../utils";
+import { DdbSingleTableError, isString, safeJsonStringify } from "../utils";
 import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types";
 
 /**
@@ -53,7 +53,8 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
     unprocessedRequestObjects = await submitBatchRequest(batchRequestObjects);
   } catch (err) {
     // If a batch op throws, NONE of the requests were successful, check if `err.code` is retryable.
-    if (!isType.map(err) || !ERR_CODE_SHOULD_RETRY?.[(err as any)?.code]) throw err;
+    const maybeErrCode = (err as any)?.code as unknown;
+    if (!isString(maybeErrCode) || !ERR_CODE_SHOULD_RETRY?.[maybeErrCode]) throw err;
     // If `err.code` indicates the op should be retried, run again with all batchRequestObjects.
     unprocessedRequestObjects = batchRequestObjects;
   }
@@ -109,4 +110,4 @@ const ERR_CODE_SHOULD_RETRY: Record<string, boolean> = {
   ProvisionedThroughputExceededException: true, // <-- SDK should auto-retry
   // Applicable to PAY_PER_REQUEST BillingMode:
   RequestLimitExceeded: true,
-};
+} as const;

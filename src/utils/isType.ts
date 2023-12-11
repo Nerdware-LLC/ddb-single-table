@@ -74,10 +74,18 @@ export const isDate = (value?: unknown): value is Date => {
  *  - `{ foo: "bar" }`
  *  - `Object.create(null)` // <-- Why checking the 'constructor' property won't work.
  */
-export const isRecordObject = <KeyTypes extends PropertyKey = string>(
+export const isPlainObject = <KeyTypes extends PropertyKey = string>(
   value?: unknown
 ): value is Record<KeyTypes, unknown> => {
-  return typeof value === "object" && Object.prototype.toString.call(value) === "[object Object]";
+  return Object.prototype.toString.call(value) === "[object Object]";
+};
+
+/**
+ * `Error` object type guard function which tests if `arg` is _either_ an instance of the `Error`
+ * class _or_ if the return value of `Object.prototype.toString.call(arg)` is `"[object Error]"`.
+ */
+export const isErrorObject = (arg?: unknown): arg is Error => {
+  return arg instanceof Error || Object.prototype.toString.call(arg) === "[object Error]";
 };
 
 /**
@@ -118,7 +126,7 @@ export const isType = Object.freeze({
   /** Type guard function for `type: "array"` */
   array: isArray,
   /** Type guard function for `type: "map"` */
-  map: isRecordObject,
+  map: isPlainObject,
   /** Type guard function for `type: "tuple"` */
   tuple: isTuple,
   /** Type guard function for `type: "enum"` */
