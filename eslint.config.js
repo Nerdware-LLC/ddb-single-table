@@ -1,6 +1,7 @@
 import eslintJS from "@eslint/js";
 import tsEslintPlugin from "@typescript-eslint/eslint-plugin";
 import tsEslintParser from "@typescript-eslint/parser";
+import eslintConfigPrettier from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
 import nodePlugin from "eslint-plugin-node";
 import vitestPlugin from "eslint-plugin-vitest";
@@ -81,7 +82,7 @@ export default [
       "import/resolver": {
         node: true,
         typescript: {
-          project: ["./tsconfig.json"],
+          project: "./tsconfig.json",
         },
       },
     },
@@ -119,5 +120,10 @@ export default [
       "@typescript-eslint/no-unsafe-assignment": "off",
     },
   },
+  ////////////////////////////////////////////////////////////////
+  // eslint-config-prettier (must be last, rm's conflicting rules)
+
+  eslintConfigPrettier,
+
   ////////////////////////////////////////////////////////////////
 ];
