@@ -1,7 +1,7 @@
 <div align="center">
 
   <a href="https://github.com/Nerdware-LLC">
-    <img src=".github/assets/ddb-single-table-banner.png" alt="ddb-single-table-banner" />
+    <img src=".github/assets/ddb-single-table-banner.png" alt="ddb-single-table banner" />
   </a>
 
   <br />
@@ -13,7 +13,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 
 [![npm package][npm-badge]](https://www.npmjs.com/package/@nerdware/ddb-single-table)
 &nbsp;
-[![Test Workflow][gh-test-badge]](https://github.com/Nerdware-LLC/ddb-single-table/blob/main/.github/workflows/test.yaml)
+[![Test Workflow][gh-test-badge]](.github/workflows/test.yaml)
 &nbsp;
 [![Codecov][codecov-badge]](https://codecov.io/gh/Nerdware-LLC/ddb-single-table)
 &nbsp;
@@ -325,26 +325,26 @@ Pull requests are welcome! Before you begin, please check existing [GitHub Issue
 
 ## 💬 Contact
 
-Trevor Anderson - [@TeeRevTweets](https://twitter.com/teerevtweets) - [Trevor@Nerdware.cloud](mailto:trevor@nerdware.cloud)
+Trevor Anderson — [Trevor@Nerdware.cloud](mailto:trevor@nerdware.cloud) — [@TeeRevTweets](https://twitter.com/teerevtweets)
 
-  <a href="https://www.youtube.com/channel/UCguSCK_j1obMVXvv-DUS3ng">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/YouTube_icon_circle.svg" height="40" />
+  <a href="https://www.youtube.com/@nerdware-io">
+    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/YouTube_icon_circle.svg" height="40" alt="Check out Nerdware on YouTube" />
   </a>
   &nbsp;
   <a href="https://www.linkedin.com/in/meet-trevor-anderson/">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/LinkedIn_icon_circle.svg" height="40" />
+    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/LinkedIn_icon_circle.svg" height="40" alt="Trevor Anderson's LinkedIn" />
   </a>
   &nbsp;
   <a href="https://twitter.com/TeeRevTweets">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/Twitter_icon_circle.svg" height="40" />
+    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/Twitter_icon_circle.svg" height="40" alt="Trevor Anderson's Twitter" />
   </a>
   &nbsp;
   <a href="mailto:trevor@nerdware.cloud">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/email_icon_circle.svg" height="40" />
+    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/email_icon_circle.svg" height="40" alt="Email Trevor Anderson" />
   </a>
   <br><br>
 
-  <a href="https://daremightythings.co/">
+  <a href="https://www.youtube.com/watch?v=GO5FwsblpT8">
     <strong><i>Dare Mighty Things.</i></strong>
   </a>
 
