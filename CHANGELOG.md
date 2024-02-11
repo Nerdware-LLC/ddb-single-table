@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.3.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.3.1...v2.3.2) (2024-02-11)
+
+
+### Bug Fixes
+
+* correct isFunction return type ([fd03980](https://github.com/Nerdware-LLC/ddb-single-table/commit/fd03980ea14e13e723e547cf1b42acb717d77e0e))
+
 ## [2.3.2-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.3.1...v2.3.2-next.1) (2024-02-11)
 
 
