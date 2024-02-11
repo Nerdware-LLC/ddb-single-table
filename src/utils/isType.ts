@@ -1,9 +1,7 @@
 import type { SchemaSupportedTypeStringLiterals } from "../Schema";
 
 /** `string` type guard function */
-export const isString = (value?: unknown): value is string => {
-  return typeof value === "string";
-};
+export const isString = (value?: unknown): value is string => typeof value === "string";
 
 /**
  * `number` type guard function
@@ -22,44 +20,29 @@ export const isNumber = (value?: unknown): value is number => {
 };
 
 /** `boolean` type guard function */
-export const isBoolean = (value?: unknown): value is boolean => {
-  return typeof value === "boolean";
-};
+export const isBoolean = (value?: unknown): value is boolean => typeof value === "boolean";
 
 /** `function` type guard function */
-export const isFunction = (value?: unknown): value is boolean => {
-  return typeof value === "function";
-};
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const isFunction = (value?: unknown): value is Function => typeof value === "function";
 
 /** `BigInt` type guard function */
-export const isBigInt = (value?: unknown): value is bigint => {
-  return typeof value === "bigint";
-};
+export const isBigInt = (value?: unknown): value is bigint => typeof value === "bigint";
 
 /** `Buffer` type guard function */
-export const isBuffer = (value?: unknown): value is Buffer => {
-  return Buffer.isBuffer(value);
-};
+export const isBuffer = (value?: unknown): value is Buffer => Buffer.isBuffer(value);
 
 /** `Symbol` type guard function */
-export const isSymbol = (value?: unknown): value is symbol => {
-  return typeof value === "symbol";
-};
+export const isSymbol = (value?: unknown): value is symbol => typeof value === "symbol";
 
 /** `undefined` type guard function */
-export const isUndefined = (value?: unknown): value is undefined => {
-  return value === void 0; // <-- most performant way to check for undefined
-};
+export const isUndefined = (value?: unknown): value is undefined => value === void 0; // <-- most performant way to check for undefined
 
 /** `null` type guard function */
-export const isNull = (value?: unknown): value is null => {
-  return value === null;
-};
+export const isNull = (value?: unknown): value is null => value === null;
 
 /** `Array` type guard function */
-export const isArray = (value?: unknown): value is Array<unknown> => {
-  return Array.isArray(value);
-};
+export const isArray: <T>(value?: unknown) => value is Array<T> | ReadonlyArray<T> = Array.isArray;
 
 /** `Date` type guard function will return `false` if the Date is invalid. */
 export const isDate = (value?: unknown): value is Date => {

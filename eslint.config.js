@@ -39,6 +39,7 @@ export default [
       ...eslintJS.configs.recommended.rules,
       ...importPlugin.configs.recommended.rules,
       ...importPlugin.configs["typescript"].rules,
+      ...nodePlugin.configs.recommended.rules,
       ...tsEslintPlugin.configs["eslint-recommended"].overrides[0].rules, // turns off base eslint rules covered by ts-eslint
       ...tsEslintPlugin.configs["recommended-type-checked"].rules,
       "default-case": "error",
