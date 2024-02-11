@@ -11,28 +11,26 @@ built to _**supercharge**_ single-table designs!⚡<br><br>
 Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-features). <br>
 <font size="2"><i>Fully-typed support for ESM and CommonJS</i></font>
 
-[![npm package][npm-badge]](https://www.npmjs.com/package/@nerdware/ddb-single-table)
+[![npm package][npm-badge]](https://www.npmjs.com/package/@nerdware/ddb-single-table "npmjs.com: @nerdware/ddb-single-table")
 &nbsp;
-[![Test Workflow][gh-test-badge]](.github/workflows/test.yaml)
+[![Test Workflow][gh-test-badge]](.github/workflows/test.yaml "View Test Workflow file")
 &nbsp;
-[![Codecov][codecov-badge]](https://codecov.io/gh/Nerdware-LLC/ddb-single-table)
+[![Codecov][codecov-badge]](https://codecov.io/gh/Nerdware-LLC/ddb-single-table "View coverage report")
 &nbsp;
-[![pre-commit][pre-commit-badge]](https://pre-commit.com/)
+[![pre-commit][pre-commit-badge]](https://pre-commit.com/ "pre-commit.com")
 &nbsp;
-[![semantic-release][semantic-badge]](https://github.com/semantic-release/semantic-release#readme)
+[![semantic-release][semantic-badge]](https://github.com/semantic-release/semantic-release#readme "github.com: semantic-release")
 &nbsp;
-[![License: MIT][license-badge]](https://opensource.org/licenses/MIT)
+[![License: MIT][license-badge]](https://opensource.org/licenses/MIT "opensource.org: The MIT License")
 
-<!--
-    BADGE LINKS:
--->
+<!--   BADGE LINKS   -->
 
-[license-badge]: https://img.shields.io/badge/License-MIT-000080.svg "opensource.org: The MIT License"
-[codecov-badge]: https://codecov.io/gh/Nerdware-LLC/ddb-single-table/graph/badge.svg?token=RLCCIOLT01 "codecov.io: Coverage Report"
-[semantic-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-6601ff.svg "github.com: semantic-release"
-[gh-test-badge]: https://github.com/Nerdware-LLC/ddb-single-table/actions/workflows/test.yaml/badge.svg?branch=main "github.com: Test Workflow"
-[pre-commit-badge]: https://img.shields.io/badge/pre--commit-7A8B80.svg?logo=pre-commit&logoColor=F8B424&labelColor=gray "pre-commit.com"
-[npm-badge]: https://img.shields.io/npm/v/%40nerdware/ddb-single-table?logo=npm&label=npm%40latest "npmjs.com: @nerdware/ddb-single-table"
+[license-badge]: https://img.shields.io/badge/License-MIT-000080.svg
+[codecov-badge]: https://codecov.io/gh/Nerdware-LLC/ddb-single-table/graph/badge.svg?token=RLCCIOLT01
+[semantic-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-6601ff.svg
+[gh-test-badge]: https://github.com/Nerdware-LLC/ddb-single-table/actions/workflows/test.yaml/badge.svg?branch=main
+[pre-commit-badge]: https://img.shields.io/badge/pre--commit-7A8B80.svg?logo=pre-commit&logoColor=F8B424&labelColor=gray
+[npm-badge]: https://img.shields.io/npm/v/%40nerdware/ddb-single-table?logo=npm&label=npm%40latest
 
 </div>
 
@@ -327,25 +325,14 @@ Pull requests are welcome! Before you begin, please check existing [GitHub Issue
 
 Trevor Anderson — [Trevor@Nerdware.cloud](mailto:trevor@nerdware.cloud) — [@TeeRevTweets](https://twitter.com/teerevtweets)
 
-  <a href="https://www.youtube.com/@nerdware-io">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/YouTube_icon_circle.svg" height="40" alt="Check out Nerdware on YouTube" />
-  </a>
-  &nbsp;
-  <a href="https://www.linkedin.com/in/meet-trevor-anderson/">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/LinkedIn_icon_circle.svg" height="40" alt="Trevor Anderson's LinkedIn" />
-  </a>
-  &nbsp;
-  <a href="https://twitter.com/TeeRevTweets">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/Twitter_icon_circle.svg" height="40" alt="Trevor Anderson's Twitter" />
-  </a>
-  &nbsp;
-  <a href="mailto:trevor@nerdware.cloud">
-    <img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/email_icon_circle.svg" height="40" alt="Email Trevor Anderson" />
-  </a>
-  <br><br>
+[<img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/YouTube_icon_circle.svg" height="40" alt="Check out Nerdware on YouTube" />](https://www.youtube.com/@nerdware-io)
+&emsp;
+[<img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/LinkedIn_icon_circle.svg" height="40" alt="Trevor Anderson's LinkedIn" />](https://www.linkedin.com/in/meet-trevor-anderson/)
+&emsp;
+[<img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/Twitter_icon_circle.svg" height="40" alt="Trevor Anderson's Twitter" />](https://twitter.com/TeeRevTweets)
+&emsp;
+[<img src="https://github.com/trevor-anderson/trevor-anderson/blob/main/assets/email_icon_circle.svg" height="40" alt="Email Trevor Anderson" />](mailto:trevor@nerdware.cloud)
 
-  <a href="https://www.youtube.com/watch?v=GO5FwsblpT8">
-    <strong><i>Dare Mighty Things.</i></strong>
-  </a>
+[**_Dare Mighty Things._**](https://www.youtube.com/watch?v=GO5FwsblpT8)
 
 </div>
