@@ -28,7 +28,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 [npm-badge]: https://img.shields.io/npm/v/%40nerdware/ddb-single-table?logo=npm&label=npm%40latest
 [gh-test-badge]: https://github.com/Nerdware-LLC/ddb-single-table/actions/workflows/test.yaml/badge.svg?branch=main
 [codecov-badge]: https://codecov.io/gh/Nerdware-LLC/ddb-single-table/graph/badge.svg?token=RLCCIOLT01
-[pre-commit-badge]: https://img.shields.io/badge/pre--commit-7A8B80.svg?logo=pre-commit&logoColor=F8B424&labelColor=gray
+[pre-commit-badge]: https://img.shields.io/badge/pre--commit-F8B424.svg?logo=pre-commit&logoColor=F8B424&labelColor=gray
 [semantic-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-6601ff.svg
 [license-badge]: https://img.shields.io/badge/License-MIT-000080.svg
 
