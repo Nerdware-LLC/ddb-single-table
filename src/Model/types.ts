@@ -1,5 +1,5 @@
 import type { Simplify } from "type-fest";
-import type { BatchOperationParams } from "../BatchRequests";
+import type { BatchOperationParams } from "../BatchRequests/types.js";
 import type {
   GetItemInput,
   BatchGetItemsInput,
@@ -9,10 +9,17 @@ import type {
   BatchWriteItemsInput,
   QueryInput,
   ScanInput,
-} from "../DdbClientWrapper";
-import type { WhereQueryParams, UpdateItemAutoGenUpdateExpressionParams } from "../Expressions";
-import type { TableKeysSchemaType, ModelSchemaType } from "../Schema";
-import type { BaseItem, AttrAliasOrName, SupportedAttributeValueTypes } from "../types/itemTypes";
+} from "../DdbClientWrapper/types.js";
+import type {
+  WhereQueryParams,
+  UpdateItemAutoGenUpdateExpressionParams,
+} from "../Expressions/index.js";
+import type { TableKeysSchemaType, ModelSchemaType } from "../Schema/types.js";
+import type {
+  BaseItem,
+  AttrAliasOrName,
+  SupportedAttributeValueTypes,
+} from "../types/itemTypes.js";
 
 /** A map of attribute names to corresponding aliases, or vice versa. */
 export type AttributesAliasesMap = Record<string, string>;

@@ -3,9 +3,9 @@ import type {
   ModelSchemaOptions,
   ModelSchemaNestedAttributes,
   SchemaEntries,
-} from "../../Schema";
-import type { BaseItem } from "../../types/itemTypes";
-import type { AttributesAliasesMap } from "../types";
+} from "../../Schema/types.js";
+import type { BaseItem } from "../../types/itemTypes.js";
+import type { AttributesAliasesMap } from "../types.js";
 
 /**
  * Labels corresponding to the request/response cycle which indicate the "direction" data is flowing

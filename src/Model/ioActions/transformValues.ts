@@ -1,5 +1,5 @@
-import { hasKey } from "../../utils";
-import type { IOActions, IOAction } from "./types";
+import { hasKey } from "@nerdware/ts-type-safety-utils";
+import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` uses `transformValue` functions (if defined) to

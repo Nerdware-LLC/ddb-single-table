@@ -1,6 +1,7 @@
-import { Schema } from "./Schema";
-import { SchemaValidationError, hasKey } from "../utils";
-import type { TableKeysAndIndexes } from "../Table";
+import { hasKey } from "@nerdware/ts-type-safety-utils";
+import { Schema } from "./Schema.js";
+import { SchemaValidationError } from "../utils/errors.js";
+import type { TableKeysAndIndexes } from "../Table/types.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
@@ -8,7 +9,7 @@ import type {
   KeyAttributeConfig,
   TableKeysSchemaMetadata,
   MergeModelAndTableKeysSchema,
-} from "./types";
+} from "./types.js";
 
 /**
  * This class and its `Schema` parent class currently only serve to organize schema-related types,

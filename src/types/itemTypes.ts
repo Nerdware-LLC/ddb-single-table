@@ -5,7 +5,7 @@ import type {
   AttributeDefault,
   ModelSchemaNestedMap,
   ModelSchemaNestedArray,
-} from "../Schema";
+} from "../Schema/types.js";
 
 /** An interface representing an Item with supported value types. */
 export interface BaseItem {
@@ -192,16 +192,14 @@ export type ItemParameters<ItemCreationParams extends BaseItem> = Simplify<
  * This generic creates a typing for the parameters necessary to update an Item.
  * @internal
  */
-type ItemParametersValue<
-  T,
-  NestDepth extends NestDepthMax32,
-> = IterateNestDepthMax32<NestDepth> extends 32
-  ? never
-  : T extends BaseItem
-  ? { [K in keyof T]+?: ItemParametersValue<T[K], IterateNestDepthMax32<NestDepth>> }
-  : T extends Array<infer El>
-  ? Array<ItemParametersValue<El, IterateNestDepthMax32<NestDepth>>>
-  : T;
+type ItemParametersValue<T, NestDepth extends NestDepthMax32> =
+  IterateNestDepthMax32<NestDepth> extends 32
+    ? never
+    : T extends BaseItem
+      ? { [K in keyof T]+?: ItemParametersValue<T[K], IterateNestDepthMax32<NestDepth>> }
+      : T extends Array<infer El>
+        ? Array<ItemParametersValue<El, IterateNestDepthMax32<NestDepth>>>
+        : T;
 
 /**
  * This type maps schema attribute names to values and makes the following access modifications:
@@ -270,25 +268,26 @@ type AttrValue<
   T extends BaseAttributeConfig,
   Opts extends ItemTypeOpts,
   NestDepth extends NestDepthMax32,
-> = IterateNestDepthMax32<NestDepth> extends 32
-  ? never
-  : T["type"] extends "string"
-  ? string
-  : T["type"] extends "number"
-  ? number
-  : T["type"] extends "boolean"
-  ? boolean
-  : T["type"] extends "Buffer"
-  ? Buffer
-  : T["type"] extends "Date"
-  ? Date
-  : T extends { type: "map"; schema: ModelSchemaNestedMap }
-  ? SchemaMapToItem<T["schema"], Opts, IterateNestDepthMax32<NestDepth>>
-  : T extends { type: "array" | "tuple"; schema: ModelSchemaNestedArray }
-  ? Array<AttrValue<T["schema"][number], Opts, IterateNestDepthMax32<NestDepth>>>
-  : T extends { type: "enum"; oneOf: ReadonlyArray<string> }
-  ? T["oneOf"][number]
-  : never;
+> =
+  IterateNestDepthMax32<NestDepth> extends 32
+    ? never
+    : T["type"] extends "string"
+      ? string
+      : T["type"] extends "number"
+        ? number
+        : T["type"] extends "boolean"
+          ? boolean
+          : T["type"] extends "Buffer"
+            ? Buffer
+            : T["type"] extends "Date"
+              ? Date
+              : T extends { type: "map"; schema: ModelSchemaNestedMap }
+                ? SchemaMapToItem<T["schema"], Opts, IterateNestDepthMax32<NestDepth>>
+                : T extends { type: "array" | "tuple"; schema: ModelSchemaNestedArray }
+                  ? Array<AttrValue<T["schema"][number], Opts, IterateNestDepthMax32<NestDepth>>>
+                  : T extends { type: "enum"; oneOf: ReadonlyArray<string> }
+                    ? T["oneOf"][number]
+                    : never;
 
 /**
  * This internal union represents the nest-depth of recursively mapped item/attribute types,

@@ -1,5 +1,5 @@
-import { transformItem } from "./transformItem";
-import type { IOActions, IOActionContext, IODirection } from "./types";
+import { transformItem } from "./transformItem.js";
+import type { IOActions, IOActionContext, IODirection } from "./types.js";
 
 describe("IOAction: transformItem", () => {
   // Mock `this` context can be empty bc transformItem doesn't access any other IOActionMethods

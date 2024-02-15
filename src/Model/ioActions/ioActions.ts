@@ -1,14 +1,14 @@
-import { aliasMapping } from "./aliasMapping";
-import { checkRequired } from "./checkRequired";
-import { convertJsTypes } from "./convertJsTypes";
-import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
-import { setDefaults } from "./setDefaults";
-import { transformItem } from "./transformItem";
-import { transformValues } from "./transformValues";
-import { typeChecking } from "./typeChecking";
-import { validate } from "./validate";
-import { validateItem } from "./validateItem";
-import type { IOActions } from "./types";
+import { aliasMapping } from "./aliasMapping.js";
+import { checkRequired } from "./checkRequired.js";
+import { convertJsTypes } from "./convertJsTypes.js";
+import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
+import { setDefaults } from "./setDefaults.js";
+import { transformItem } from "./transformItem.js";
+import { transformValues } from "./transformValues.js";
+import { typeChecking } from "./typeChecking.js";
+import { validate } from "./validate.js";
+import { validateItem } from "./validateItem.js";
+import type { IOActions } from "./types.js";
 
 /**
  * An object with various methods used to validate and transform items to/from the db.

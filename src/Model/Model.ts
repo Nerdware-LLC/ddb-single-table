@@ -1,20 +1,21 @@
-import { ioActions } from "./ioActions";
-import { handleBatchRequests, type BatchRequestFunction } from "../BatchRequests";
-import { DdbClientWrapper } from "../DdbClientWrapper";
-import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions";
-import { ModelSchema } from "../Schema";
-import { ItemInputError } from "../utils";
+import { isArray } from "@nerdware/ts-type-safety-utils";
+import { ioActions } from "./ioActions/index.js";
+import { handleBatchRequests, type BatchRequestFunction } from "../BatchRequests/index.js";
+import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
+import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions/index.js";
+import { ModelSchema } from "../Schema/ModelSchema.js";
+import { ItemInputError } from "../utils/errors.js";
 import type { SetOptional } from "type-fest";
-import type { ModelSchemaType, ModelSchemaOptions, SchemaEntries } from "../Schema";
-import type { TableKeysAndIndexes } from "../Table";
+import type { ModelSchemaType, ModelSchemaOptions, SchemaEntries } from "../Schema/types.js";
+import type { TableKeysAndIndexes } from "../Table/types.js";
 import type {
   BaseItem,
   ItemKeys,
   ItemTypeFromSchema,
   ItemCreationParameters,
   ItemParameters,
-} from "../types/itemTypes";
-import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions";
+} from "../types/itemTypes.js";
+import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions/index.js";
 import type {
   AttributesAliasesMap,
   KeyParameters,
@@ -27,7 +28,7 @@ import type {
   BatchWriteItemsOpts,
   QueryOpts,
   ScanOpts,
-} from "./types";
+} from "./types.js";
 
 /**
  * Each Model instance is provided with CRUD methods featuring parameter and return types which
@@ -219,7 +220,7 @@ export class Model<
     { exponentialBackoffConfigs, ...batchGetItemOpts }: BatchGetItemsOpts = {}
   ): Promise<Array<ItemType>> => {
     // Safety-check: throw error if `primaryKeys` is not an array
-    if (!Array.isArray(primaryKeys)) {
+    if (!isArray(primaryKeys)) {
       throw new ItemInputError(`[batchGetItems] The "primaryKeys" parameter must be an array.`);
     }
 
@@ -241,7 +242,7 @@ export class Model<
       // Get any successfully returned items from the response
       const items = response?.Responses?.[this.tableName];
       // If the response returned items, add them to the `batchGetItems` array
-      if (Array.isArray(items)) returnedItems.push(...items);
+      if (isArray(items)) returnedItems.push(...items);
       // Return any unprocessed keys
       return response?.UnprocessedKeys?.[this.tableName]?.Keys;
     };
@@ -512,12 +513,12 @@ export class Model<
     deleteItems?: Array<KeyParameters<Schema>>;
   }> => {
     // Safety-check: throw error if neither `upsertItems` nor `deleteItems` are arrays
-    if (!Array.isArray(upsertItems) && !Array.isArray(deleteItems)) {
+    if (!isArray(upsertItems) && !isArray(deleteItems)) {
       throw new ItemInputError("batchUpsertAndDeleteItems was called without valid arguments.");
     }
 
     // Process any `upsertItems`, and add timestamps if `autoAddTimestamps` is enabled
-    const toDBupsertItems: Array<BaseItem> = Array.isArray(upsertItems)
+    const toDBupsertItems: Array<BaseItem> = isArray(upsertItems)
       ? upsertItems.map((item) =>
           this.processItemAttributes.toDB({
             ...(this.schemaOptions.autoAddTimestamps && {
@@ -530,7 +531,7 @@ export class Model<
       : [];
 
     // Process any `deleteItems`
-    const toDBunaliasedKeysToDelete: Array<ItemKeys> = Array.isArray(deleteItems)
+    const toDBunaliasedKeysToDelete: Array<ItemKeys> = isArray(deleteItems)
       ? deleteItems.map((pks) => this.processKeyArgs(pks))
       : [];
 

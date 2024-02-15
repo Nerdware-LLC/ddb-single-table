@@ -1,6 +1,6 @@
-import { Schema } from "./Schema";
-import { SchemaValidationError } from "../utils";
-import type { TableKeysSchemaType, ModelSchemaType } from "./types";
+import { Schema } from "./Schema.js";
+import { SchemaValidationError } from "../utils/errors.js";
+import type { TableKeysSchemaType, ModelSchemaType } from "./types.js";
 
 describe("Schema", () => {
   test("validates a valid ModelSchemaType with all supported types and attributes", () => {

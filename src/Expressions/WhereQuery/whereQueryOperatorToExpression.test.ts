@@ -1,4 +1,4 @@
-import { WHERE_QUERY_OPERATOR_TO_EXPRESSION as OPERATORS } from "./whereQueryOperatorToExpression";
+import { WHERE_QUERY_OPERATOR_TO_EXPRESSION as OPERATORS } from "./whereQueryOperatorToExpression.js";
 
 describe("OPERATORS", () => {
   describe("eq()", () => {

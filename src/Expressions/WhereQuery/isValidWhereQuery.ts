@@ -1,5 +1,5 @@
-import { InvalidExpressionError, isType } from "../../utils";
-import type { WhereQueryComparisonObject, WhereQueryOperator } from "./types";
+import { InvalidExpressionError, isType } from "../../utils/index.js";
+import type { WhereQueryComparisonObject, WhereQueryOperator } from "./types.js";
 
 /**
  * Type-guard function for `WhereQueryOperator`.

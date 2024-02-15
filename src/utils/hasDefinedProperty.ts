@@ -1,4 +1,4 @@
-import { hasKey } from "./hasKey";
+import { hasKey } from "@nerdware/ts-type-safety-utils";
 
 /**
  * A type-guard which returns a boolean indicating whether the following are all true:

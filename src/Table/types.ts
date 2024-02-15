@@ -1,13 +1,16 @@
 import type { Simplify, Except } from "type-fest";
-import type { DdbClientWrapperConstructorParams, CreateTableInput } from "../DdbClientWrapper";
-import type { Model } from "../Model";
+import type {
+  DdbClientWrapperConstructorParams,
+  CreateTableInput,
+} from "../DdbClientWrapper/index.js";
+import type { Model } from "../Model/Model.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
-} from "../Schema";
-import type { BaseItem, ItemTypeFromSchema } from "../types/itemTypes";
+} from "../Schema/types.js";
+import type { BaseItem, ItemTypeFromSchema } from "../types/itemTypes.js";
 
 /** `Table` class constructor params. @public */
 export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> = Simplify<

@@ -1,5 +1,5 @@
 import type { SetOptional } from "type-fest";
-import type { BaseItem, SupportedAttributeValueTypes } from "../types";
+import type { BaseItem, SupportedAttributeValueTypes } from "../types/itemTypes.js";
 
 ///////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:
@@ -247,10 +247,10 @@ export type MergeModelAndTableKeysSchema<
         : TableKeysSchema[K]
       : never
     : K extends keyof ModelSchema // <-- K is NOT in TableKeysSchema
-    ? ModelSchema[K] extends ModelSchemaAttributeConfig
-      ? ModelSchema[K]
-      : never
-    : never; // <-- K must be in either TableKeysSchema or ModelSchema
+      ? ModelSchema[K] extends ModelSchemaAttributeConfig
+        ? ModelSchema[K]
+        : never
+      : never; // <-- K must be in either TableKeysSchema or ModelSchema
 };
 
 /** Model config options to define item-level transformations and validations. */

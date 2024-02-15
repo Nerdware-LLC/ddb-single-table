@@ -13,7 +13,8 @@
     "skipLibCheck": true,
 
     // ESM build settings:
-    "module": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "dist/esm"
   }
 }

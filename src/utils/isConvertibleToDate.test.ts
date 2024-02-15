@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { isConvertibleToDate } from "./isConvertibleToDate";
+import { isConvertibleToDate } from "./isConvertibleToDate.js";
 
 describe("isConvertibleToDate", () => {
   // Positive test cases:

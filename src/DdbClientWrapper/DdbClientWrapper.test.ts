@@ -13,8 +13,12 @@ import {
   QueryCommand,
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { DdbClientWrapper } from "./DdbClientWrapper";
-import type { DdbClientWrapperConstructorParams, CreateTableInput, UpdateItemInput } from "./types";
+import { DdbClientWrapper } from "./DdbClientWrapper.js";
+import type {
+  DdbClientWrapperConstructorParams,
+  CreateTableInput,
+  UpdateItemInput,
+} from "./types.js";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts

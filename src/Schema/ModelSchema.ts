@@ -1,13 +1,14 @@
-import { Schema } from "./Schema";
-import { SchemaValidationError, hasKey } from "../utils";
-import type { TableKeysAndIndexes } from "../Table";
+import { hasKey } from "@nerdware/ts-type-safety-utils";
+import { Schema } from "./Schema.js";
+import { SchemaValidationError } from "../utils/errors.js";
+import type { TableKeysAndIndexes } from "../Table/index.js";
 import type {
   ModelSchemaType,
   ModelSchemaOptions,
   ModelSchemaMetadata,
   KeyAttributeConfig,
   SchemaEntries,
-} from "./types";
+} from "./types.js";
 
 /**
  * This class and its `Schema` parent class currently only serve to organize schema-related types,
@@ -118,16 +119,16 @@ export class ModelSchema extends Schema {
       return attrNameA === tableHashKey // Sort tableHashKey to the front
         ? -1
         : attrNameB === tableHashKey
-        ? 1
-        : attrNameA === tableRangeKey // tableRangeKey goes after tableHashKey
-        ? -1
-        : attrNameB === tableRangeKey
-        ? 1
-        : attrNameA in indexes // index PKs, if any, go after tableRangeKey
-        ? -1
-        : attrNameB in indexes
-        ? 1
-        : 0; // For all other attributes the order is unchanged
+          ? 1
+          : attrNameA === tableRangeKey // tableRangeKey goes after tableHashKey
+            ? -1
+            : attrNameB === tableRangeKey
+              ? 1
+              : attrNameA in indexes // index PKs, if any, go after tableRangeKey
+                ? -1
+                : attrNameB in indexes
+                  ? 1
+                  : 0; // For all other attributes the order is unchanged
     });
   };
 }

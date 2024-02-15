@@ -1,6 +1,6 @@
-import { hasDefinedProperty, ItemInputError } from "../../utils";
-import type { BaseItem } from "../../types/itemTypes";
-import type { IOActions, IOAction } from "./types";
+import { hasDefinedProperty, ItemInputError } from "../../utils/index.js";
+import type { BaseItem } from "../../types/itemTypes.js";
+import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` swaps attribute-names with their corresponding

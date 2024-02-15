@@ -1,5 +1,6 @@
-import { DdbSingleTableError, isString, safeJsonStringify } from "../utils";
-import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types";
+import { isString, isArray, safeJsonStringify } from "@nerdware/ts-type-safety-utils";
+import { DdbSingleTableError } from "../utils/errors.js";
+import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types.js";
 
 /**
  * This DynamoDB batch-requests helper handles submission and retry logic for batch operations like
@@ -59,7 +60,7 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
     unprocessedRequestObjects = batchRequestObjects;
   }
 
-  if (Array.isArray(unprocessedRequestObjects) && unprocessedRequestObjects.length > 0) {
+  if (isArray(unprocessedRequestObjects) && unprocessedRequestObjects.length > 0) {
     // Determine the next `attemptNumber` and the delay before the next attempt
     const nextAttemptNumber = attemptNumber + 1;
     // The delay is calculated as: initialDelay * timeMultiplier^attemptNumber milliseconds

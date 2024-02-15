@@ -1,6 +1,6 @@
-import { Table } from "./Table";
-import { Model } from "../Model";
-import { SchemaValidationError } from "../utils";
+import { Table } from "./Table.js";
+import { Model } from "../Model/Model.js";
+import { SchemaValidationError } from "../utils/errors.js";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts

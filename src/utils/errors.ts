@@ -1,6 +1,6 @@
-import { isType } from "./isType";
-import { safeJsonStringify } from "./safeJsonStringify";
-import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../Schema";
+import { safeJsonStringify } from "@nerdware/ts-type-safety-utils";
+import { isType } from "./isType.js";
+import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../Schema/types.js";
 
 /**
  * This is the base `error` class for custom errors defined in this package. If the
@@ -105,12 +105,12 @@ export class InvalidExpressionError extends DdbSingleTableError {
       isType.string(arg) && arg
         ? arg
         : isType.map(arg) &&
-          isType.string(arg?.expressionName) &&
-          isType.string(arg?.invalidValueDescription) &&
-          isType.string(arg?.problem)
-        ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n` +
-          `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
-        : InvalidExpressionError.DEFAULT_MSG;
+            isType.string(arg?.expressionName) &&
+            isType.string(arg?.invalidValueDescription) &&
+            isType.string(arg?.problem)
+          ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n` +
+            `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
+          : InvalidExpressionError.DEFAULT_MSG;
 
     super(message);
     Error.captureStackTrace(this, InvalidExpressionError);

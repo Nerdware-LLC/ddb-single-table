@@ -1,4 +1,4 @@
-import type { WhereQueryOperator } from "./types";
+import type { WhereQueryOperator } from "./types.js";
 
 /**
  * A dict of `WhereQuery` operator methods, each of which returns a string

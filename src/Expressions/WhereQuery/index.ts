@@ -1,2 +1,2 @@
-export * from "./convertWhereQueryToSdkQueryArgs";
-export * from "./types";
+export * from "./convertWhereQueryToSdkQueryArgs.js";
+export * from "./types.js";

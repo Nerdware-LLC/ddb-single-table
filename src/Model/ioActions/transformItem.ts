@@ -1,4 +1,4 @@
-import type { IOActions, IOAction } from "./types";
+import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` uses the `transformItem` method (if defined in the

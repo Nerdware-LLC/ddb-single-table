@@ -1,5 +1,6 @@
-import { hasDefinedProperty, hasKey } from "../../utils";
-import type { IOActions, IOAction } from "./types";
+import { hasKey } from "@nerdware/ts-type-safety-utils";
+import { hasDefinedProperty } from "../../utils/hasDefinedProperty.js";
+import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` applies any `"default"`s defined in the schema in

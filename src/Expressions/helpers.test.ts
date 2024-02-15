@@ -1,5 +1,5 @@
-import { getExpressionAttrTokens } from "./helpers";
-import { DdbSingleTableError } from "../utils";
+import { getExpressionAttrTokens } from "./helpers.js";
+import { DdbSingleTableError } from "../utils/errors.js";
 
 describe("getExpressionAttrTokens()", () => {
   test("returns the correct tokens when called with an alphanumeric attrName arg", () => {

@@ -1,4 +1,4 @@
-import { hasDefinedProperty } from "./hasDefinedProperty";
+import { hasDefinedProperty } from "./hasDefinedProperty.js";
 
 describe("hasDefinedProperty()", () => {
   // string key
