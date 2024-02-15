@@ -1,7 +1,12 @@
-import type { SchemaSupportedTypeStringLiterals } from "../Schema";
-
-/** `string` type guard function */
-export const isString = (value?: unknown): value is string => typeof value === "string";
+import {
+  isString,
+  isBoolean,
+  isBuffer,
+  isDate,
+  isArray,
+  isPlainObject,
+} from "@nerdware/ts-type-safety-utils";
+import type { SchemaSupportedTypeStringLiterals } from "../Schema/types.js";
 
 /**
  * `number` type guard function
@@ -19,58 +24,6 @@ export const isNumber = (value?: unknown): value is number => {
   return typeof value === "number" && Number.isFinite(value);
 };
 
-/** `boolean` type guard function */
-export const isBoolean = (value?: unknown): value is boolean => typeof value === "boolean";
-
-/** `function` type guard function */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export const isFunction = (value?: unknown): value is Function => typeof value === "function";
-
-/** `BigInt` type guard function */
-export const isBigInt = (value?: unknown): value is bigint => typeof value === "bigint";
-
-/** `Buffer` type guard function */
-export const isBuffer = (value?: unknown): value is Buffer => Buffer.isBuffer(value);
-
-/** `Symbol` type guard function */
-export const isSymbol = (value?: unknown): value is symbol => typeof value === "symbol";
-
-/** `undefined` type guard function */
-export const isUndefined = (value?: unknown): value is undefined => value === void 0; // <-- most performant way to check for undefined
-
-/** `null` type guard function */
-export const isNull = (value?: unknown): value is null => value === null;
-
-/** `Array` type guard function */
-export const isArray: <T>(value?: unknown) => value is Array<T> | ReadonlyArray<T> = Array.isArray;
-
-/** `Date` type guard function will return `false` if the Date is invalid. */
-export const isDate = (value?: unknown): value is Date => {
-  return value instanceof Date && !isNaN(value.getTime());
-};
-
-/**
- * Type guard function for `type: "map"` which tests if `value` is a `Record<>`-like object.
- *
- * Example values which will return `true`:
- *  - `{}`
- *  - `{ foo: "bar" }`
- *  - `Object.create(null)` // <-- Why checking the 'constructor' property won't work.
- */
-export const isPlainObject = <KeyTypes extends PropertyKey = string>(
-  value?: unknown
-): value is Record<KeyTypes, unknown> => {
-  return Object.prototype.toString.call(value) === "[object Object]";
-};
-
-/**
- * `Error` object type guard function which tests if `arg` is _either_ an instance of the `Error`
- * class _or_ if the return value of `Object.prototype.toString.call(arg)` is `"[object Error]"`.
- */
-export const isErrorObject = (arg?: unknown): arg is Error => {
-  return arg instanceof Error || Object.prototype.toString.call(arg) === "[object Error]";
-};
-
 /**
  * Type guard function for `type: "tuple"`
  *
@@ -79,9 +32,7 @@ export const isErrorObject = (arg?: unknown): arg is Error => {
  *   via `recursivelyApplyIOAction`.
  */
 export const isTuple = (value?: unknown, nestedSchema?: unknown): value is [...unknown[]] => {
-  return (
-    Array.isArray(value) && Array.isArray(nestedSchema) && value.length === nestedSchema.length
-  );
+  return isArray(value) && isArray(nestedSchema) && value.length === nestedSchema.length;
 };
 
 /** Type guard function for `type: "enum"` */
@@ -89,7 +40,7 @@ export const isEnumMember = <EnumValues extends ReadonlyArray<string>>(
   value?: unknown,
   allowedValues?: unknown
 ): value is EnumValues[number] => {
-  return typeof value === "string" && Array.isArray(allowedValues) && allowedValues.includes(value);
+  return isString(value) && isArray(allowedValues) && allowedValues.includes(value);
 };
 
 /**
@@ -103,7 +54,7 @@ export const isType = Object.freeze({
   /** Type guard function for `type: "boolean"` */
   boolean: isBoolean,
   /** Type guard function for `type: "Buffer"` */
-  Buffer: isBuffer,
+  Buffer: isBuffer as (value?: unknown) => value is Buffer,
   /** Type guard function for `type: "Date"` */
   Date: isDate,
   /** Type guard function for `type: "array"` */
