@@ -37,6 +37,7 @@
   ],
   "scripts": {
     "lint": "eslint src",
+    "postlint": "npm run test:types",
     "test": "vitest run",
     "test:ci": "eslint src && vitest run --coverage --bail=1 --silent",
     "test:types": "tsc --project tsconfig.json --noEmit --skipLibCheck",
@@ -46,6 +47,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.398.0",
     "@aws-sdk/lib-dynamodb": "^3.398.0",
+    "@nerdware/ts-type-safety-utils": "^1.0.7",
     "dayjs": "^1.11.9"
   },
   "devDependencies": {
