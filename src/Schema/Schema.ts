@@ -1,5 +1,11 @@
-import { SchemaValidationError, hasKey, isType } from "../utils";
-import type { TableKeysSchemaType, ModelSchemaType, SchemaMetadata, SchemaEntries } from "./types";
+import { hasKey } from "@nerdware/ts-type-safety-utils";
+import { SchemaValidationError, isType } from "../utils/index.js";
+import type {
+  TableKeysSchemaType,
+  ModelSchemaType,
+  SchemaMetadata,
+  SchemaEntries,
+} from "./types.js";
 
 /**
  * The base class for `TableKeysSchema` and `ModelSchema`. This class and its subclasses currently

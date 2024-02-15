@@ -1,8 +1,8 @@
-import { Table } from "./Table";
-import { DdbSingleTableError } from "../utils";
-import type { CreateTableInput } from "../DdbClientWrapper";
-import type { TableKeysSchemaType } from "../Schema";
-import type { TableCreateTableParameters } from "./types";
+import { Table } from "./Table.js";
+import { DdbSingleTableError } from "../utils/errors.js";
+import type { CreateTableInput } from "../DdbClientWrapper/types.js";
+import type { TableKeysSchemaType } from "../Schema/types.js";
+import type { TableCreateTableParameters } from "./types.js";
 
 /**
  * [`CreateTable`][ddb-docs-create-table] operation wrapper which uses the provided
@@ -87,8 +87,8 @@ export const createTable = async function <TableKeysSchema extends TableKeysSche
             ProjectionType: !index?.project // if undefined or false, default "KEYS_ONLY"
               ? "KEYS_ONLY"
               : index.project === true
-              ? "ALL"
-              : "INCLUDE",
+                ? "ALL"
+                : "INCLUDE",
             ...(Array.isArray(index.project) && { NonKeyAttributes: index.project }),
           },
           ...(!!index?.throughput && {

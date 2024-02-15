@@ -1,7 +1,8 @@
-import { Table } from "./Table";
-import { isPlainObject, isErrorObject, DdbSingleTableError, DdbConnectionError } from "../utils";
-import type { TableKeysSchemaType } from "../Schema";
-import type { EnsureTableIsActiveParams } from "./types";
+import { isError, isPlainObject } from "@nerdware/ts-type-safety-utils";
+import { Table } from "./Table.js";
+import { DdbSingleTableError, DdbConnectionError } from "../utils/errors.js";
+import type { TableKeysSchemaType } from "../Schema/types.js";
+import type { EnsureTableIsActiveParams } from "./types.js";
 
 /**
  * This method of the `Table` class is used to check if a DynamoDB table is active and
@@ -65,7 +66,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       });
     } catch (err: unknown) {
       // Sanity type-check: ensure `err` is an object.
-      if (!isErrorObject(err) && !isPlainObject(err)) throw err;
+      if (!isError(err) && !isPlainObject(err)) throw err;
 
       // If `err?.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
       if ((err as { code?: unknown })?.code === "ECONNREFUSED") throw new DdbConnectionError(err);

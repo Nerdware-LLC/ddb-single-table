@@ -1,7 +1,8 @@
-import { hasDefinedProperty, safeJsonStringify, isType } from "../../utils";
-import { ItemInputError, getAttrErrID, stringifyNestedSchema } from "../../utils/errors";
-import type { ModelSchemaNestedAttributes as NestedAttributes } from "../../Schema";
-import type { IOActions, IOAction } from "./types";
+import { safeJsonStringify } from "@nerdware/ts-type-safety-utils";
+import { ItemInputError, getAttrErrID, stringifyNestedSchema } from "../../utils/errors.js";
+import { hasDefinedProperty, isType } from "../../utils/index.js";
+import type { ModelSchemaNestedAttributes as NestedAttributes } from "../../Schema/types.js";
+import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` checks item properties for conformance with their
@@ -24,8 +25,8 @@ export const typeChecking: IOAction = function (
             (attrConfig.type === "enum"
               ? `(oneOf: ${safeJsonStringify(attrConfig.oneOf)})`
               : ["map", "array", "tuple"].includes(attrConfig.type)
-              ? `(schema: ${stringifyNestedSchema(attrConfig.schema as NestedAttributes)})`
-              : "") +
+                ? `(schema: ${stringifyNestedSchema(attrConfig.schema as NestedAttributes)})`
+                : "") +
             `\nReceived: ${safeJsonStringify(item[attrName])}`
         );
       }

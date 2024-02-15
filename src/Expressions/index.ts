@@ -1,2 +1,2 @@
-export * from "./UpdateExpression";
-export * from "./WhereQuery";
+export * from "./UpdateExpression/index.js";
+export * from "./WhereQuery/index.js";

@@ -1,2 +1,2 @@
-export * from "./DdbClientWrapper";
-export * from "./types";
+export * from "./DdbClientWrapper.js";
+export * from "./types.js";

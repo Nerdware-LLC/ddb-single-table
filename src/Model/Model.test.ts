@@ -1,9 +1,9 @@
-import { Model } from "./Model";
-import * as batchRequestsModule from "../BatchRequests";
-import * as whereQueryModule from "../Expressions/WhereQuery";
-import { ModelSchema } from "../Schema";
-import { Table } from "../Table";
-import type { ItemTypeFromSchema } from "../types";
+import { Model } from "./Model.js";
+import * as batchRequestsModule from "../BatchRequests/index.js";
+import * as whereQueryModule from "../Expressions/WhereQuery/index.js";
+import { ModelSchema } from "../Schema/ModelSchema.js";
+import { Table } from "../Table/Table.js";
+import type { ItemTypeFromSchema } from "../types/itemTypes.js";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts

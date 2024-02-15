@@ -1,5 +1,5 @@
-import { validateItem } from "./validateItem";
-import type { IOActions, IOActionContext } from "./types";
+import { validateItem } from "./validateItem.js";
+import type { IOActions, IOActionContext } from "./types.js";
 
 describe("IOAction: validateItem", () => {
   // Mock `this` context can be empty bc validateItem doesn't access any other IOActionMethods

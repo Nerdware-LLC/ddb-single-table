@@ -1,5 +1,5 @@
-import { ItemInputError } from "../../utils";
-import type { IOActions, IOAction } from "./types";
+import { ItemInputError } from "../../utils/errors.js";
+import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` uses the `validateItem` method provided in the

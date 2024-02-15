@@ -1,6 +1,6 @@
-import { isValidWhereQueryOperator, validateWhereQueryComparand } from "./isValidWhereQuery";
-import { InvalidExpressionError } from "../../utils";
-import type { WhereQueryOperator } from "./types";
+import { isValidWhereQueryOperator, validateWhereQueryComparand } from "./isValidWhereQuery.js";
+import { InvalidExpressionError } from "../../utils/errors.js";
+import type { WhereQueryOperator } from "./types.js";
 
 describe("isValidWhereQueryOperator()", () => {
   ["eq", "lt", "lte", "gt", "gte", "between", "beginsWith"].forEach((validOperator) => {

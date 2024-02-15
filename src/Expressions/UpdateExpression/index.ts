@@ -1,2 +1,2 @@
-export * from "./generateUpdateExpression";
-export * from "./types";
+export * from "./generateUpdateExpression.js";
+export * from "./types.js";

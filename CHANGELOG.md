@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.4.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.3.3...v2.4.0-next.1) (2024-02-15)
+
+
+### Features
+
+* add [@nerdware](https://github.com/nerdware) type-safety utils ([ea251eb](https://github.com/Nerdware-LLC/ddb-single-table/commit/ea251eb98afaafcd61c8ca95bdc6ed44e71a7d04))
+
 ## [2.3.3](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.3.2...v2.3.3) (2024-02-14)
 
 ## [2.3.3-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.3.2...v2.3.3-next.1) (2024-02-14)

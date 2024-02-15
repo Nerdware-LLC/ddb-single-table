@@ -1,8 +1,8 @@
 import lodashSet from "lodash.set";
-import { convertJsTypes } from "./convertJsTypes";
-import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
-import type { ModelSchemaType } from "../../Schema";
-import type { IOActions, IOActionContext } from "./types";
+import { convertJsTypes } from "./convertJsTypes.js";
+import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
+import type { ModelSchemaType } from "../../Schema/types.js";
+import type { IOActions, IOActionContext } from "./types.js";
 
 describe("IOAction: convertJsTypes", () => {
   // Mock `this` context with bound methods: `convertJsTypes` and `recursivelyApplyIOAction`

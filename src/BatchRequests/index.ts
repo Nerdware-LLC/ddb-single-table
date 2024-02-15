@@ -1,3 +1,3 @@
-export * from "./batchRequestWithExponentialBackoff";
-export * from "./handleBatchRequests";
-export * from "./types";
+export * from "./batchRequestWithExponentialBackoff.js";
+export * from "./handleBatchRequests.js";
+export * from "./types.js";

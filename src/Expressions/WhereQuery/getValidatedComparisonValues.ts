@@ -1,6 +1,6 @@
-import { isValidWhereQueryOperator, validateWhereQueryComparand } from "./isValidWhereQuery";
-import { InvalidExpressionError, isType } from "../../utils";
-import type { WhereQueryOperator, WhereQueryComparand } from "./types";
+import { isValidWhereQueryOperator, validateWhereQueryComparand } from "./isValidWhereQuery.js";
+import { InvalidExpressionError, isType } from "../../utils/index.js";
+import type { WhereQueryOperator, WhereQueryComparand } from "./types.js";
 
 /**
  * This function takes a K-V pair from a `WhereQuery` object, validates the values,

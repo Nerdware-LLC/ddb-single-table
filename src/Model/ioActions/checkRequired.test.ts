@@ -1,8 +1,8 @@
 import lodashSet from "lodash.set";
-import { checkRequired } from "./checkRequired";
-import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
-import type { ModelSchemaType } from "../../Schema";
-import type { IOActions, IOActionContext } from "./types";
+import { checkRequired } from "./checkRequired.js";
+import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
+import type { ModelSchemaType } from "../../Schema/types.js";
+import type { IOActions, IOActionContext } from "./types.js";
 
 describe("IOAction: checkRequired", () => {
   // Mock `this` context with bound methods: `checkRequired` and `recursivelyApplyIOAction`

@@ -19,10 +19,10 @@ jobs:
       pull-requests: write # to add coverage reports to the PR
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
 
@@ -56,7 +56,7 @@ jobs:
 
       - name: Update CodeCov
         if: success()
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -65,9 +65,9 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
 
   release:
-    name: Release if Tests Passed (push-only)
-    needs: test # only run on push events when tests pass
-    if: github.event_name == 'push' && needs.test.result == 'success'
+    name: Release if Tests Passed (push/dispatch only)
+    needs: test
+    if: github.event_name != 'pull_request' && needs.test.result == 'success'
     uses: ./.github/workflows/release.yaml
     secrets:
       SEMANTIC_RELEASE_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}

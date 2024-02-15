@@ -1,4 +1,4 @@
-import type { BaseItem } from "../../types/itemTypes";
+import type { BaseItem } from "../../types/itemTypes.js";
 
 /** Parameters for `generateUpdateExpression`. */
 export interface GenerateUpdateExpressionOpts {

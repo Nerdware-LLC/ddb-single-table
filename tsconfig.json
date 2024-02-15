@@ -10,8 +10,8 @@
     "allowJs": false,
 
     // Modules:
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "types": ["node", "vitest/globals"],
 

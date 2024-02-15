@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import { hasDefinedProperty, isConvertibleToDate, isType } from "../../utils";
-import type { IOActions, IOAction } from "./types";
+import { hasDefinedProperty, isConvertibleToDate, isType } from "../../utils/index.js";
+import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` converts JS types to DynamoDB types and vice versa.

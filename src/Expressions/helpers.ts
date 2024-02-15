@@ -1,4 +1,4 @@
-import { DdbSingleTableError } from "../utils";
+import { DdbSingleTableError } from "../utils/errors.js";
 
 /**
  * This function creates "tokens" to be used as stand-ins for attribute names and values

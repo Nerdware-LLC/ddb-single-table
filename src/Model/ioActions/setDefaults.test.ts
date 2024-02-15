@@ -1,8 +1,8 @@
 import lodashSet from "lodash.set";
-import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction";
-import { setDefaults } from "./setDefaults";
-import type { ModelSchemaType } from "../../Schema";
-import type { IOActions, IOActionContext } from "./types";
+import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
+import { setDefaults } from "./setDefaults.js";
+import type { ModelSchemaType } from "../../Schema/types.js";
+import type { IOActions, IOActionContext } from "./types.js";
 
 describe("IOAction: setDefaults", () => {
   // Mock `this` context with bound methods: `setDefaults` and `recursivelyApplyIOAction`
