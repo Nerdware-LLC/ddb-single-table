@@ -78,7 +78,7 @@ describe("IOAction: setDefaults", () => {
                           // This nested `default` function also tests that the entire
                           // parent item is provided as the arg to the `default` function.
                           default: (item: any) => {
-                            return `${item.books[0].author.publisher.address.street}-FOO`;
+                            return `${item.books[0].author.publisher.address.street as string}-FOO`;
                           },
                         },
                         BAR: {

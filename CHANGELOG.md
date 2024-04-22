@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.5.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.4.5...v2.5.0-next.1) (2024-04-22)
+
+
+### Features
+
+* bump node to v20, npm to v10 ([e06bc65](https://github.com/Nerdware-LLC/ddb-single-table/commit/e06bc65c97541ed273dc95f8ef2bcc01bda58e7f))
+
 ## [2.4.5](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.4.4...v2.4.5) (2024-04-22)
 
 ## [2.4.4](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.4.3...v2.4.4) (2024-04-22)

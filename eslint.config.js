@@ -1,11 +1,11 @@
+// @ts-check
 import eslintJS from "@eslint/js";
-import tsEslintPlugin from "@typescript-eslint/eslint-plugin";
-import tsEslintParser from "@typescript-eslint/parser";
 import eslintConfigPrettier from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
 import nodePlugin from "eslint-plugin-node";
 import vitestPlugin from "eslint-plugin-vitest";
 import globals from "globals";
+import tsEslint from "typescript-eslint";
 
 /** @type { import("eslint").Linter.FlatConfig } */
 export default [
@@ -20,7 +20,7 @@ export default [
       globals: globals.node,
       ecmaVersion: "latest",
       sourceType: "module",
-      parser: tsEslintParser,
+      parser: tsEslint.parser,
       parserOptions: {
         project: "./tsconfig.json",
         ecmaVersion: "latest",
@@ -31,17 +31,22 @@ export default [
       },
     },
     plugins: {
-      "@typescript-eslint": tsEslintPlugin,
+      "@typescript-eslint": tsEslint.plugin,
       import: importPlugin,
       node: nodePlugin,
     },
     rules: {
+      // MERGE PRESETS:
       ...eslintJS.configs.recommended.rules,
       ...importPlugin.configs.recommended.rules,
       ...importPlugin.configs["typescript"].rules,
       ...nodePlugin.configs.recommended.rules,
-      ...tsEslintPlugin.configs["eslint-recommended"].overrides[0].rules, // turns off base eslint rules covered by ts-eslint
-      ...tsEslintPlugin.configs["recommended-type-checked"].rules,
+      ...tsEslint.configs.eslintRecommended.rules, // turns off base eslint rules covered by ts-eslint
+      ...[
+        ...tsEslint.configs.strictTypeChecked,
+        ...tsEslint.configs.stylisticTypeChecked, // prettier-ignore
+      ].reduce((acc, { rules = {} }) => ({ ...acc, ...rules }), {}),
+      // RULE CUSTOMIZATIONS:
       "default-case": "error",
       "default-case-last": "error",
       eqeqeq: ["error", "always"],
@@ -51,12 +56,19 @@ export default [
       "node/no-missing-import": "off",
       "node/no-process-env": "error",
       "node/no-unpublished-import": ["error", { allowModules: ["type-fest", "lodash.set"] }],
+      "@typescript-eslint/array-type": "off", // Allow "T[]" and "Array<T>"
+      "@typescript-eslint/consistent-indexed-object-style": "off", // Allow "Record<K, V>" and "{ [key: K]: V }"
+      "@typescript-eslint/consistent-type-definitions": "off", // Allow "type" and "interface", there are subtle usage differences
+      "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-extraneous-class": "off",
       "@typescript-eslint/no-inferrable-types": "off",
       "@typescript-eslint/no-misused-promises": [
         "error",
         { checksVoidReturn: { arguments: false } },
       ],
+      "@typescript-eslint/no-unnecessary-boolean-literal-compare": "off", // Allow "if (x === true)"
+      "@typescript-eslint/no-unnecessary-condition": "off", // Allow option chains to convey "dont know if preceding exists"
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unused-vars": [
@@ -67,6 +79,24 @@ export default [
           args: "after-used",
           argsIgnorePattern: "^_",
           ignoreRestSiblings: true,
+        },
+      ],
+      "@typescript-eslint/only-throw-error": "off", // <-- rule results in false positives for Error-like objects/subclasses
+      "@typescript-eslint/prefer-nullish-coalescing": [
+        "error",
+        {
+          ignoreConditionalTests: true,
+          ignorePrimitives: { string: true },
+        },
+      ],
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        {
+          allowAny: false,
+          allowBoolean: true,
+          allowNullish: false,
+          allowNumber: true,
+          allowRegExp: false,
         },
       ],
     },
@@ -112,6 +142,7 @@ export default [
       "vitest/no-focused-tests": "warn",
       "vitest/prefer-to-have-length": "warn",
       "vitest/valid-expect": "error",
+      "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
     },
   },
