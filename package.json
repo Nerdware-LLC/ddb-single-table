@@ -45,35 +45,36 @@
     "build": "./scripts/build.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.398.0",
-    "@aws-sdk/lib-dynamodb": "^3.398.0",
-    "@nerdware/ts-type-safety-utils": "^1.0.7",
-    "dayjs": "^1.11.9"
+    "@aws-sdk/client-dynamodb": "^3.556.0",
+    "@aws-sdk/lib-dynamodb": "^3.556.0",
+    "@nerdware/ts-type-safety-utils": "^1.0.12",
+    "dayjs": "^1.11.10"
   },
   "devDependencies": {
     "@serverless-guru/prettier-plugin-import-order": "^0.4.2",
-    "@types/lodash.set": "^4.3.7",
-    "@types/node": "^20.5.6",
-    "@typescript-eslint/eslint-plugin": "^6.4.1",
-    "@typescript-eslint/parser": "^6.4.1",
+    "@types/lodash.set": "^4.3.9",
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "@vitest/coverage-v8": "^1.5.0",
     "aws-sdk-client-mock": "^4.0.0",
-    "eslint": "^8.47.0",
+    "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-import-resolver-typescript": "^3.6.0",
-    "eslint-plugin-import": "^2.28.1",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-vitest": "^0.3.1",
+    "eslint-plugin-vitest": "^0.5.3",
     "lodash.set": "^4.3.2",
-    "prettier": "^3.2.4",
-    "type-fest": "^4.2.0",
-    "typescript": "^5.1.6",
+    "prettier": "^3.2.5",
+    "type-fest": "^4.16.0",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.7.1",
     "vitest": "^1.5.0",
-    "vitest-github-actions-reporter": "^0.10.0"
+    "vitest-github-actions-reporter": "^0.11.1"
   },
   "overrides": {
     "@serverless-guru/prettier-plugin-import-order": {
-      "prettier": "^3.2.4"
+      "prettier": "^3.2.5"
     }
   }
 }
