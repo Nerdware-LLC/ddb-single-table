@@ -71,7 +71,7 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
       throw new DdbSingleTableError(
         `After several attempts, ${unprocessedRequestObjects.length} batch requests were ` +
           `still unable to be processed due to insufficient provisioned throughput: ` +
-          `${safeJsonStringify(unprocessedRequestObjects)}`
+          safeJsonStringify(unprocessedRequestObjects)
       );
     }
 

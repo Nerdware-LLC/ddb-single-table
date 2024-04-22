@@ -24,8 +24,8 @@ export const typeChecking: IOAction = function (
             `\nExpected: ${attrConfig.type} ` +
             (attrConfig.type === "enum"
               ? `(oneOf: ${safeJsonStringify(attrConfig.oneOf)})`
-              : ["map", "array", "tuple"].includes(attrConfig.type)
-                ? `(schema: ${stringifyNestedSchema(attrConfig.schema as NestedAttributes)})`
+              : ["map", "array", "tuple"].includes(attrConfig.type) // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style
+                ? `(schema: ${stringifyNestedSchema(attrConfig.schema as NestedAttributes)})` // <-- eslint rule false positive
                 : "") +
             `\nReceived: ${safeJsonStringify(item[attrName])}`
         );

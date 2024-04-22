@@ -17,14 +17,14 @@ export const setDefaults: IOAction = function (
 ) {
   schemaEntries.forEach(([attrName, attrConfig]) => {
     // If a default is defined, and item[attrName] is null/undefined, use the default
-    if (hasKey(attrConfig, "default") && !hasDefinedProperty(item, attrName)) {
+    if (hasKey(attrConfig as any, "default") && !hasDefinedProperty(item, attrName)) {
       // hasKey/hasOwnProperty is used since default can be 0, false, etc.
       const attrDefault = attrConfig.default;
       // Check if "default" is a function, and if so, call it to get the "default" value
       item[attrName] = typeof attrDefault === "function" ? attrDefault(parentItem) : attrDefault;
     }
     // Run recursively on nested attributes if parent value exists
-    if (attrConfig?.schema && hasKey(item, attrName)) {
+    if (attrConfig?.schema && hasKey(item as any, attrName)) {
       item[attrName] = this.recursivelyApplyIOAction(this.setDefaults, item[attrName], {
         parentItem,
         ...ctx,

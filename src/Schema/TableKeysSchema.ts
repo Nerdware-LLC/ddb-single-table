@@ -198,7 +198,7 @@ export class TableKeysSchema extends Schema {
         // If ModelSchema contains keyAttrName, check if it contains mergeable config properties.
         (["type", "required"] satisfies Array<keyof BaseAttributeConfig>).forEach(
           (attrConfigName) => {
-            if (hasKey(modelSchema[keyAttrName], attrConfigName)) {
+            if (hasKey(modelSchema[keyAttrName] as any, attrConfigName)) {
               // If ModelSchema contains `keyAttrName` AND a mergeable property, ensure it matches TableKeysSchema.
               if (modelSchema[keyAttrName][attrConfigName] !== keyAttrConfig[attrConfigName]) {
                 // Throw error if ModelSchema key attrConfig has a config mismatch
@@ -224,6 +224,7 @@ export class TableKeysSchema extends Schema {
       (["isHashKey", "isRangeKey", "index"] satisfies Array<keyof KeyAttributeConfig>).forEach(
         (attrConfigName) => {
           if (hasKey(mergedModelSchema[attrName], attrConfigName)) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete mergedModelSchema[attrName][attrConfigName];
           }
         }

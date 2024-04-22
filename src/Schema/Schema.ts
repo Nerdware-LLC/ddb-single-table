@@ -105,7 +105,7 @@ export class Schema {
       }
 
       // Check if "default" is specified
-      if (hasKey(attrConfig, "default")) {
+      if (hasKey(attrConfig as any, "default")) {
         // If the default is not a function, ensure its type matches the attr's defined "type"
         const defaultValue = attrConfig.default;
 
