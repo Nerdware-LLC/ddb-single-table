@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.6.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.5.0...v2.6.0) (2024-05-10)
+
+
+### Features
+
+* add support for TransactWriteItems cmd ([8333d8a](https://github.com/Nerdware-LLC/ddb-single-table/commit/8333d8a9f80cf133d4f03413c7ff6bc6c31b643e))
+
 # [2.6.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.5.0...v2.6.0-next.1) (2024-05-10)
 
 
