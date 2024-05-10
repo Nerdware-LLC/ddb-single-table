@@ -1,5 +1,5 @@
 import { isValidWhereQueryOperator, validateWhereQueryComparand } from "./isValidWhereQuery.js";
-import { InvalidExpressionError } from "../../utils/errors.js";
+import { InvalidExpressionError } from "../../utils/index.js";
 import type { WhereQueryOperator } from "./types.js";
 
 describe("isValidWhereQueryOperator()", () => {

@@ -1,4 +1,4 @@
-import { convertWhereQueryToSdkQueryArgs } from "./convertWhereQueryToSdkQueryArgs.js";
+import { convertWhereQueryToSdkQueryArgs } from "./index.js";
 
 describe("convertWhereQueryToSdkQueryArgs()", () => {
   // positive test case: valid short-hand "eq" WhereQuery field

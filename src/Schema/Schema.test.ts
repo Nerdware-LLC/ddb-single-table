@@ -1,5 +1,5 @@
 import { Schema } from "./Schema.js";
-import { SchemaValidationError } from "../utils/errors.js";
+import { SchemaValidationError } from "../utils/index.js";
 import type { TableKeysSchemaType, ModelSchemaType } from "./types.js";
 
 describe("Schema", () => {

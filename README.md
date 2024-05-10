@@ -263,6 +263,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 - Required/nullable property assertions
 - Easy access to a streamlined DynamoDB client (more info [here](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client))
 - Automatic retries for batch operations using exponential backoff (more info [here](#batch-retries-with-exponential-backoff))
+- Support for transactions - _group up to 100 operations into a single atomic transaction!_
 
 ### Batch Retries with Exponential Backoff
 

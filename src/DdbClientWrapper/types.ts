@@ -26,6 +26,8 @@ import type {
   QueryCommandOutput as _QueryCommandOutput,
   ScanCommandInput as _ScanCommandInput,
   ScanCommandOutput as _ScanCommandOutput,
+  TransactWriteCommandInput as _TransactWriteCommandInput,
+  TransactWriteCommandOutput as _TransactWriteCommandOutput,
 } from "@aws-sdk/lib-dynamodb";
 import type {
   Simplify,
@@ -78,20 +80,18 @@ type LegacyDdbSdkParameters =
  * [ts-tail-rec]: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html#tail-recursion-elimination-on-conditional-types
  * @internal
  */
-type FixDocClientValueType<
-  T,
-  NestDepth extends NestDepthMax10,
-> = IterateNestDepthMax10<NestDepth> extends 5
-  ? T
-  : T extends Record<PropertyKey, unknown>
-  ? keyof OmitIndexSignature<T> extends never // <-- If it only contains an index signature, don't map it.
-    ? Record<keyof T, FixDocClientValueType<T[keyof T], IterateNestDepthMax10<NestDepth>>>
-    : FixDocClientType<T, IterateNestDepthMax10<NestDepth>>
-  : T extends Array<infer El>
-  ? Array<FixDocClientValueType<El, IterateNestDepthMax10<NestDepth>>>
-  : IsAny<T> extends true
-  ? unknown
-  : T;
+type FixDocClientValueType<T, NestDepth extends NestDepthMax10> =
+  IterateNestDepthMax10<NestDepth> extends 5
+    ? T
+    : T extends Record<PropertyKey, unknown>
+      ? keyof OmitIndexSignature<T> extends never // <-- If it only contains an index signature, don't map it.
+        ? Record<keyof T, FixDocClientValueType<T[keyof T], IterateNestDepthMax10<NestDepth>>>
+        : FixDocClientType<T, IterateNestDepthMax10<NestDepth>>
+      : T extends Array<infer El>
+        ? Array<FixDocClientValueType<El, IterateNestDepthMax10<NestDepth>>>
+        : IsAny<T> extends true
+          ? unknown
+          : T;
 
 /**
  * The nest-depth of DDB client params, up to a maximum of 10.
@@ -164,6 +164,8 @@ export type BatchWriteItemsInput = FixDocClientType<_BatchWriteCommandInput>;
 export type QueryInput = FixDocClientType<_QueryCommandInput>;
 /** Input params for `DdbClientWrapper` methods which implement the `Scan` command. @public */
 export type ScanInput = FixDocClientType<_ScanCommandInput>;
+/** Input params for `DdbClientWrapper` methods which implement the `TransactWriteItems` command. @public */
+export type TransactWriteItemsInput = FixDocClientType<_TransactWriteCommandInput>;
 /** Input params for `DdbClientWrapper` methods which implement the `DescribeTable` command. @public */
 export type DescribeTableInput = FixDocClientType<_DescribeTableInput>;
 /** Input params for `DdbClientWrapper` methods which implement the `CreateTable` command. @public */
@@ -187,6 +189,8 @@ export type BatchWriteItemsOutput = FixDocClientType<_BatchWriteCommandOutput>;
 export type QueryOutput = FixDocClientType<_QueryCommandOutput>;
 /** Output from `DdbClientWrapper` methods which implement the `Scan` command. @public */
 export type ScanOutput = FixDocClientType<_ScanCommandOutput>;
+/** Output from `DdbClientWrapper` methods which implement the `TransactWriteItems` command. @public */
+export type TransactWriteItemsOutput = FixDocClientType<_TransactWriteCommandOutput>;
 /** Output from `DdbClientWrapper` methods which implement the `DescribeTable` command. @public */
 export type DescribeTableOutput = FixDocClientType<_DescribeTableOutput>;
 /** Output from `DdbClientWrapper` methods which implement the `CreateTable` command. @public */

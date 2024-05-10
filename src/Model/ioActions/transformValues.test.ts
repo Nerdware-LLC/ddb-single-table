@@ -1,7 +1,7 @@
 import lodashSet from "lodash.set";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { transformValues } from "./transformValues.js";
-import type { ModelSchemaType } from "../../Schema/types.js";
+import type { ModelSchemaType } from "../../Schema/index.js";
 import type { IOActions, IOActionContext, IODirection } from "./types.js";
 
 describe("IOAction: transformValues", () => {

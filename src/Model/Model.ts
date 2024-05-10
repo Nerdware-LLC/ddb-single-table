@@ -156,9 +156,9 @@ export class Model<
   }
 
   /**
-   * [`GetItem`][ddb-docs-get-item] operation wrapper.
+   * [`GetItem`][api-ref] operation wrapper.
    *
-   * [ddb-docs-get-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_GetItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_GetItem.html
    *
    * @param primaryKeys The primary keys of the item to get.
    * @param getItemOpts Options for the underlying `GetItem` operation.
@@ -182,7 +182,7 @@ export class Model<
   };
 
   /**
-   * [`BatchGetItem`][ddb-docs-batch-get] operation wrapper.
+   * [`BatchGetItem`][api-ref] operation wrapper.
    *
    * - **Max Chunk Size**: The provided `primaryKeys` are spliced into chunks of 100 (the maximum
    *   limit set by AWS for BatchGetItem requests).
@@ -208,7 +208,7 @@ export class Model<
    *      to the base `delay`: `Math.round( Math.random() * delay )`. Note that the determination as
    *      to whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
    *
-   * [ddb-docs-batch-get]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
    *
    * @param primaryKeys The primary keys of the items to get.
    * @param batchGetItemsOpts Options for the underlying `BatchGetItem` operation.
@@ -259,15 +259,15 @@ export class Model<
   };
 
   /**
-   * A [`PutItem`][ddb-docs-put-item] operation wrapper which guarantees existing items will not be
-   * overwritten by always including a [`ConditionExpression` which checks for the non-existence of
-   * the item's hash key][ddb-docs-conditional-put].
+   * A [`PutItem`][api-ref] operation wrapper which guarantees existing items will not be
+   * overwritten by always including a [`ConditionExpression` which checks for the non-existence
+   * of the item's hash key][ddb-docs-conditional-put].
    *
    * If the Model's `schemaOptions` are configured to auto-add timestamps, this method will also add
    * a `createdAt` attribute (or the `attrName` specified for the custom timestamp attribute) set to
    * the current timestamp.
    *
-   * [ddb-docs-put-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
    * [ddb-docs-conditional-put]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ConditionExpressions.html#Expressions.ConditionExpressions.PreventingOverwrites
    *
    * @param item The item to create.
@@ -305,12 +305,12 @@ export class Model<
   };
 
   /**
-   * A [`PutItem`][ddb-docs-put-item] operation wrapper which will either update an existing item or
+   * A [`PutItem`][api-ref] operation wrapper which will either update an existing item or
    * create a new one if an item with the specified keys does not yet exist.
    *
    * > This method will overwrite an existing item with the specified keys if one exists.
    *
-   * [ddb-docs-put-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
    *
    * @param item The item to upsert.
    * @param upsertItemOpts Options for the underlying `PutItem` operation.
@@ -339,11 +339,11 @@ export class Model<
   };
 
   /**
-   * A [`BatchWriteItem`][ddb-docs-batch-write] operation wrapper optimized for upserting items.
+   * A [`BatchWriteItem`][api-ref] operation wrapper optimized for upserting items.
    *
    * > Note: `BatchWriteItem` does not support condition expressions.
    *
-   * [ddb-docs-batch-write]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
    *
    * @param items The items to upsert.
    * @param batchUpsertItemsOpts Options for the underlying `BatchWriteItem` operation.
@@ -363,14 +363,14 @@ export class Model<
   };
 
   /**
-   * [`UpdateItem`][ddb-docs-update-item] operation wrapper. This method uses the `update` param
-   * to generate the following `UpdateItem` arguments:
+   * [`UpdateItem`][api-ref] operation wrapper. This method uses the `update` param to generate the
+   * following `UpdateItem` arguments:
    *
    * - `UpdateExpression` (may include `"SET"` and/or `"REMOVE"` clauses)
    * - `ExpressionAttributeNames`
    * - `ExpressionAttributeValues`
    *
-   * [ddb-docs-update-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
    *
    * @param primaryKeys The primary keys of the item to update.
    * @param updateItemOpts The `update` object and options for the underlying `UpdateItem` operation.
@@ -414,9 +414,9 @@ export class Model<
   };
 
   /**
-   * [`DeleteItem`][ddb-docs-del-item] operation wrapper.
+   * [`DeleteItem`][api-ref] operation wrapper.
    *
-   * [ddb-docs-del-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DeleteItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DeleteItem.html
    *
    * @param primaryKeys The primary keys of the item to delete.
    * @param deleteItemOpts Options for the underlying `DeleteItem` operation.
@@ -439,11 +439,11 @@ export class Model<
   };
 
   /**
-   * A [`BatchWriteItem`][ddb-docs-batch-write] operation wrapper optimized for deleting items.
+   * A [`BatchWriteItem`][api-ref] operation wrapper optimized for deleting items.
    *
    * > Note: `BatchWriteItem` does not support condition expressions.
    *
-   * [ddb-docs-batch-write]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
    *
    * @param primaryKeys The primary keys of the items to delete.
    * @param batchDeleteItemsOpts Options for the underlying `BatchWriteItem` operation.
@@ -461,7 +461,7 @@ export class Model<
   };
 
   /**
-   * A [`BatchWriteItem`][ddb-docs-batch-write] operation wrapper which can be used for both
+   * A [`BatchWriteItem`][api-ref] operation wrapper which can be used for both
    * upserting and deleting items. Note that while each individual underlying Put/Delete operation
    * _is_ atomic, they're not atomic as a a whole, despite occurring within the same call (this is
    * an AWS implementation limitation).
@@ -492,7 +492,7 @@ export class Model<
    *      to the base `delay`: `Math.round(Math.random() * delay)`. Note that the determination as to
    *      whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
    *
-   * [ddb-docs-batch-write]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
    *
    * @param upsertItems An array of items to upsert.
    * @param deleteItems An array of primary keys of items to delete.
@@ -573,10 +573,10 @@ export class Model<
   };
 
   /**
-   * [`Query`][ddb-docs-query] operation wrapper which applies defaults and/or transforms defined in
+   * [`Query`][api-ref] operation wrapper which applies defaults and/or transforms defined in
    * this Model's schema to the returned items.
    *
-   * [ddb-docs-query]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
    *
    * // IDEA - Restrict QueryOpts.IndexName to only be a valid index name for the table.
    *
@@ -646,10 +646,10 @@ export class Model<
   };
 
   /**
-   * [`Scan`][ddb-docs-scan] operation wrapper which applies defaults and/or transforms defined in
+   * [`Scan`][api-ref] operation wrapper which applies defaults and/or transforms defined in
    * this Model's schema to the returned items.
    *
-   * [ddb-docs-scan]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
    *
    * // IDEA - Restrict ScanOpts.IndexName to only be a valid index name for the table.
    *

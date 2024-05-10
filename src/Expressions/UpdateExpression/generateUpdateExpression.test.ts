@@ -1,4 +1,4 @@
-import { generateUpdateExpression } from "./generateUpdateExpression.js";
+import { generateUpdateExpression } from "./index.js";
 
 describe("generateUpdateExpression()", () => {
   test("returns an empty UpdateExpression when itemAttributes is an empty object", () => {

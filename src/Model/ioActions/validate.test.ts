@@ -1,6 +1,6 @@
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { validate } from "./validate.js";
-import type { ModelSchemaType } from "../../Schema/types.js";
+import type { ModelSchemaType } from "../../Schema/index.js";
 import type { IOActions, IOActionContext } from "./types.js";
 
 describe("IOAction: validate", () => {
