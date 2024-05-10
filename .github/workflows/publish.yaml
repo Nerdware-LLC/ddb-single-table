@@ -13,22 +13,24 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           registry-url: "https://registry.npmjs.org"
+
       - run: |
           npm ci --include=dev
           npm run build
 
-          if [ ${{ github.event.release.prerelease }} == true ]; then
-            latest_or_next_tag=next
+          if [ "${{ github.event.release.prerelease }}" == 'true' ]; then
+              latest_or_next_tag=next
           else
-            latest_or_next_tag=latest
+              latest_or_next_tag=latest
           fi
 
           npm publish --provenance --access public \
-            --tag ${{ github.ref }} \
-            --tag $latest_or_next_tag
+              --tag ${{ github.ref }} \
+              --tag $latest_or_next_tag
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_PUBLISH_PUBLIC_ORG_SCOPE }}
