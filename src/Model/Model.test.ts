@@ -1,9 +1,8 @@
-import { Model } from "./Model.js";
+import { Model } from "./index.js";
 import * as batchRequestsModule from "../BatchRequests/index.js";
 import * as whereQueryModule from "../Expressions/WhereQuery/index.js";
-import { ModelSchema } from "../Schema/ModelSchema.js";
-import { Table } from "../Table/Table.js";
-import type { ItemTypeFromSchema } from "../types/itemTypes.js";
+import { Table, ModelSchema } from "../index.js";
+import type { ItemTypeFromSchema } from "../index.js";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
@@ -175,7 +174,9 @@ describe("Model", () => {
       expect(result).toBeUndefined();
     });
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(() => mockModel.getItem({} as any)).rejects.toThrowError(/required .* "id"/i);
+      await expect(() => mockModel.getItem({} as MockItem)).rejects.toThrowError(
+        /required .* "id"/i
+      );
     });
   });
 

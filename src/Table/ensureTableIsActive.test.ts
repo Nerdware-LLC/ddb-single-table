@@ -1,5 +1,5 @@
 import { Table } from "./Table.js";
-import { DdbSingleTableError } from "../utils/errors.js";
+import { DdbSingleTableError } from "../utils/index.js";
 import type { TableCreateTableParameters } from "./types.js";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
