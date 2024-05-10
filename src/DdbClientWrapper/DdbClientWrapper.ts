@@ -14,6 +14,7 @@ import {
   DeleteCommand,
   QueryCommand,
   ScanCommand,
+  TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type {
   DdbClientWrapperConstructorParams,
@@ -33,6 +34,8 @@ import type {
   QueryOutput,
   ScanInput,
   ScanOutput,
+  TransactWriteItemsInput,
+  TransactWriteItemsOutput,
   DescribeTableInput,
   DescribeTableOutput,
   CreateTableInput,
@@ -83,18 +86,18 @@ export class DdbClientWrapper {
   }
 
   /**
-   * [`GetItem`][ddb-docs-get-item] operation wrapper.
+   * [`GetItem`][api-ref] operation wrapper.
    *
-   * [ddb-docs-get-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_GetItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_GetItem.html
    */
   readonly getItem = async (args: GetItemInput): Promise<GetItemOutput> => {
     return await this._ddbDocClient.send(new GetCommand(args));
   };
 
   /**
-   * [`BatchGetItem`][ddb-docs-batch-get] command wrapper.
+   * [`BatchGetItem`][api-ref] command wrapper.
    *
-   * [ddb-docs-batch-get]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
    */
   readonly batchGetItems = async (args: BatchGetItemsInput): Promise<BatchGetItemsOutput> => {
     const response = await this._ddbDocClient.send(new BatchGetCommand(args));
@@ -106,83 +109,94 @@ export class DdbClientWrapper {
   };
 
   /**
-   * [`PutItem`][ddb-docs-put-item] operation wrapper.
+   * [`PutItem`][api-ref] operation wrapper.
    *
-   * [ddb-docs-put-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
    */
   readonly putItem = async (args: PutItemInput): Promise<PutItemOutput> => {
     return await this._ddbDocClient.send(new PutCommand(args));
   };
 
   /**
-   * [`UpdateItem`][ddb-docs-update-item] operation wrapper.
+   * [`UpdateItem`][api-ref] operation wrapper.
    *
-   * [ddb-docs-update-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
    */
   readonly updateItem = async (args: UpdateItemInput): Promise<UpdateItemOutput> => {
     return await this._ddbDocClient.send(new UpdateCommand(args));
   };
 
   /**
-   * [`DeleteItem`][ddb-docs-del-item] operation wrapper.
+   * [`DeleteItem`][api-ref] operation wrapper.
    *
-   * [ddb-docs-del-item]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DeleteItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DeleteItem.html
    */
   readonly deleteItem = async (args: DeleteItemInput): Promise<DeleteItemOutput> => {
     return await this._ddbDocClient.send(new DeleteCommand(args));
   };
 
   /**
-   * [`BatchWriteItem`][ddb-docs-batch-write] operation wrapper.
+   * [`BatchWriteItem`][api-ref] operation wrapper.
    *
-   * [ddb-docs-batch-write]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
    */
   readonly batchWriteItems = async (args: BatchWriteItemsInput): Promise<BatchWriteItemsOutput> => {
     return await this._ddbDocClient.send(new BatchWriteCommand(args));
   };
 
   /**
-   * [`Query`][ddb-docs-query] operation wrapper.
+   * [`Query`][api-ref] operation wrapper.
    *
-   * [ddb-docs-query]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
    */
   readonly query = async (args: QueryInput): Promise<QueryOutput> => {
     return await this._ddbDocClient.send(new QueryCommand(args));
   };
 
   /**
-   * [`Scan`][ddb-docs-scan] operation wrapper.
+   * [`Scan`][api-ref] operation wrapper.
    *
-   * [ddb-docs-scan]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
    */
   readonly scan = async (args: ScanInput): Promise<ScanOutput> => {
     return await this._ddbDocClient.send(new ScanCommand(args));
   };
 
+  /**
+   * [`TransactWriteItems`][api-ref] operation wrapper.
+   *
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html
+   */
+  readonly transactWriteItems = async (
+    args: TransactWriteItemsInput
+  ): Promise<TransactWriteItemsOutput> => {
+    return await this._ddbDocClient.send(new TransactWriteCommand(args));
+  };
+
   // CONTROL PLANE METHODS:
 
   /**
-   * [`DescribeTable`][ddb-docs-describe-table] operation wrapper.
+   * [`DescribeTable`][api-ref] operation wrapper.
    *
-   * [ddb-docs-describe-table]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html
    */
   readonly describeTable = async (args: DescribeTableInput): Promise<DescribeTableOutput> => {
     return await this._ddbClient.send(new DescribeTableCommand(args));
   };
 
   /**
-   * [`CreateTable`][ddb-docs-create-table] operation wrapper.
+   * [`CreateTable`][api-ref] operation wrapper.
    *
-   * [ddb-docs-create-table]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html
    */
   readonly createTable = async (args: CreateTableInput): Promise<CreateTableOutput> => {
     return await this._ddbClient.send(new CreateTableCommand(args));
   };
 
   /**
-   * [`ListTables`][ddb-docs-list-tables] operation wrapper.
+   * [`ListTables`][api-ref] operation wrapper.
    *
-   * [ddb-docs-list-tables]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTables.html
+   * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTables.html
    */
   readonly listTables = async (args: ListTablesInput = {}): Promise<ListTablesOutput> => {
     return await this._ddbClient.send(new ListTablesCommand(args));
