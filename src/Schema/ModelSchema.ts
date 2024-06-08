@@ -115,6 +115,13 @@ export class ModelSchema extends Schema {
     modelSchema: ModelSchemaType,
     { tableHashKey, tableRangeKey, indexes = {} }: TableKeysAndIndexes
   ): ModelSchemaEntries => {
+    // Create a map of index PKs for quick lookup
+    const indexPKs: Record<string, boolean> = {};
+
+    for (const index of Object.values(indexes)) {
+      indexPKs[index.indexPK] = true;
+    }
+
     return Object.entries(modelSchema).sort(([attrNameA], [attrNameB]) => {
       return attrNameA === tableHashKey // Sort tableHashKey to the front
         ? -1
@@ -124,9 +131,9 @@ export class ModelSchema extends Schema {
             ? -1
             : attrNameB === tableRangeKey
               ? 1
-              : attrNameA in indexes // index PKs, if any, go after tableRangeKey
+              : attrNameA in indexPKs // index PKs, if any, go after tableRangeKey
                 ? -1
-                : attrNameB in indexes
+                : attrNameB in indexPKs
                   ? 1
                   : 0; // For all other attributes the order is unchanged
     });
