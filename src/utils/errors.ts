@@ -1,4 +1,4 @@
-import { safeJsonStringify } from "@nerdware/ts-type-safety-utils";
+import { safeJsonStringify, isPlainObject } from "@nerdware/ts-type-safety-utils";
 import { isType } from "./isType.js";
 import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../Schema/types.js";
 
@@ -65,15 +65,35 @@ export interface DdbClientErrorECONNREFUSED {
 /**
  * This error is thrown by schema-validation functions when a `TableKeysSchema`
  * or `ModelSchema` is invalid.
+ *
+ * The provided {@link SchemaValidationErrorPayload} is used to create an error
+ * message formatted as follows:
+ *
+ * > `{schemaName} is invalid: {problem}.`
  */
 export class SchemaValidationError extends DdbSingleTableError {
   static override readonly DEFAULT_MSG: string = "Invalid schema";
 
-  constructor(message?: unknown) {
-    super(message, SchemaValidationError.DEFAULT_MSG);
+  constructor(message: SchemaValidationErrorPayload) {
+    const msgOrFormattedString =
+      isPlainObject(message) &&
+      isType.string(message?.schemaName) &&
+      isType.string(message?.problem)
+        ? `${message.schemaName} is invalid: ${message.problem}.`
+        : message;
+
+    super(msgOrFormattedString, SchemaValidationError.DEFAULT_MSG);
     Error.captureStackTrace(this, SchemaValidationError);
   }
 }
+
+/**
+ * An object that may be passed to a `SchemaValidationError` for a standardized error message format.
+ */
+export type SchemaValidationErrorPayload = {
+  schemaName: string;
+  problem: string;
+};
 
 /**
  * This error is thrown by Model `IOAction` functions when run-time input

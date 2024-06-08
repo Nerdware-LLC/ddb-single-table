@@ -26,7 +26,7 @@ plugins:
     - preset: angular
 
   - - "@semantic-release/npm"
-    - npmPublish: false # publishing is handled by the Publish Workflow
+    - npmPublish: true
 
   - - "@semantic-release/github"
     - addReleases: bottom

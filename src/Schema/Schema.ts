@@ -1,10 +1,12 @@
-import { hasKey } from "@nerdware/ts-type-safety-utils";
+import { hasKey, isPlainObject } from "@nerdware/ts-type-safety-utils";
 import { SchemaValidationError, isType } from "../utils/index.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
   SchemaMetadata,
-  SchemaEntries,
+  AnyValidSchemaEntries,
+  ModelSchemaEntries,
+  TableKeysSchemaEntries,
 } from "./types.js";
 
 /**
@@ -20,8 +22,10 @@ import type {
  */
 export class Schema {
   /**
-   * This method performs the following `Schema` validation checks:
+   * This method ensures the provided `schema` is a valid `Schema` object, and if valid, returns
+   * it as an array of entries (i.e., returns `Object.entries(schema)`).
    *
+   * This method performs the following `Schema` validation checks:
    * 1. Ensure the provided `schema` is a non-empty enumerable object.
    * 2. Ensure a valid "type" is specified for all attributes.
    * 3. Ensure "map", "array", and "tuple" attributes include a valid "schema" config.
@@ -32,25 +36,33 @@ export class Schema {
    * @param schemaType - The type of schema being validated ("TableKeysSchema" or "ModelSchema").
    * @param name - A name to identify the schema in any error messages (defaults to "schemaType" if not provided).
    */
-  static readonly validateAttributeTypes = (
-    schema: TableKeysSchemaType | ModelSchemaType,
+  static readonly validateAttributeTypes = <S extends TableKeysSchemaType | ModelSchemaType>(
+    schema: S,
     { schemaType, name: schemaName = schemaType }: SchemaMetadata
   ) => {
-    // Ensure schema is a Record-like object
-    if (!isType.map(schema)) {
-      throw new SchemaValidationError(
-        `${schemaName} is invalid: schema must be an object, but received "${typeof schema}".`
-      );
+    // Ensure schema is a plain Record-like object
+    if (!isPlainObject(schema)) {
+      // Get a string representation of the schema's type
+      const schemaTypeErrStr =
+        typeof schema !== "object"
+          ? typeof schema
+          : Object.prototype.toString.call(schema).slice(8, -1); // e.g. "[object Array]" => "Array"
+
+      throw new SchemaValidationError({
+        schemaName,
+        problem: `schema must be a plain object, but received "${schemaTypeErrStr}"`,
+      });
     }
 
-    // Convert the schema to entries (casting to `SchemaEntries` allows checking nested `schema`)
-    const schemaEntries = Object.entries(schema) as SchemaEntries;
+    // Convert the schema to entries
+    const schemaEntries = Object.entries(schema) as AnyValidSchemaEntries;
 
     // Ensure schema is not empty
     if (schemaEntries.length === 0) {
-      throw new SchemaValidationError(
-        `${schemaName} is invalid: schema does not contain any attributes.`
-      );
+      throw new SchemaValidationError({
+        schemaName,
+        problem: `schema does not contain any attributes`,
+      });
     }
 
     // Iterate over schema entries and validate the attribute configs
@@ -59,9 +71,10 @@ export class Schema {
 
       // Ensure "type" was provided
       if (!type) {
-        throw new SchemaValidationError(
-          `${schemaName} is invalid: attribute "${attrName}" does not specify a "type".`
-        );
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `attribute "${attrName}" does not specify a "type"`,
+        });
       }
 
       // Ensure "type" is one of the allowed values:
@@ -70,10 +83,10 @@ export class Schema {
       if (["map", "array", "tuple"].includes(type)) {
         // NESTED TYPES: ensure a nested "schema" is defined
         if (!schema) {
-          throw new SchemaValidationError(
-            `${schemaName} is invalid: attribute "${attrName}" is of type "${type}", ` +
-              `but does not specify a nested "schema".`
-          );
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${attrName}" is of type "${type}", but does not specify a nested "schema"`,
+          });
         }
         // NESTED TYPES: ensure "schema" is correct type
         if (
@@ -81,27 +94,27 @@ export class Schema {
           (type === "array" && !isType.array(schema)) ||
           (type === "tuple" && !isType.array(schema))
         ) {
-          throw new SchemaValidationError(
-            `${schemaName} is invalid: attribute "${attrName}" is of type "${type}", ` +
-              `but its nested "schema" is not an ${type === "map" ? "object" : "array"}.`
-          );
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${attrName}" is of type "${type}", but its nested "schema" is not an ${type === "map" ? "object" : "array"}`,
+          });
         }
         // TYPE: "enum"
       } else if (type === "enum") {
         // ENUM TYPE: ensure "oneOf" is defined and is a non-empty array
         if (!Array.isArray(oneOf) || oneOf.length === 0) {
-          throw new SchemaValidationError(
-            `${schemaName} is invalid: attribute "${attrName}" is of type "enum", ` +
-              `but does not specify a valid "oneOf" array.`
-          );
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${attrName}" is of type "enum", but does not specify a valid "oneOf" array`,
+          });
         }
         // TYPE: "string" | "number" | "boolean" | "Buffer" | "Date"
       } else if (!["string", "number", "boolean", "Buffer", "Date"].includes(type)) {
         // If it's none of the above, throw an error
-        throw new SchemaValidationError(
-          `${schemaName} is invalid: attribute "${attrName}" has an invalid "type" value (must be ` +
-            `"string", "number", "boolean", "Buffer", "Date", "map", "array", "tuple", or "enum").`
-        );
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `attribute "${attrName}" has an invalid "type" value (must be "string", "number", "boolean", "Buffer", "Date", "map", "array", "tuple", or "enum")`,
+        });
       }
 
       // Check if "default" is specified
@@ -110,12 +123,16 @@ export class Schema {
         const defaultValue = attrConfig.default;
 
         if (typeof defaultValue !== "function" && !isType[type](defaultValue, oneOf)) {
-          throw new SchemaValidationError(
-            `${schemaName} is invalid: attribute "${attrName}" specifies a "default" value of type ` +
-              `"${typeof defaultValue}", but the attribute's configured "type" is "${type}".`
-          );
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${attrName}" specifies a "default" value of type "${typeof defaultValue}", but the attribute's configured "type" is "${type}"`,
+          });
         }
       }
     });
+
+    return schemaEntries as S extends TableKeysSchemaType
+      ? TableKeysSchemaEntries
+      : ModelSchemaEntries;
   };
 }

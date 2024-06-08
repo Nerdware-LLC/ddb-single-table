@@ -2,7 +2,7 @@ import type {
   ModelSchemaType,
   ModelSchemaOptions,
   ModelSchemaNestedAttributes,
-  SchemaEntries,
+  ModelSchemaEntries,
 } from "../../Schema/types.js";
 import type { BaseItem } from "../../types/itemTypes.js";
 import type { AttributesAliasesMap } from "../types.js";
@@ -36,8 +36,8 @@ interface BaseIOActionContext {
  */
 export interface IOActionContext extends BaseIOActionContext {
   schema: ModelSchemaType;
-  /** Ordered array of schema entries. See {@link SchemaEntries}. */
-  schemaEntries: SchemaEntries;
+  /** Ordered array of schema entries. See {@link ModelSchemaEntries}. */
+  schemaEntries: ModelSchemaEntries;
 }
 
 /**

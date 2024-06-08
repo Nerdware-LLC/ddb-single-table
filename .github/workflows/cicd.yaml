@@ -1,0 +1,55 @@
+name: 📦 CI/CD Workflow
+
+on:
+  push:
+    branches: [main, next]
+    paths: ["src/**/*", "package*.json"]
+  # This workflow can be manually triggered
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 🧪 Test
+    uses: ./.github/workflows/test.yaml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    permissions:
+      contents: read #       to checkout the code
+      pull-requests: write # to add coverage reports to the PR
+      statuses: write #      to update commit status
+
+  release:
+    name: 🚀 Release
+    needs: test # only release if tests passed
+    if: needs.test.outputs.success == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write # to generate artifact attestations for dist assets
+      contents: write #     to create a release
+      id-token: write #     to enable use of OIDC for npm provenance
+      issues: write #       to be able to comment on released issues
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install Dependencies
+        run: npm ci --include=dev
+
+      - name: Build Dist Assets
+        run: npm run build
+
+      - name: Run Semantic-Release
+        id: semantic-release
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            @semantic-release/changelog@6.0.3
+            @semantic-release/git@10.0.1
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN_PUBLISH_PUBLIC_ORG_SCOPE }}
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}

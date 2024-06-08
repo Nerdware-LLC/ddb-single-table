@@ -45,45 +45,49 @@ export class TableKeysSchema extends Schema {
     { name: schemaName = "TableKeysSchema" }: Pick<TableKeysSchemaMetadata, "name"> = {}
   ): TableKeysAndIndexes => {
     // First run the base Schema validation checks:
-    Schema.validateAttributeTypes(tableKeysSchema, {
+    const schemaEntries = Schema.validateAttributeTypes(tableKeysSchema, {
       schemaType: "TableKeysSchema",
       name: schemaName,
     });
 
     // Then perform TableKeysSchema-specific validation checks:
-    const { tableHashKey, tableRangeKey, indexes } = Object.entries(tableKeysSchema).reduce(
+    const { tableHashKey, tableRangeKey, indexes } = schemaEntries.reduce(
       (
         accum: Partial<TableKeysAndIndexes>,
         [keyAttrName, { isHashKey, isRangeKey, index, type, required }]
       ) => {
         // Ensure all key/index attributes specify `isHashKey`, `isRangeKey`, or `index`
         if (isHashKey !== true && isRangeKey !== true && index === undefined) {
-          throw new SchemaValidationError(
-            `${schemaName} is invalid: attribute "${keyAttrName}" is not configured as a key or index.`
-          );
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${keyAttrName}" is not configured as a key or index`,
+          });
         }
 
         // Ensure all key/index attribute `type`s are "string", "number", or "Buffer" (S/N/B in DDB)
         if (!["string", "number", "Buffer"].includes(type)) {
-          throw new SchemaValidationError(
-            `${schemaName} is invalid: attribute "${keyAttrName}" has an invalid "type" (must be "string", "number", or "Buffer").`
-          );
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${keyAttrName}" has an invalid "type" (must be "string", "number", or "Buffer")`,
+          });
         }
 
         // Ensure all key/index attributes are `required`
         if (required !== true) {
-          throw new SchemaValidationError(
-            `${schemaName} is invalid: attribute "${keyAttrName}" is not "required".`
-          );
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${keyAttrName}" is not "required"`,
+          });
         }
 
         // Check for table hashKey
         if (isHashKey === true) {
           // Throw error if table hashKey already exists
           if (accum.tableHashKey) {
-            throw new SchemaValidationError(
-              `${schemaName} is invalid: multiple table hash keys ("${accum.tableHashKey}" and "${keyAttrName}").`
-            );
+            throw new SchemaValidationError({
+              schemaName,
+              problem: `multiple table hash keys ("${accum.tableHashKey}" and "${keyAttrName}")`,
+            });
           }
           accum.tableHashKey = keyAttrName;
         }
@@ -92,9 +96,10 @@ export class TableKeysSchema extends Schema {
         if (isRangeKey === true) {
           // Throw error if table rangeKey already exists
           if (accum.tableRangeKey) {
-            throw new SchemaValidationError(
-              `${schemaName} is invalid: multiple table range keys ("${accum.tableRangeKey}" and "${keyAttrName}").`
-            );
+            throw new SchemaValidationError({
+              schemaName,
+              problem: `multiple table range keys ("${accum.tableRangeKey}" and "${keyAttrName}")`,
+            });
           }
           accum.tableRangeKey = keyAttrName;
         }
@@ -103,9 +108,10 @@ export class TableKeysSchema extends Schema {
         if (index) {
           // Ensure index has a name
           if (!index.name) {
-            throw new SchemaValidationError(
-              `Invalid TableKeysSchema: the index for attribute "${keyAttrName}" is missing a "name".`
-            );
+            throw new SchemaValidationError({
+              schemaName,
+              problem: `the index for attribute "${keyAttrName}" is missing a "name"`,
+            });
           }
 
           // See if "indexes" exists on accum yet
@@ -114,9 +120,10 @@ export class TableKeysSchema extends Schema {
             accum.indexes = {};
             // Else ensure the index name is unique
           } else if (hasKey(accum.indexes, index.name)) {
-            throw new SchemaValidationError(
-              `${schemaName} is invalid: multiple indexes with the same name ("${index.name}").`
-            );
+            throw new SchemaValidationError({
+              schemaName,
+              problem: `multiple indexes with the same name ("${index.name}")`,
+            });
           }
 
           accum.indexes[index.name] = {
@@ -136,9 +143,10 @@ export class TableKeysSchema extends Schema {
       const { keyType, keyConfig } = !tableHashKey
         ? { keyType: "hash", keyConfig: "isHashKey" }
         : { keyType: "range", keyConfig: "isRangeKey" };
-      throw new SchemaValidationError(
-        `${schemaName} is invalid: the schema does not contain a ${keyType} key (must specify exactly one attribute with "${keyConfig}: true").`
-      );
+      throw new SchemaValidationError({
+        schemaName,
+        problem: `the schema does not contain a ${keyType} key (must specify exactly one attribute with "${keyConfig}: true")`,
+      });
     }
 
     return {
@@ -202,10 +210,10 @@ export class TableKeysSchema extends Schema {
               // If ModelSchema contains `keyAttrName` AND a mergeable property, ensure it matches TableKeysSchema.
               if (modelSchema[keyAttrName][attrConfigName] !== keyAttrConfig[attrConfigName]) {
                 // Throw error if ModelSchema key attrConfig has a config mismatch
-                throw new SchemaValidationError(
-                  `Invalid "${attrConfigName}" value found in ModelSchema for key attribute ` +
-                    `"${keyAttrName}" does not match the value provided in the TableKeysSchema.`
-                );
+                throw new SchemaValidationError({
+                  schemaName: "ModelSchema",
+                  problem: `the "${attrConfigName}" config in the ModelSchema for key attribute "${keyAttrName}" does not match the TableKeysSchema`,
+                });
               }
             } else {
               // If ModelSchema contains `keyAttrName`, but NOT a mergeable config property, add it.

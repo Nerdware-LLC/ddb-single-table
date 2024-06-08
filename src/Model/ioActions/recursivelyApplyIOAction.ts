@@ -1,5 +1,5 @@
 import { isType } from "../../utils/isType.js";
-import type { ModelSchemaType, SchemaEntries } from "../../Schema/types.js";
+import type { ModelSchemaType, ModelSchemaEntries } from "../../Schema/types.js";
 import type { IOActions, IOActionRecursiveApplicator } from "./types.js";
 
 /**
@@ -27,7 +27,7 @@ export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
       attrValue = attrValue.map((tupleEl, index) =>
         ioAction.call(this, { _: tupleEl }, {
           schema: { _: nestedSchema[index] } as ModelSchemaType,
-          schemaEntries: [["_", nestedSchema[index]]] as SchemaEntries,
+          schemaEntries: [["_", nestedSchema[index]]] as ModelSchemaEntries,
           ...ctx,
         })._
       );
@@ -36,7 +36,7 @@ export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
       attrValue = attrValue.map((arrayEl) =>
         ioAction.call(this, { _: arrayEl }, {
           schema: { _: nestedSchema[0] } as ModelSchemaType,
-          schemaEntries: [["_", nestedSchema[0]]] as SchemaEntries,
+          schemaEntries: [["_", nestedSchema[0]]] as ModelSchemaEntries,
           ...ctx,
         })._
       );
