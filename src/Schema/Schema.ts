@@ -4,7 +4,7 @@ import type {
   TableKeysSchemaType,
   ModelSchemaType,
   SchemaMetadata,
-  SchemaEntries,
+  ModelSchemaEntries,
 } from "./types.js";
 
 /**

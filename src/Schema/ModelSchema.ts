@@ -7,7 +7,7 @@ import type {
   ModelSchemaOptions,
   ModelSchemaMetadata,
   KeyAttributeConfig,
-  SchemaEntries,
+  ModelSchemaEntries,
 } from "./types.js";
 
 /**
@@ -114,7 +114,7 @@ export class ModelSchema extends Schema {
   static readonly getSortedSchemaEntries = (
     modelSchema: ModelSchemaType,
     { tableHashKey, tableRangeKey, indexes = {} }: TableKeysAndIndexes
-  ): SchemaEntries => {
+  ): ModelSchemaEntries => {
     return Object.entries(modelSchema).sort(([attrNameA], [attrNameB]) => {
       return attrNameA === tableHashKey // Sort tableHashKey to the front
         ? -1

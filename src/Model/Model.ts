@@ -6,7 +6,7 @@ import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Ex
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { ItemInputError } from "../utils/errors.js";
 import type { SetOptional } from "type-fest";
-import type { ModelSchemaType, ModelSchemaOptions, SchemaEntries } from "../Schema/types.js";
+import type { ModelSchemaType, ModelSchemaOptions, ModelSchemaEntries } from "../Schema/types.js";
 import type { TableKeysAndIndexes } from "../Table/types.js";
 import type {
   BaseItem,
@@ -92,7 +92,7 @@ export class Model<
   // INSTANCE PROPERTIES:
   readonly modelName: string;
   readonly schema: Schema;
-  readonly schemaEntries: SchemaEntries;
+  readonly schemaEntries: ModelSchemaEntries;
   readonly schemaOptions: ModelSchemaOptions;
   readonly attributesToAliasesMap: AttributesAliasesMap;
   readonly aliasesToAttributesMap: AttributesAliasesMap;
