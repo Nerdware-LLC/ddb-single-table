@@ -12,6 +12,9 @@
     "npm": ">=10.0.0"
   },
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "module": "dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
   "main": "dist/cjs/index.js",
