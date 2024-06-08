@@ -16,11 +16,6 @@ on:
   # This workflow can be manually triggered
   workflow_dispatch:
 
-permissions:
-  contents: write #      to checkout the code and merge dependabot PRs
-  pull-requests: write # to add coverage reports to the PR
-  statuses: write #      to update commit status
-
 jobs:
   run-tests:
     name: 🧪 Run Tests

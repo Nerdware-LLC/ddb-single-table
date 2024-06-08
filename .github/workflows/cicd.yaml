@@ -7,14 +7,6 @@ on:
   # This workflow can be manually triggered
   workflow_dispatch:
 
-permissions:
-  attestations: write #  to generate artifact attestations for dist assets
-  contents: write #      to checkout the code and create a release
-  id-token: write #      to enable use of OIDC for npm provenance
-  issues: write #        to be able to comment on released issues
-  pull-requests: write # to add coverage reports to a PR
-  statuses: write #      to update commit status
-
 jobs:
   test:
     name: 🧪 Test
