@@ -1,7 +1,8 @@
-import type { SetOptional } from "type-fest";
+import type { SetOptional, Simplify } from "type-fest";
+import type { CombineUnionOfObjects } from "../types/helpers.js";
 import type { BaseItem, SupportedAttributeValueTypes } from "../types/itemTypes.js";
 
-///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:
 
 /**
@@ -131,7 +132,7 @@ export interface BaseAttributeConfig {
   readonly required?: boolean;
 }
 
-///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG TYPES:
 
 /** Key attribute configs. */
@@ -199,14 +200,29 @@ export interface ModelSchemaNestedMap {
   readonly [nestedAttrName: string]: ModelSchemaAttributeConfig;
 }
 
-///////////////////////////////////////////////////////////////////
+/** Union of all valid `Schema` attribute configs. */
+export type UnionOfAttributeConfigs = KeyAttributeConfig | ModelSchemaAttributeConfig;
+
+/**
+ * This type reflects a "combination" of all possible attribute configs —
+ * _**not**_ an intersection (see {@link CombineUnionOfObjects}).
+ *
+ * > This type is used for attribute configs when the parent schema type is
+ * > unknown, as is the case in many methods of the base `Schema` class.
+ */
+export type AnyValidAttributeConfig = CombineUnionOfObjects<UnionOfAttributeConfigs>;
+
+///////////////////////////////////////////////////////////////////////////////
 // SCHEMA TYPES:
+
+/** An attribute name / schema key. */
+export type AttributeName = string;
 
 /**
  * Type for the `TableKeys` schema; for `Model` schemas, instead use {@link ModelSchemaType}.
  */
 export interface TableKeysSchemaType {
-  readonly [keyAttrName: string]: KeyAttributeConfig;
+  readonly [keyAttrName: AttributeName]: KeyAttributeConfig;
 }
 
 /**
@@ -222,13 +238,13 @@ export interface TableKeysSchemaType {
  */
 export type ModelSchemaType<TableKeysSchema extends TableKeysSchemaType | undefined = undefined> =
   TableKeysSchema extends TableKeysSchemaType
-    ? { readonly [attrName: string]: ModelSchemaAttributeConfig } & {
+    ? { readonly [attrName: AttributeName]: ModelSchemaAttributeConfig } & {
         readonly [KeyAttrName in keyof TableKeysSchema]?: SetOptional<
           ModelSchemaAttributeConfig,
           "type" | "required"
         >;
       }
-    : { readonly [attrName: string]: ModelSchemaAttributeConfig };
+    : { readonly [attrName: AttributeName]: ModelSchemaAttributeConfig };
 
 /**
  * Use this type to derive a _merged_ schema type from merging a
@@ -285,9 +301,41 @@ export interface ModelSchemaOptions {
   readonly validateItem?: (item: any) => boolean;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// SCHEMA METADATA TYPES:
+
+/** Base type for Schema metadata properties. @internal */
+export type SchemaMetadata = {
+  schemaType: "ModelSchema" | "TableKeysSchema";
+  name?: string;
+  version?: string;
+};
+
+/** ModelSchema {@link SchemaMetadata | metadata properties }. @internal */
+export type ModelSchemaMetadata = Simplify<
+  SetOptional<SchemaMetadata, "schemaType"> & {
+    schemaType?: "ModelSchema";
+    name: string;
+  }
+>;
+
+/** TableKeysSchema {@link SchemaMetadata | metadata properties }. @internal */
+export type TableKeysSchemaMetadata = Simplify<
+  SetOptional<SchemaMetadata, "schemaType"> & {
+    schemaType?: "TableKeysSchema";
+  }
+>;
+
+///////////////////////////////////////////////////////////////////////////////
+// SCHMEA ENTRIES TYPES:
+
+/** This type reflects `Object.entries(tableKeysSchema)`. */
+export type TableKeysSchemaEntries = Array<[AttributeName, KeyAttributeConfig]>;
+
 /**
- * Schema entries are created by each Model upon instantiation using
- * `Object.entries(schema)` to achieve the following:
+ * This type reflects `Object.entries(modelSchema)`.
+ *
+ * This type is used by the `Model` class to achieve the following:
  *
  * - Ensure `IOAction`s aren't needlessly re-creating schema entries
  *   using `Object.entries(schema)` on every call.
@@ -295,22 +343,11 @@ export interface ModelSchemaOptions {
  *   always consistent.
  * - Ensure that key attributes are always processed before non-key attributes.
  */
-export type SchemaEntries = Array<[string, ModelSchemaAttributeConfig]>;
+export type ModelSchemaEntries = Array<[AttributeName, ModelSchemaAttributeConfig]>;
 
-/** Base type for Schema metadata properties. @internal */
-export interface SchemaMetadata {
-  schemaType: "ModelSchema" | "TableKeysSchema";
-  name?: string;
-  version?: string;
-}
-
-/** ModelSchema {@link SchemaMetadata | metadata properties }. @internal */
-export interface ModelSchemaMetadata extends SchemaMetadata {
-  schemaType: "ModelSchema";
-  name: string;
-}
-
-/** TableKeysSchema {@link SchemaMetadata | metadata properties }. @internal */
-export interface TableKeysSchemaMetadata extends SchemaMetadata {
-  schemaType: "TableKeysSchema";
-}
+/**
+ * This type reflects `Object.entries(schema)`, where `schema` contains attribute
+ * configs of type {@link AnyValidAttributeConfig} — a "combination" of all attr
+ * config types, rather than an intersection (see {@link CombineUnionOfObjects}).
+ */
+export type AnyValidSchemaEntries = Array<[AttributeName, AnyValidAttributeConfig]>;

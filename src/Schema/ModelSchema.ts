@@ -53,13 +53,13 @@ export class ModelSchema extends Schema {
     { name: schemaName }: Pick<ModelSchemaMetadata, "name">
   ) => {
     // First run the base Schema validation checks:
-    Schema.validateAttributeTypes(modelSchema, {
+    const schemaEntries = Schema.validateAttributeTypes(modelSchema, {
       schemaType: "ModelSchema",
       name: schemaName,
     });
 
     // Then run the ModelSchema-specific validation checks:
-    const { attributesToAliasesMap, aliasesToAttributesMap } = Object.entries(modelSchema).reduce(
+    const { attributesToAliasesMap, aliasesToAttributesMap } = schemaEntries.reduce(
       (
         accum: Record<"attributesToAliasesMap" | "aliasesToAttributesMap", Record<string, string>>,
         [attrName, { alias, type, schema, default: defaultValue, ...attrConfigs }]
@@ -68,10 +68,10 @@ export class ModelSchema extends Schema {
         (["isHashKey", "isRangeKey", "index"] satisfies Array<keyof KeyAttributeConfig>).forEach(
           (keyConfigProperty) => {
             if (hasKey(attrConfigs, keyConfigProperty)) {
-              throw new SchemaValidationError(
-                `${schemaName} attribute "${attrName}" includes an "${keyConfigProperty}" ` +
-                  `config, which is only valid in the TableKeysSchema.`
-              );
+              throw new SchemaValidationError({
+                schemaName,
+                problem: `attribute "${attrName}" includes an "${keyConfigProperty}" config, which is only valid in the TableKeysSchema`,
+              });
             }
           }
         );
@@ -80,7 +80,10 @@ export class ModelSchema extends Schema {
         if (alias) {
           // If alias already exists in accum, there's a dupe alias in the schema, throw error
           if (alias in accum.aliasesToAttributesMap) {
-            throw new SchemaValidationError(`${schemaName} contains duplicate alias "${alias}".`);
+            throw new SchemaValidationError({
+              schemaName,
+              problem: `the ModelSchema contains duplicate alias "${alias}"`,
+            });
           }
 
           // Add attrName/alias to the alias maps
