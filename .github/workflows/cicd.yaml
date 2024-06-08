@@ -14,7 +14,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     permissions:
-      contents: read #       to checkout the code
+      contents: write #      to checkout the code and merge bot-PRs
       pull-requests: write # to add coverage reports to the PR
       statuses: write #      to update commit status
 
