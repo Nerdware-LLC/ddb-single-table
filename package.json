@@ -25,9 +25,14 @@
     }
   },
   "private": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Nerdware-LLC/ddb-single-table.git"
+    "url": "git+https://github.com/Nerdware-LLC/ddb-single-table.git"
   },
   "homepage": "https://github.com/Nerdware-LLC/ddb-single-table#readme",
   "bugs": {
@@ -45,7 +50,7 @@
     "test:ci": "vitest run --coverage --bail=1 --silent",
     "test:types": "tsc --project tsconfig.json --noEmit --skipLibCheck",
     "prebuild": "[ -d dist ] && rm -rf dist || true",
-    "build": "./scripts/build.sh"
+    "build": "scripts/cicd.build.sh"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.572.0",
