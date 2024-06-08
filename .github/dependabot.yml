@@ -19,8 +19,8 @@ updates:
         update-types: ["minor", "patch"]
 
     # Metadata for Dependabot's PRs:
-    assignees: ["trevor-anderson"]
     labels: ["dependabot 🤖"]
+    assignees: ["trevor-anderson"]
 
     # Behavior of Dependabot's PRs:
     target-branch: "main"
