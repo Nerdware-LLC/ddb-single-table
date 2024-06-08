@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.6.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.0...v2.6.1) (2024-06-08)
+
+
+### Bug Fixes
+
+* correct index-name lookup logic ([58a5075](https://github.com/Nerdware-LLC/ddb-single-table/commit/58a5075def07927016b08e0e28deac27e539f16d))
+
 # [2.6.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.5.0...v2.6.0) (2024-05-10)
 
 
