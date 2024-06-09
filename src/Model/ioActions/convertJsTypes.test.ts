@@ -1,4 +1,3 @@
-import lodashSet from "lodash.set";
 import { convertJsTypes } from "./convertJsTypes.js";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import type { ModelSchemaType } from "../../Schema/index.js";
@@ -56,7 +55,7 @@ describe("IOAction: convertJsTypes", () => {
   };
 
   // Mock schema with an attribute with a nest-depth of 5 (the current max for ItemTypeFromSchema)
-  const mockSchema: ModelSchemaType = {
+  const mockSchema = {
     id: { type: "string", required: true },
     DATE: { type: "Date" }, //         <-- top-level Date
     DATE_ISO_STR: { type: "Date" }, // <-- top-level Date (fromDB will be ISO-8601 string)
@@ -98,19 +97,19 @@ describe("IOAction: convertJsTypes", () => {
         },
       ],
     },
-  };
+  } as const satisfies ModelSchemaType;
 
   const mockCtx = {
     modelName: "MockModel",
     schema: mockSchema,
     schemaEntries: Object.entries(mockSchema),
-  } as IOActionContext;
+  } as const satisfies Partial<IOActionContext>;
 
-  it(`should convert JS types to DDB types when "ioDirection" is "toDB"`, () => {
+  test(`converts JS types to DDB types when "ioDirection" is "toDB"`, () => {
     const result = convertJsTypes.call(mockThis, mockToDbItem, {
       ...mockCtx,
       ioDirection: "toDB",
-    });
+    } as any);
 
     expect(result.DATE).toStrictEqual(CONVERSION_VALUES.DDB.DATE);
     expect((result as any).books[0].author.publisher.address.DATE).toStrictEqual(
@@ -128,23 +127,34 @@ describe("IOAction: convertJsTypes", () => {
     );
   });
 
-  it(`should convert DDB types to JS types when "ioDirection" is "fromDB"`, () => {
+  test(`converts DDB types to JS types when "ioDirection" is "fromDB"`, () => {
     // Mock item with DDB types
     const mockFromDbItem = {
       ...mockToDbItem,
       ...CONVERSION_VALUES.DDB, //         <-- top-level Date and Buffer
       DATE_ISO_STR: JAN_1_2020_ISO_STR, // <-- top-level ISO-8601 string
+      books: [
+        {
+          ...mockToDbItem.books[0],
+          author: {
+            ...mockToDbItem.books[0].author,
+            publisher: {
+              ...mockToDbItem.books[0].author.publisher,
+              address: {
+                street: "123 Main St",
+                ...CONVERSION_VALUES.DDB, //         <-- nested Date and Buffer
+                DATE_ISO_STR: JAN_1_2020_ISO_STR, // <-- nested ISO-8601 string
+              },
+            },
+          },
+        },
+      ],
     };
-    lodashSet(mockFromDbItem, "books[0].author.publisher.address", {
-      street: "123 Main St",
-      ...CONVERSION_VALUES.DDB, //         <-- nested Date and Buffer
-      DATE_ISO_STR: JAN_1_2020_ISO_STR, // <-- nested ISO-8601 string
-    });
 
     const result = convertJsTypes.call(mockThis, mockFromDbItem, {
       ...mockCtx,
       ioDirection: "fromDB",
-    });
+    } as any);
 
     expect(result.DATE).toStrictEqual(CONVERSION_VALUES.JS.DATE);
     expect((result as any).books[0].author.publisher.address.DATE).toStrictEqual(

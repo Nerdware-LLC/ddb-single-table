@@ -24,24 +24,34 @@ describe("IOAction: transformItem", () => {
         },
       },
     },
-  } as IOActionContext;
+  } as const satisfies Partial<IOActionContext>;
 
-  it(`should return the "item" as configured when "transformItem.toDB" is a function`, () => {
-    const result = transformItem.call(mockThis, mockItem, { ...mockCtx, ioDirection: "toDB" });
-    expect(result).toStrictEqual({ ...mockItem, NEW_TO_DB_KEY: "NEW_TO_DB_VALUE" });
+  test(`returns the "item" as configured when "transformItem.toDB" is a function`, () => {
+    expect(
+      transformItem.call(mockThis, mockItem, {
+        ...mockCtx,
+        ioDirection: "toDB",
+      } as any)
+    ).toStrictEqual({ ...mockItem, NEW_TO_DB_KEY: "NEW_TO_DB_VALUE" });
   });
 
-  it(`should return the "item" as configured when "transformItem.fromDB" is a function`, () => {
-    const result = transformItem.call(mockThis, mockItem, { ...mockCtx, ioDirection: "fromDB" });
-    expect(result).toStrictEqual({ ...mockItem, NEW_FROM_DB_KEY: "NEW_FROM_DB_VALUE" });
+  test(`returns the "item" as configured when "transformItem.fromDB" is a function`, () => {
+    expect(
+      transformItem.call(mockThis, mockItem, {
+        ...mockCtx,
+        ioDirection: "fromDB",
+      } as any)
+    ).toStrictEqual({ ...mockItem, NEW_FROM_DB_KEY: "NEW_FROM_DB_VALUE" });
   });
 
-  it(`should return the "item" unaltered when "transformItem" is not provided`, () => {
-    const ctxWithoutTransformItem = { ...mockCtx, schemaOptions: {} };
-
+  test(`returns the "item" unaltered when "transformItem" is not provided`, () => {
     (["toDB", "fromDB"] satisfies Array<IODirection>).forEach((ioDirection) => {
       expect(
-        transformItem.call(mockThis, mockItem, { ...ctxWithoutTransformItem, ioDirection })
+        transformItem.call(mockThis, mockItem, {
+          ...mockCtx,
+          schemaOptions: {},
+          ioDirection,
+        } as any)
       ).toStrictEqual(mockItem);
     });
   });

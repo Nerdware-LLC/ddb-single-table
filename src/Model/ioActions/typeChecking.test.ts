@@ -1,4 +1,3 @@
-import lodashSet from "lodash.set";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { typeChecking } from "./typeChecking.js";
 import type { ModelSchemaType } from "../../Schema/index.js";
@@ -94,13 +93,13 @@ describe("IOAction: typeChecking", () => {
     modelName: "MockModel",
     schema: mockSchema,
     schemaEntries: Object.entries(mockSchema),
-  } as IOActionContext;
+  } as const satisfies Partial<IOActionContext>;
 
-  it("should return the item if all attributes are of the correct type", () => {
-    expect(typeChecking.call(mockThis, mockItem, mockCtx)).toEqual(mockItem);
+  test("returns the item if all attributes are of the correct type", () => {
+    expect(typeChecking.call(mockThis, mockItem, mockCtx as any)).toEqual(mockItem);
   });
 
-  it("should throw an ItemInputError when provided an item with an incorrect type", () => {
+  test("throws an ItemInputError when provided an item with an incorrect type", () => {
     Object.entries(VALID_VALUE_TYPE_INPUTS).forEach(([key, value]) => {
       // Test bad value-type on top-level property:
       expect(() =>
@@ -110,21 +109,35 @@ describe("IOAction: typeChecking", () => {
             ...mockItem,
             [key]: typeof value === "string" ? { BAD_KEY: "BAD_VALUE" } : "BAD_VALUE",
           },
-          mockCtx
+          mockCtx as any
         )
       ).toThrow(/Invalid type of value provided/i);
 
       // Test bad value-type on nested property:
-      const mockItemWithBadNestedValue = { ...mockItem };
-      lodashSet(
-        mockItemWithBadNestedValue,
-        `books[0].author.publisher.nestedValues.${key}`,
-        typeof value === "string" ? { BAD_KEY: "BAD_VALUE" } : "BAD_VALUE"
-      );
-
       expect(() =>
-        typeChecking.call(mockThis, mockItemWithBadNestedValue, mockCtx)
-      ).toThrow(/Invalid type of value provided/i); // prettier-ignore
+        typeChecking.call(
+          mockThis,
+          {
+            ...mockItem,
+            books: [
+              {
+                ...mockItem.books[0],
+                author: {
+                  ...mockItem.books[0].author,
+                  publisher: {
+                    ...mockItem.books[0].author.publisher,
+                    nestedValues: {
+                      ...mockItem.books[0].author.publisher.nestedValues,
+                      [key]: typeof value === "string" ? { BAD_KEY: "BAD_VALUE" } : "BAD_VALUE",
+                    },
+                  },
+                },
+              },
+            ],
+          },
+          mockCtx as any
+        )
+      ).toThrow(/Invalid type of value provided/i);
     });
   });
 });

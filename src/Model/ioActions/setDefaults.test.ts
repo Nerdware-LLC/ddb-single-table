@@ -1,4 +1,3 @@
-import lodashSet from "lodash.set";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { setDefaults } from "./setDefaults.js";
 import type { ModelSchemaType } from "../../Schema/index.js";
@@ -14,8 +13,8 @@ describe("IOAction: setDefaults", () => {
   const mockItem = {
     id: "USER-1",
     EXISTING_ATTR: "EXISTING_VALUE",
-    // missing top-level "FOO" attr, `setDefaults` should set it to "FOO_VALUE"
-    // missing top-level "BAR" attr, `setDefaults` should set it to "USER-1-BAR"
+    // missing top-level "FOO" attr, `setDefaults` set it to "FOO_VALUE"
+    // missing top-level "BAR" attr, `setDefaults` set it to "USER-1-BAR"
     books: [
       {
         bookID: "BOOK-1",
@@ -26,7 +25,7 @@ describe("IOAction: setDefaults", () => {
             address: {
               street: "123 Main St",
               EXISTING_ATTR: "EXISTING_VALUE",
-              // missing nested "FOO" attr, `setDefaults` should set it to "123 Main St-FOO"
+              // missing nested "FOO" attr, `setDefaults` set it to "123 Main St-FOO"
             },
           },
         },
@@ -108,15 +107,27 @@ describe("IOAction: setDefaults", () => {
     schemaEntries: Object.entries(mockSchema),
   } as IOActionContext;
 
-  it(`should return the provided "item" with configured "default" values where applicable`, () => {
-    const expectedItemResult = { ...mockItem };
-    lodashSet(expectedItemResult, "FOO", "FOO_VALUE");
-    lodashSet(expectedItemResult, "BAR", "USER-1-BAR");
-    lodashSet(expectedItemResult, "books[0].author.publisher.address.FOO", "123 Main St-FOO");
-    lodashSet(expectedItemResult, "books[0].author.publisher.address.BAR", "BAR_VALUE");
-
-    const result = setDefaults.call(mockThis, mockItem, mockCtx);
-
-    expect(result).toStrictEqual(expectedItemResult);
+  test(`returns the provided "item" with configured "default" values where applicable`, () => {
+    expect(setDefaults.call(mockThis, mockItem, mockCtx)).toStrictEqual({
+      ...mockItem,
+      FOO: "FOO_VALUE",
+      BAR: "USER-1-BAR",
+      books: [
+        {
+          ...mockItem.books[0],
+          author: {
+            ...mockItem.books[0].author,
+            publisher: {
+              ...mockItem.books[0].author.publisher,
+              address: {
+                ...mockItem.books[0].author.publisher.address,
+                FOO: "123 Main St-FOO",
+                BAR: "BAR_VALUE",
+              },
+            },
+          },
+        },
+      ],
+    });
   });
 });

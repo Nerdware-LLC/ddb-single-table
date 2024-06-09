@@ -12,7 +12,7 @@ describe("IOAction: validateItem", () => {
     age: 32,
   };
 
-  it(`should return the provided "item" without throwing when "validateItem" is not defined`, () => {
+  test(`returns the provided "item" without throwing when "validateItem" is not defined`, () => {
     expect(
       validateItem.call(mockThis, mockItem, {
         modelName: "MockModel",
@@ -21,7 +21,7 @@ describe("IOAction: validateItem", () => {
     ).toStrictEqual(mockItem);
   });
 
-  it(`should return the provided "item" without throwing when "validateItem" returns true`, () => {
+  test(`returns the provided "item" without throwing when "validateItem" returns true`, () => {
     expect(
       validateItem.call(mockThis, mockItem, {
         modelName: "MockModel",
@@ -32,7 +32,7 @@ describe("IOAction: validateItem", () => {
     ).toStrictEqual(mockItem);
   });
 
-  it(`should throw an ItemInputError when "validateItem" returns false`, () => {
+  test(`throws an ItemInputError when "validateItem" returns false`, () => {
     expect(() =>
       validateItem.call(mockThis, mockItem, {
         modelName: "MockModel",
@@ -40,6 +40,6 @@ describe("IOAction: validateItem", () => {
           validateItem: (_item: any) => false,
         },
       } as IOActionContext)
-    ).toThrow("Invalid MockModel item.");
+    ).toThrowError("Invalid MockModel item.");
   });
 });

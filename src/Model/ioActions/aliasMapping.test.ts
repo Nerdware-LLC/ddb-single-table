@@ -1,4 +1,3 @@
-import lodashSet from "lodash.set";
 import { aliasMapping } from "./aliasMapping.js";
 import type { IOActions, IOActionContext } from "./types.js";
 
@@ -21,7 +20,7 @@ describe("IOAction: aliasMapping", () => {
   };
 
   // The mock IOActionsContext includes a mock schema with aliased attributes
-  const mockToDbCtx: IOActionContext = {
+  const mockToDbCtx = {
     modelName: "MockModel",
     schema: {
       pk: { alias: "id", type: "string", required: true },
@@ -38,66 +37,92 @@ describe("IOAction: aliasMapping", () => {
       id: "pk",
       name: "sk",
     },
-  };
+  } as const satisfies IOActionContext;
 
-  it(`should map aliases to attributes when "ioDirection" is "toDB"`, () => {
-    const result = aliasMapping.call(mockThis, mockToDbItem, mockToDbCtx);
-    expect(result).toStrictEqual(mockFromDbItem);
+  test(`maps aliases to attributes when "ioDirection" is "toDB"`, () => {
+    expect(aliasMapping.call(mockThis, mockToDbItem, mockToDbCtx)).toStrictEqual(mockFromDbItem);
   });
 
-  it(`should map attributes to aliases when "ioDirection" is "fromDB"`, () => {
-    const result = aliasMapping.call(mockThis, mockFromDbItem, {
-      ...mockToDbCtx,
-      ioDirection: "fromDB",
-      aliasesMap: {
-        pk: "id",
-        sk: "name",
-      },
-    });
-    expect(result).toStrictEqual(mockToDbItem);
+  test(`maps attributes to aliases when "ioDirection" is "fromDB"`, () => {
+    expect(
+      aliasMapping.call(mockThis, mockFromDbItem, {
+        ...mockToDbCtx,
+        ioDirection: "fromDB",
+        aliasesMap: {
+          pk: "id",
+          sk: "name",
+        },
+      })
+    ).toStrictEqual(mockToDbItem);
   });
 
-  it(`should map aliases to attributes and include uknown attributes when "allowUnknownAttributes" is true`, () => {
-    const result = aliasMapping.call(
-      mockThis,
-      { ...mockToDbItem, UNKNOWN_ATTR: "mock_value_of_unknown_attr" },
-      lodashSet(mockToDbCtx, "schemaOptions.allowUnknownAttributes", true)
-    );
-    expect(result).toStrictEqual({
+  test(`maps aliases to attributes and include uknown attributes when "allowUnknownAttributes" is true`, () => {
+    expect(
+      aliasMapping.call(
+        mockThis,
+        { ...mockToDbItem, UNKNOWN_ATTR: "mock_value_of_unknown_attr" },
+        {
+          ...mockToDbCtx,
+          schemaOptions: {
+            ...mockToDbCtx.schemaOptions,
+            allowUnknownAttributes: true,
+          },
+        }
+      )
+    ).toStrictEqual({
       ...mockFromDbItem,
       UNKNOWN_ATTR: "mock_value_of_unknown_attr",
     });
   });
 
-  it(`should map aliases to attributes and include an uknown attribute that's explicitly listed in "allowUnknownAttributes"`, () => {
-    const result = aliasMapping.call(
-      mockThis,
-      { ...mockToDbItem, UNKNOWN_ATTR: "mock_value_of_unknown_attr" },
-      lodashSet(mockToDbCtx, "schemaOptions.allowUnknownAttributes", ["UNKNOWN_ATTR"])
-    );
-    expect(result).toStrictEqual({
+  test(`maps aliases to attributes and include an uknown attribute that's explicitly listed in "allowUnknownAttributes"`, () => {
+    expect(
+      aliasMapping.call(
+        mockThis,
+        { ...mockToDbItem, UNKNOWN_ATTR: "mock_value_of_unknown_attr" },
+        {
+          ...mockToDbCtx,
+          schemaOptions: {
+            ...mockToDbCtx.schemaOptions,
+            allowUnknownAttributes: ["UNKNOWN_ATTR"],
+          },
+        }
+      )
+    ).toStrictEqual({
       ...mockFromDbItem,
       UNKNOWN_ATTR: "mock_value_of_unknown_attr",
     });
   });
 
-  it(`should throw an error if an unknown attribute is found and "allowUnknownAttributes" is false`, () => {
+  test(`throws an error if an unknown attribute is found and "allowUnknownAttributes" is false`, () => {
     expect(() =>
       aliasMapping.call(
         mockThis,
         { ...mockToDbItem, UNKNOWN_ATTR: "mock_value_of_unknown_attr" },
-        lodashSet(mockToDbCtx, "schemaOptions.allowUnknownAttributes", false)
+        {
+          ...mockToDbCtx,
+          schemaOptions: {
+            ...mockToDbCtx.schemaOptions,
+            allowUnknownAttributes: false,
+          },
+        }
       )
     ).toThrowError(`MockModel item contains unknown property: "UNKNOWN_ATTR"`);
   });
 
-  it(`should throw an error if an unknown attribute is found and "allowUnknownAttributes" does not include the key`, () => {
+  test(`throws an error if an unknown attribute is found and "allowUnknownAttributes" does not include the key`, () => {
     expect(() =>
       aliasMapping.call(
         mockThis,
         { ...mockToDbItem, UNKNOWN_ATTR: "mock_value_of_unknown_attr" },
         // Here, allowUnknownAttributes is provided, but the key "UNKNOWN_ATTR" is not included
-        lodashSet(mockToDbCtx, "schemaOptions.allowUnknownAttributes", ["SOME_OTHER_ATTR"])
+        {
+          ...mockToDbCtx,
+          schemaOptions: {
+            ...mockToDbCtx.schemaOptions,
+            allowUnknownAttributes: ["SOME_OTHER_ATTR"],
+          },
+        }
       )
     ).toThrowError(`MockModel item contains unknown property: "UNKNOWN_ATTR"`);
   });

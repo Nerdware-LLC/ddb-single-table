@@ -87,15 +87,15 @@ describe("IOAction: validate", () => {
     modelName: "MockModel",
     schema: mockSchema,
     schemaEntries: Object.entries(mockSchema),
-  } as IOActionContext;
+  } as const satisfies Partial<IOActionContext>;
 
-  it(`should return the provided "item" when all validate fns return true`, () => {
-    expect(validate.call(mockThis, mockItem, mockCtx)).toStrictEqual(mockItem);
+  test(`returns the provided "item" when all validate fns return true`, () => {
+    expect(validate.call(mockThis, mockItem, mockCtx as any)).toStrictEqual(mockItem);
   });
 
-  it(`should throw an ItemInputError if a validate fn returns false`, () => {
+  test(`throws an ItemInputError if a validate fn returns false`, () => {
     expect(() =>
-      validate.call(mockThis, { ...mockItem, BAR: "SHOULD_THROW" }, mockCtx)
-    ).toThrow(/Invalid value for MockModel property "BAR"./i); // prettier-ignore
+      validate.call(mockThis, { ...mockItem, BAR: "SHOULD_THROW" }, mockCtx as any)
+    ).toThrow(/Invalid value for MockModel property "BAR"./i);
   });
 });

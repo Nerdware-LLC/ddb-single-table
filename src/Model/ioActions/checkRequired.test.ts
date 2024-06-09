@@ -1,4 +1,3 @@
-import lodashSet from "lodash.set";
 import { checkRequired } from "./checkRequired.js";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import type { ModelSchemaType } from "../../Schema/index.js";
@@ -37,7 +36,7 @@ describe("IOAction: checkRequired", () => {
   };
 
   // Mock schema with an attribute with a nest-depth of 5 (the current max for ItemTypeFromSchema)
-  const mockSchema: ModelSchemaType = {
+  const mockSchema = {
     id: { type: "string", required: true },
     books: {
       type: "array", // nest level 1
@@ -86,29 +85,64 @@ describe("IOAction: checkRequired", () => {
         },
       ],
     },
-  };
+  } as const satisfies ModelSchemaType;
 
   const mockCtx = {
     modelName: "MockModel",
     schema: mockSchema,
     schemaEntries: Object.entries(mockSchema),
-  } as IOActionContext;
+  } as const satisfies Partial<IOActionContext>;
 
-  it(`should return the provided "item" when all "required" fields are present`, () => {
-    const result = checkRequired.call(mockThis, mockItem, mockCtx);
-    expect(result).toStrictEqual(mockItem);
+  test(`returns the provided "item" when all "required" fields are present`, () => {
+    expect(checkRequired.call(mockThis, mockItem, mockCtx as any)).toStrictEqual(mockItem);
   });
 
-  it(`should throw an ItemInputError when a "required" field is missing`, () => {
+  test(`throws an ItemInputError when a "required" field is missing`, () => {
     // Same mockSchema as above, but with "MISSING_ATTR" added to the `address` nested schema
-    const contextWithAddressMISSING_ATTR = lodashSet(
-      mockCtx,
-      "schema.books.schema[0].schema.author.schema.publisher.schema.address.schema.MISSING_ATTR",
-      { type: "string", required: true }
-    );
+    const mockSchemaWithAddressMISSING_ATTR = {
+      ...mockCtx.schema,
+      books: {
+        ...mockCtx.schema.books,
+        schema: [
+          {
+            ...mockCtx.schema.books.schema[0],
+            schema: {
+              ...mockCtx.schema.books.schema[0].schema,
+              author: {
+                ...mockCtx.schema.books.schema[0].schema.author,
+                schema: {
+                  ...mockCtx.schema.books.schema[0].schema.author.schema,
+                  publisher: {
+                    ...mockCtx.schema.books.schema[0].schema.author.schema.publisher,
+                    schema: {
+                      ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema,
+                      address: {
+                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema
+                          .address,
+                        schema: {
+                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema
+                            .address.schema,
+                          MISSING_ATTR: { type: "string", required: true },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const contextWithAddressMISSING_ATTR = {
+      ...mockCtx,
+      schema: mockSchemaWithAddressMISSING_ATTR,
+      schemaEntries: Object.entries(mockSchemaWithAddressMISSING_ATTR),
+    };
 
     expect(() =>
-      checkRequired.call(mockThis, mockItem, contextWithAddressMISSING_ATTR)
+      checkRequired.call(mockThis, mockItem, contextWithAddressMISSING_ATTR as any)
     ).toThrowError(`A value is required for MockModel property "MISSING_ATTR".`);
   });
 });
