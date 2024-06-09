@@ -1,6 +1,10 @@
-name: 📦 CI/CD Workflow
+name: 🚀 CI/CD Workflow
 
 on:
+  pull_request:
+    types: [opened, reopened, synchronize] # default PR types
+    branches: [main, next]
+    paths: ["src/**/*", "package*.json"]
   push:
     branches: [main, next]
     paths: ["src/**/*", "package*.json"]
@@ -19,9 +23,9 @@ jobs:
       statuses: write #      to update commit status
 
   release:
-    name: 🚀 Release
-    needs: test # only release if tests passed
-    if: needs.test.outputs.success == 'true'
+    name: 📦 Release
+    needs: test # run job if event=push and tests passed
+    if: github.event_name == 'push' && needs.test.outputs.success == 'true'
     runs-on: ubuntu-latest
     permissions:
       attestations: write # to generate artifact attestations for dist assets
