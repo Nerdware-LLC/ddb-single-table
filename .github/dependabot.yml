@@ -20,7 +20,6 @@ updates:
 
     # Metadata for Dependabot's PRs:
     labels: ["dependabot 🤖"]
-    assignees: ["trevor-anderson"]
 
     # Behavior of Dependabot's PRs:
     target-branch: "main"
