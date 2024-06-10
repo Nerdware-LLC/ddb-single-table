@@ -10,27 +10,31 @@ export const validate: IOAction = function (
   item,
   { schemaEntries, modelName, ...ctx }
 ) {
-  schemaEntries.forEach(([attrName, attrConfig]) => {
-    /* Check if item has schemaKey and value is neither null/undefined
-    (can't validate unknown attributes if schema allows for them).  */
-    if (hasDefinedProperty(item, attrName)) {
-      // Run "validate" fn if defined in the schema
-      if (!!attrConfig?.validate && !attrConfig.validate(item[attrName])) {
-        // Throw error if validation fails
-        throw new ItemInputError(
-          `Invalid value for ${getAttrErrID(modelName, attrName, attrConfig)}.`
-        );
-      }
-      // Run recursively on nested attributes
-      if (attrConfig?.schema) {
-        this.recursivelyApplyIOAction(this.validate, item[attrName], {
-          parentItem: item,
-          modelName,
-          ...ctx,
-          schema: attrConfig.schema, // <-- overwrites ctx.schema with the nested schema
-        });
-      }
+  // Iterate over schemaEntries
+  for (let i = 0; i < schemaEntries.length; i++) {
+    const [attrName, attrConfig] = schemaEntries[i];
+
+    // If the item does not have the attribute, or if its value is nullish, skip it
+    if (!hasDefinedProperty(item, attrName)) continue;
+
+    // Run "validate" fn if defined in the schema
+    if (!!attrConfig?.validate && !attrConfig.validate(item[attrName])) {
+      // Throw error if validation fails
+      throw new ItemInputError(
+        `Invalid value for ${getAttrErrID(modelName, attrName, attrConfig)}.`
+      );
     }
-  });
+
+    // Run recursively on nested attributes
+    if (attrConfig?.schema) {
+      this.recursivelyApplyIOAction(this.validate, item[attrName], {
+        parentItem: item,
+        modelName,
+        ...ctx,
+        schema: attrConfig.schema, // <-- overwrites ctx.schema with the nested schema
+      });
+    }
+  }
+
   return item;
 };

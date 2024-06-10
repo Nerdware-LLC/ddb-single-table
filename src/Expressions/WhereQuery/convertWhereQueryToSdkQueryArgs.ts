@@ -17,7 +17,7 @@ import type { WhereQueryComparisonObject } from "./types.js";
 export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = BaseItem>({
   where,
 }: WhereQueryParams<ItemParams>) => {
-  // Ensure `where` is a Record-like object before providing it to `Object.entries()`
+  // Ensure `where` is a plain Record-like object
   if (!isType.map(where)) {
     throw new InvalidExpressionError({
       expressionName: "KeyConditionExpression",
@@ -27,11 +27,10 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = Ba
     });
   }
 
-  // Convert `where` into entries to (a) check the number of keys and (b) facilitate processing
-  const whereQueryEntries = Object.entries(where);
+  // Ensure there are not more than 2 keys in the where object
+  const whereQueryKeys = Object.keys(where);
 
-  // Ensure the length of the entries array is not greater than 2
-  if (whereQueryEntries.length > 2) {
+  if (whereQueryKeys.length > 2) {
     throw new InvalidExpressionError({
       expressionName: "KeyConditionExpression",
       invalidValue: where,
@@ -40,62 +39,50 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = Ba
     });
   }
 
-  // Process whereQueryEntries to derive the KCE, EAN, and EAV
-  const { KeyConditionExpression, ExpressionAttributeNames, ExpressionAttributeValues } =
-    whereQueryEntries.reduce(
-      (
-        accum: Required<
-          Pick<
-            QueryInput,
-            "KeyConditionExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
-          >
-        >,
-        [attrName, value]
-      ) => {
-        // Derive and append the appropriate KeyConditionExpression clause
+  // Process whereQuery to derive the KCE, EAN, and EAV:
 
-        // Get the operator and comparand to use in the expression
-        const { operator, comparand } = getValidatedComparisonValues(attrName, value);
+  let KeyConditionExpression = "";
+  const ExpressionAttributeNames: QueryInput["ExpressionAttributeNames"] = {};
+  const ExpressionAttributeValues: QueryInput["ExpressionAttributeValues"] = {};
 
-        // Get the keys for ExpressionAttribute{Names,Values}
-        const { attrNamesToken, attrValuesToken } = getExpressionAttrTokens(attrName);
-        // Update ExpressionAttributeNames
-        accum.ExpressionAttributeNames[attrNamesToken] = attrName;
-        // Update ExpressionAttributeValues
-        const eavKeysAdded: Array<string> = [];
-        // For "between" operators, the comparand is an array, so we need to add 2 EAV
-        if (operator === "between") {
-          const [lowerBoundOperand, upperBoundOperand] = comparand;
-          const lowerBoundEavToken = `${attrValuesToken}LowerBound`;
-          const upperBoundEavToken = `${attrValuesToken}UpperBound`;
-          accum.ExpressionAttributeValues[lowerBoundEavToken] = lowerBoundOperand;
-          accum.ExpressionAttributeValues[upperBoundEavToken] = upperBoundOperand;
-          eavKeysAdded.push(lowerBoundEavToken, upperBoundEavToken);
-        } else {
-          accum.ExpressionAttributeValues[attrValuesToken] = comparand;
-          eavKeysAdded.push(attrValuesToken);
-        }
+  for (let i = 0; i < whereQueryKeys.length; i++) {
+    const attrName = whereQueryKeys[i];
+    const value = where[attrName];
 
-        // Get the KCE clause
-        const keyConditionExpressionClause = WHERE_QUERY_OPERATOR_TO_EXPRESSION[operator](
-          attrNamesToken,
-          eavKeysAdded
-        );
+    // Get the operator and comparand to use in the expression
+    const { operator, comparand } = getValidatedComparisonValues(attrName, value);
 
-        // Add the clause to the accum
-        accum.KeyConditionExpression +=
-          accum.KeyConditionExpression.length === 0
-            ? keyConditionExpressionClause
-            : ` AND ${keyConditionExpressionClause}`;
+    // Get the keys for ExpressionAttribute{Names,Values}
+    const { attrNamesToken, attrValuesToken } = getExpressionAttrTokens(attrName);
+    // Update ExpressionAttributeNames
+    ExpressionAttributeNames[attrNamesToken] = attrName;
+    // Update ExpressionAttributeValues
+    const eavKeysAdded: Array<string> = [];
+    // For "between" operators, the comparand is an array, so we need to add 2 EAV
+    if (operator === "between") {
+      const [lowerBoundOperand, upperBoundOperand] = comparand;
+      const lowerBoundEavToken = `${attrValuesToken}LowerBound`;
+      const upperBoundEavToken = `${attrValuesToken}UpperBound`;
+      ExpressionAttributeValues[lowerBoundEavToken] = lowerBoundOperand;
+      ExpressionAttributeValues[upperBoundEavToken] = upperBoundOperand;
+      eavKeysAdded.push(lowerBoundEavToken, upperBoundEavToken);
+    } else {
+      ExpressionAttributeValues[attrValuesToken] = comparand;
+      eavKeysAdded.push(attrValuesToken);
+    }
 
-        return accum;
-      },
-      {
-        KeyConditionExpression: "",
-        ExpressionAttributeNames: {},
-        ExpressionAttributeValues: {},
-      }
+    // Get the KCE clause
+    const keyConditionExpressionClause = WHERE_QUERY_OPERATOR_TO_EXPRESSION[operator](
+      attrNamesToken,
+      eavKeysAdded
     );
+
+    // Add the clause to the accum
+    KeyConditionExpression +=
+      KeyConditionExpression.length === 0
+        ? keyConditionExpressionClause
+        : ` AND ${keyConditionExpressionClause}`;
+  }
 
   // If neither are equality clauses, throw an error (KCE requires at least 1 equality clause)
   if (!/\s=\s/.test(KeyConditionExpression)) {

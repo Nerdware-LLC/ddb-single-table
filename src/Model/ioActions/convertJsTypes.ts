@@ -1,6 +1,35 @@
+import { isDate, isString, isSafeInteger, isBuffer } from "@nerdware/ts-type-safety-utils";
 import dayjs from "dayjs";
-import { hasDefinedProperty, isConvertibleToDate, isType } from "../../utils/index.js";
-import type { IOActions, IOAction } from "./types.js";
+import { hasDefinedProperty, isConvertibleToDate } from "../../utils/index.js";
+import type { SchemaSupportedTypeStringLiterals } from "../../Schema/types.js";
+import type { BaseItem } from "../../types/itemTypes.js";
+import type { IOActions, IOAction, IODirection } from "./types.js";
+
+const DDB_TYPE_MAP: Partial<
+  Record<
+    SchemaSupportedTypeStringLiterals,
+    Record<IODirection, (value: NonNullable<unknown>) => NonNullable<unknown>>
+  >
+> = {
+  Buffer: {
+    toDB: (value) => (isBuffer(value) ? value.toString("binary") : value),
+    fromDB: (value) => (isString(value) ? Buffer.from(value, "binary") : value),
+  },
+  Date: {
+    toDB: (value) =>
+      isDate(value) || isString(value)
+        ? dayjs(value).unix() // convert Dates/strings to unix timestamps
+        : value,
+    fromDB: (value) =>
+      isConvertibleToDate(value) // convert valid timestamps to Date objects
+        ? dayjs(
+            isSafeInteger(value)
+              ? value * 1000 // convert seconds to milliseconds
+              : value
+          ).toDate()
+        : value,
+  },
+};
 
 /**
  * This `IOAction` converts JS types to DynamoDB types and vice versa.
@@ -18,47 +47,30 @@ export const convertJsTypes: IOAction = function (
   item,
   { schemaEntries, ioDirection, ...ctx }
 ) {
-  schemaEntries.forEach(([attrName, attrConfig]) => {
-    if (hasDefinedProperty(item, attrName)) {
-      const itemValue = item[attrName];
-      const attrType = attrConfig.type;
-      let convertedValue: unknown = undefined;
+  // Iterate over schemaEntries
+  for (let i = 0; i < schemaEntries.length; i++) {
+    const [attrName, attrConfig] = schemaEntries[i];
 
-      if (attrType === "Date") {
-        // For "Date" attributes, convert Date objects and ISO strings to unix timestamps and vice versa.
-        if (ioDirection === "toDB" && (isType.Date(itemValue) || isType.string(itemValue))) {
-          // toDB, convert Date objects to unix timestamps (Math.floor(new Date(value).getTime() / 1000))
-          convertedValue = dayjs(itemValue).unix();
-        } else if (ioDirection === "fromDB" && isConvertibleToDate(itemValue)) {
-          // fromDB, convert timestamps to Date objects
-          convertedValue = dayjs(
-            isType.number(itemValue)
-              ? itemValue * 1000 // <-- convert seconds to milliseconds
-              : itemValue
-          ).toDate();
-        }
-      } else if (attrType === "Buffer") {
-        // For "Buffer" attributes, convert Buffers to binary and vice versa.
-        if (ioDirection === "toDB" && isType.Buffer(itemValue)) {
-          // toDB, convert Buffer objects to binary
-          convertedValue = itemValue.toString("binary");
-        } else if (ioDirection === "fromDB" && isType.string(itemValue)) {
-          // fromDB, convert binary to Buffer objects
-          convertedValue = Buffer.from(itemValue, "binary");
-        }
-      } else if ((attrType === "map" || attrType === "array") && attrConfig?.schema) {
-        // Run recursively on nested attributes
-        convertedValue = this.recursivelyApplyIOAction(this.convertJsTypes, itemValue, {
-          parentItem: item,
-          ioDirection,
-          ...ctx,
-          schema: attrConfig.schema, // <-- overwrites ctx.schema with the nested schema
-        });
-      }
-      // Update the value if necessary
-      if (convertedValue) item[attrName] = convertedValue;
+    // If the item does not have the attribute, or if its value is nullish, skip it
+    if (!hasDefinedProperty(item, attrName)) continue;
+
+    const itemValue = item[attrName];
+
+    // If the attribute type is "Date" or "Buffer", use the DDB_TYPE_MAP
+    const typeConverterFn = DDB_TYPE_MAP?.[attrConfig.type]?.[ioDirection];
+
+    if (typeConverterFn) {
+      item[attrName] = typeConverterFn(itemValue);
+    } else if ((attrConfig.type === "map" || attrConfig.type === "array") && attrConfig?.schema) {
+      // Run recursively on nested attributes
+      (item as BaseItem)[attrName] = this.recursivelyApplyIOAction(this.convertJsTypes, itemValue, {
+        parentItem: item,
+        ioDirection,
+        ...ctx,
+        schema: attrConfig.schema, // <-- overwrites ctx.schema with the nested schema
+      });
     }
-  });
+  }
 
   return item;
 };

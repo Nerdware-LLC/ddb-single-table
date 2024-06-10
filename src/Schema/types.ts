@@ -329,9 +329,6 @@ export type TableKeysSchemaMetadata = Simplify<
 ///////////////////////////////////////////////////////////////////////////////
 // SCHMEA ENTRIES TYPES:
 
-/** This type reflects `Object.entries(tableKeysSchema)`. */
-export type TableKeysSchemaEntries = Array<[AttributeName, KeyAttributeConfig]>;
-
 /**
  * This type reflects `Object.entries(modelSchema)`.
  *
@@ -344,10 +341,3 @@ export type TableKeysSchemaEntries = Array<[AttributeName, KeyAttributeConfig]>;
  * - Ensure that key attributes are always processed before non-key attributes.
  */
 export type ModelSchemaEntries = Array<[AttributeName, ModelSchemaAttributeConfig]>;
-
-/**
- * This type reflects `Object.entries(schema)`, where `schema` contains attribute
- * configs of type {@link AnyValidAttributeConfig} — a "combination" of all attr
- * config types, rather than an intersection (see {@link CombineUnionOfObjects}).
- */
-export type AnyValidSchemaEntries = Array<[AttributeName, AnyValidAttributeConfig]>;

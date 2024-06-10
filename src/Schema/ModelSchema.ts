@@ -53,48 +53,46 @@ export class ModelSchema extends Schema {
     { name: schemaName }: Pick<ModelSchemaMetadata, "name">
   ) => {
     // First run the base Schema validation checks:
-    const schemaEntries = Schema.validateAttributeTypes(modelSchema, {
+    Schema.validateAttributeTypes(modelSchema, {
       schemaType: "ModelSchema",
       name: schemaName,
     });
 
     // Then run the ModelSchema-specific validation checks:
-    const { attributesToAliasesMap, aliasesToAttributesMap } = schemaEntries.reduce(
-      (
-        accum: Record<"attributesToAliasesMap" | "aliasesToAttributesMap", Record<string, string>>,
-        [attrName, { alias, type, schema, default: defaultValue, ...attrConfigs }]
-      ) => {
-        // Ensure ModelSchema doesn't include key/index configs which are only valid in the TableKeysSchema
-        (["isHashKey", "isRangeKey", "index"] satisfies Array<keyof KeyAttributeConfig>).forEach(
-          (keyConfigProperty) => {
-            if (hasKey(attrConfigs, keyConfigProperty)) {
-              throw new SchemaValidationError({
-                schemaName,
-                problem: `attribute "${attrName}" includes an "${keyConfigProperty}" config, which is only valid in the TableKeysSchema`,
-              });
-            }
-          }
-        );
 
-        // If an "alias" is specified, ensure it's unique, and add it to the alias maps
-        if (alias) {
-          // If alias already exists in accum, there's a dupe alias in the schema, throw error
-          if (alias in accum.aliasesToAttributesMap) {
+    const attributesToAliasesMap: Record<string, string> = {};
+    const aliasesToAttributesMap: Record<string, string> = {};
+
+    for (const attrName in modelSchema) {
+      const { alias, ...attrConfigs } = modelSchema[attrName];
+
+      // Ensure ModelSchema doesn't include key/index configs which are only valid in the TableKeysSchema
+      (["isHashKey", "isRangeKey", "index"] satisfies Array<keyof KeyAttributeConfig>).forEach(
+        (keyConfigProperty) => {
+          if (hasKey(attrConfigs, keyConfigProperty)) {
             throw new SchemaValidationError({
               schemaName,
-              problem: `the ModelSchema contains duplicate alias "${alias}"`,
+              problem: `attribute "${attrName}" includes an "${keyConfigProperty}" config, which is only valid in the TableKeysSchema`,
             });
           }
+        }
+      );
 
-          // Add attrName/alias to the alias maps
-          accum.attributesToAliasesMap[attrName] = alias;
-          accum.aliasesToAttributesMap[alias] = attrName;
+      // If an "alias" is specified, ensure it's unique, and add it to the alias maps
+      if (alias) {
+        // If alias already exists in accum, there's a dupe alias in the schema, throw error
+        if (alias in aliasesToAttributesMap) {
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `the ModelSchema contains duplicate alias "${alias}"`,
+          });
         }
 
-        return accum;
-      },
-      { attributesToAliasesMap: {}, aliasesToAttributesMap: {} }
-    );
+        // Add attrName/alias to the alias maps
+        attributesToAliasesMap[attrName] = alias;
+        aliasesToAttributesMap[alias] = attrName;
+      }
+    }
 
     return {
       attributesToAliasesMap,

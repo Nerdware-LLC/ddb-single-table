@@ -49,6 +49,7 @@ export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
       ...ctx,
     });
   }
+
   // Return attrValue with schema-defined updates, if any.
   return attrValue;
 };
