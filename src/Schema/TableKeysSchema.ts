@@ -45,98 +45,98 @@ export class TableKeysSchema extends Schema {
     { name: schemaName = "TableKeysSchema" }: Pick<TableKeysSchemaMetadata, "name"> = {}
   ): TableKeysAndIndexes => {
     // First run the base Schema validation checks:
-    const schemaEntries = Schema.validateAttributeTypes(tableKeysSchema, {
+    Schema.validateAttributeTypes(tableKeysSchema, {
       schemaType: "TableKeysSchema",
       name: schemaName,
     });
 
     // Then perform TableKeysSchema-specific validation checks:
-    const { tableHashKey, tableRangeKey, indexes } = schemaEntries.reduce(
-      (
-        accum: Partial<TableKeysAndIndexes>,
-        [keyAttrName, { isHashKey, isRangeKey, index, type, required }]
-      ) => {
-        // Ensure all key/index attributes specify `isHashKey`, `isRangeKey`, or `index`
-        if (isHashKey !== true && isRangeKey !== true && index === undefined) {
+
+    let tableHashKey: TableKeysAndIndexes["tableHashKey"] | undefined;
+    let tableRangeKey: TableKeysAndIndexes["tableRangeKey"] | undefined;
+    let indexes: TableKeysAndIndexes["indexes"] | undefined;
+
+    for (const keyAttrName in tableKeysSchema) {
+      const { isHashKey, isRangeKey, index, type, required } = tableKeysSchema[keyAttrName];
+
+      // Ensure all key/index attributes specify `isHashKey`, `isRangeKey`, or `index`
+      if (isHashKey !== true && isRangeKey !== true && index === undefined) {
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `attribute "${keyAttrName}" is not configured as a key or index`,
+        });
+      }
+
+      // Ensure all key/index attribute `type`s are "string", "number", or "Buffer" (S/N/B in DDB)
+      if (!["string", "number", "Buffer"].includes(type)) {
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `attribute "${keyAttrName}" has an invalid "type" (must be "string", "number", or "Buffer")`,
+        });
+      }
+
+      // Ensure all key/index attributes are `required`
+      if (required !== true) {
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `attribute "${keyAttrName}" is not "required"`,
+        });
+      }
+
+      // Check for table hashKey
+      if (isHashKey === true) {
+        // Throw error if tableHashKey is already defined
+        if (tableHashKey) {
           throw new SchemaValidationError({
             schemaName,
-            problem: `attribute "${keyAttrName}" is not configured as a key or index`,
+            problem: `multiple table hash keys ("${tableHashKey}" and "${keyAttrName}")`,
+          });
+        }
+        tableHashKey = keyAttrName;
+      }
+
+      // Check for table rangeKey
+      if (isRangeKey === true) {
+        // Throw error if tableRangeKey is already defined
+        if (tableRangeKey) {
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `multiple table range keys ("${tableRangeKey}" and "${keyAttrName}")`,
+          });
+        }
+        tableRangeKey = keyAttrName;
+      }
+
+      // Check for index
+      if (index) {
+        // Ensure index has a name
+        if (!index.name) {
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `the index for attribute "${keyAttrName}" is missing a "name"`,
           });
         }
 
-        // Ensure all key/index attribute `type`s are "string", "number", or "Buffer" (S/N/B in DDB)
-        if (!["string", "number", "Buffer"].includes(type)) {
+        // See if "indexes" exists on accum yet
+        if (!indexes) {
+          // If accum does not yet have "indexes", add it.
+          indexes = {};
+          // Else ensure the index name is unique
+        } else if (hasKey(indexes, index.name)) {
           throw new SchemaValidationError({
             schemaName,
-            problem: `attribute "${keyAttrName}" has an invalid "type" (must be "string", "number", or "Buffer")`,
+            problem: `multiple indexes with the same name ("${index.name}")`,
           });
         }
 
-        // Ensure all key/index attributes are `required`
-        if (required !== true) {
-          throw new SchemaValidationError({
-            schemaName,
-            problem: `attribute "${keyAttrName}" is not "required"`,
-          });
-        }
-
-        // Check for table hashKey
-        if (isHashKey === true) {
-          // Throw error if table hashKey already exists
-          if (accum.tableHashKey) {
-            throw new SchemaValidationError({
-              schemaName,
-              problem: `multiple table hash keys ("${accum.tableHashKey}" and "${keyAttrName}")`,
-            });
-          }
-          accum.tableHashKey = keyAttrName;
-        }
-
-        // Check for table rangeKey
-        if (isRangeKey === true) {
-          // Throw error if table rangeKey already exists
-          if (accum.tableRangeKey) {
-            throw new SchemaValidationError({
-              schemaName,
-              problem: `multiple table range keys ("${accum.tableRangeKey}" and "${keyAttrName}")`,
-            });
-          }
-          accum.tableRangeKey = keyAttrName;
-        }
-
-        // Check for index
-        if (index) {
-          // Ensure index has a name
-          if (!index.name) {
-            throw new SchemaValidationError({
-              schemaName,
-              problem: `the index for attribute "${keyAttrName}" is missing a "name"`,
-            });
-          }
-
-          // See if "indexes" exists on accum yet
-          if (!accum.indexes) {
-            // If accum does not yet have "indexes", add it.
-            accum.indexes = {};
-            // Else ensure the index name is unique
-          } else if (hasKey(accum.indexes, index.name)) {
-            throw new SchemaValidationError({
-              schemaName,
-              problem: `multiple indexes with the same name ("${index.name}")`,
-            });
-          }
-
-          accum.indexes[index.name] = {
-            name: index.name,
-            type: index?.global === true ? "GLOBAL" : "LOCAL",
-            indexPK: keyAttrName,
-            ...(index?.rangeKey && { indexSK: index.rangeKey }),
-          };
-        }
-        return accum;
-      },
-      {} // <-- initial accum
-    );
+        indexes[index.name] = {
+          name: index.name,
+          type: index?.global === true ? "GLOBAL" : "LOCAL",
+          indexPK: keyAttrName,
+          ...(index?.rangeKey && { indexSK: index.rangeKey }),
+        };
+      }
+    }
 
     // Ensure table hashKey and rangeKey exist
     if (!tableHashKey || !tableRangeKey) {
@@ -199,6 +199,7 @@ export class TableKeysSchema extends Schema {
     const mergedModelSchema: Record<string, Record<string, any>> = { ...modelSchema };
 
     for (const keyAttrName in tableKeysSchema) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { isHashKey, isRangeKey, index, ...keyAttrConfig } = tableKeysSchema[keyAttrName];
 
       // Check if ModelSchema contains keyAttrName

@@ -31,37 +31,25 @@ export const generateUpdateExpression = (
       ? (value: unknown) => value === undefined || value === null
       : (value: unknown) => value === undefined;
 
-  const { updateExpressionClauses, ExpressionAttributeNames, ExpressionAttributeValues } =
-    Object.entries(itemAttributes).reduce(
-      (
-        accum: Required<
-          Pick<UpdateItemInput, "ExpressionAttributeNames" | "ExpressionAttributeValues">
-        > & {
-          updateExpressionClauses: { SET: string; REMOVE: string };
-        },
-        [attributeName, attributeValue]
-      ) => {
-        // Get the keys for ExpressionAttribute{Names,Values}
-        const { attrNamesToken, attrValuesToken } = getExpressionAttrTokens(attributeName);
-        // Always update ExpressionAttributeNames
-        accum.ExpressionAttributeNames[attrNamesToken] = attributeName;
-        // Derive and append the appropriate UpdateExpression clause
-        if (shouldAddToRemoveClause(attributeValue)) {
-          accum.updateExpressionClauses.REMOVE += `${attrNamesToken}, `;
-        } else {
-          accum.updateExpressionClauses.SET += `${attrNamesToken} = ${attrValuesToken}, `;
-          // Only add to EAV if attrValue will be used, otherwise DDB will throw error
-          accum.ExpressionAttributeValues[attrValuesToken] = attributeValue;
-        }
+  const updateExpressionClauses = { SET: "", REMOVE: "" };
+  const ExpressionAttributeNames: UpdateItemInput["ExpressionAttributeNames"] = {};
+  const ExpressionAttributeValues: UpdateItemInput["ExpressionAttributeValues"] = {};
 
-        return accum;
-      },
-      {
-        updateExpressionClauses: { SET: "", REMOVE: "" },
-        ExpressionAttributeNames: {},
-        ExpressionAttributeValues: {},
-      }
-    );
+  for (const attributeName in itemAttributes) {
+    const attributeValue = itemAttributes[attributeName];
+    // Get the keys for ExpressionAttribute{Names,Values}
+    const { attrNamesToken, attrValuesToken } = getExpressionAttrTokens(attributeName);
+    // Always update ExpressionAttributeNames
+    ExpressionAttributeNames[attrNamesToken] = attributeName;
+    // Derive and append the appropriate UpdateExpression clause
+    if (shouldAddToRemoveClause(attributeValue)) {
+      updateExpressionClauses.REMOVE += `${attrNamesToken}, `;
+    } else {
+      updateExpressionClauses.SET += `${attrNamesToken} = ${attrValuesToken}, `;
+      // Only add to EAV if attrValue will be used, otherwise DDB will throw error
+      ExpressionAttributeValues[attrValuesToken] = attributeValue;
+    }
+  }
 
   // Combine the clauses into UpdateExpression (slice to rm last comma+space)
   const UpdateExpression = [

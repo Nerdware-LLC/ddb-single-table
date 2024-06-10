@@ -54,7 +54,7 @@ export const isType = Object.freeze({
   /** Type guard function for `type: "boolean"` */
   boolean: isBoolean,
   /** Type guard function for `type: "Buffer"` */
-  Buffer: isBuffer as (value?: unknown) => value is Buffer,
+  Buffer: isBuffer,
   /** Type guard function for `type: "Date"` */
   Date: isDate,
   /** Type guard function for `type: "array"` */

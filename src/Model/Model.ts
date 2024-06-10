@@ -6,7 +6,12 @@ import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Ex
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { ItemInputError } from "../utils/errors.js";
 import type { SetOptional } from "type-fest";
-import type { ModelSchemaType, ModelSchemaOptions, ModelSchemaEntries } from "../Schema/types.js";
+import type {
+  ModelSchemaType,
+  ModelSchemaOptions,
+  ModelSchemaEntries,
+  ModelSchemaAttributeConfig,
+} from "../Schema/types.js";
 import type { TableKeysAndIndexes } from "../Table/types.js";
 import type {
   BaseItem,
@@ -94,6 +99,7 @@ export class Model<
   readonly schema: Schema;
   readonly schemaEntries: ModelSchemaEntries;
   readonly schemaOptions: ModelSchemaOptions;
+  readonly schemaWithKeysOnly: Record<string, ModelSchemaAttributeConfig>;
   readonly attributesToAliasesMap: AttributesAliasesMap;
   readonly aliasesToAttributesMap: AttributesAliasesMap;
   readonly tableName: string;
@@ -137,6 +143,10 @@ export class Model<
       allowUnknownAttributes,
       ...(transformItem && { transformItem }),
       ...(validateItem && { validateItem }),
+    };
+    this.schemaWithKeysOnly = {
+      [tableHashKey]: this.schema[tableHashKey],
+      ...(!!tableRangeKey && { [tableRangeKey]: this.schema[tableRangeKey] }),
     };
 
     this.attributesToAliasesMap = attributesToAliasesMap;
@@ -772,6 +782,10 @@ export class Model<
     {
       ioDirection,
       aliasesMap,
+      modelName = this.modelName,
+      schema: schemaOverride,
+      schemaEntries,
+      schemaOptions = this.schemaOptions,
       ...ioActionsCtxOverrides
     }: SetOptional<IOActionContext, Exclude<keyof IOActionContext, "ioDirection" | "aliasesMap">>
   ): ProcessedItemAttributes => {
@@ -779,10 +793,19 @@ export class Model<
     const ioActionsCtx = {
       ioDirection,
       aliasesMap,
-      modelName: this.modelName,
-      schema: this.schema,
-      schemaEntries: this.schemaEntries,
-      schemaOptions: this.schemaOptions,
+      modelName,
+      ...(schemaOverride
+        ? // If a schemaOverride is provided, use it to set a default for schemaEntries
+          {
+            schema: schemaOverride,
+            schemaEntries: schemaEntries ?? Object.entries(schemaOverride),
+          }
+        : // Else use the Model's base schema+schemaEntries
+          {
+            schema: this.schema,
+            schemaEntries: this.schemaEntries,
+          }),
+      schemaOptions,
       ...ioActionsCtxOverrides,
     };
 
@@ -802,14 +825,6 @@ export class Model<
    * provided `schema` only contains the `tableHashKey` and `tableRangeKey` attributes.
    */
   private readonly processKeyArgs = (primaryKeyArgs: KeyParameters<Schema>): ItemKeys => {
-    // For this method, the schema is limited to the table's hash and range keys:
-    const schemaWithKeysOnly = {
-      [this.tableHashKey]: this.schema[this.tableHashKey],
-      ...(!!this.tableRangeKey && {
-        [this.tableRangeKey]: this.schema[this.tableRangeKey],
-      }),
-    };
-
     // Apply IO-Actions to the primary key args
     return this.applyIOActionsToItemAttributes(
       { ...primaryKeyArgs }, // dereferenced shallow copy
@@ -817,13 +832,25 @@ export class Model<
         ioActions.aliasMapping,
         ioActions.setDefaults,
         ioActions.typeChecking,
+        ioActions.convertJsTypes, // FIXME what other IO-Actions should be applied to keys?
+        //                           FIXME WHY NOT attr validation?
         ioActions.checkRequired,
       ],
       {
         ioDirection: "toDB",
         aliasesMap: this.aliasesToAttributesMap,
-        schema: schemaWithKeysOnly,
-        schemaEntries: Object.entries(schemaWithKeysOnly),
+        schema: this.schemaWithKeysOnly,
+        schemaEntries: [
+          [this.tableHashKey, this.schema[this.tableHashKey]],
+          ...(this.tableRangeKey
+            ? [
+                [this.tableRangeKey, this.schema[this.tableRangeKey]] satisfies [
+                  string,
+                  ModelSchemaAttributeConfig,
+                ],
+              ]
+            : []),
+        ],
       }
     );
   };

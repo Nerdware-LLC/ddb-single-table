@@ -34,86 +34,77 @@ export const createTable = async function <TableKeysSchema extends TableKeysSche
     );
   }
 
+  const AttributeDefinitions: CreateTableInput["AttributeDefinitions"] = [];
+  const KeySchema: CreateTableInput["KeySchema"] = [];
+  const GlobalSecondaryIndexes: CreateTableInput["GlobalSecondaryIndexes"] = [];
+  const LocalSecondaryIndexes: CreateTableInput["LocalSecondaryIndexes"] = [];
+
   // Make `CreateTable` args from the `tableKeysSchema` provided to the `Table` constructor
-  const createTableArgsFromSchema = Object.entries(this.tableKeysSchema).reduce(
-    (
-      accum: Required<
-        Pick<
-          CreateTableInput,
-          "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes"
-        >
-      >,
-      [keyAttrName, keyAttrConfig]
-    ) => {
-      const {
-        type: keyAttrType,
-        isHashKey: isTableHashKey = false,
-        isRangeKey: isTableRangeKey = false,
-        index,
-      } = keyAttrConfig;
+  for (const keyAttrName in this.tableKeysSchema) {
+    const keyAttrConfig = this.tableKeysSchema[keyAttrName];
 
-      accum.AttributeDefinitions.push({
+    const {
+      type: keyAttrType,
+      isHashKey: isTableHashKey = false,
+      isRangeKey: isTableRangeKey = false,
+      index,
+    } = keyAttrConfig;
+
+    AttributeDefinitions.push({
+      AttributeName: keyAttrName,
+      AttributeType: keyAttrType === "string" ? "S" : keyAttrType === "number" ? "N" : "B",
+      // keys can only be strings, numbers, or binary
+    });
+
+    // Table hash+range keys
+    if (isTableHashKey || isTableRangeKey) {
+      KeySchema.push({
         AttributeName: keyAttrName,
-        AttributeType: keyAttrType === "string" ? "S" : keyAttrType === "number" ? "N" : "B",
-        // keys can only be strings, numbers, or binary
+        KeyType: isTableHashKey === true ? "HASH" : "RANGE",
       });
-
-      // Table hash+range keys
-      if (isTableHashKey || isTableRangeKey) {
-        accum.KeySchema.push({
-          AttributeName: keyAttrName,
-          KeyType: isTableHashKey === true ? "HASH" : "RANGE",
-        });
-      }
-
-      // Indexes
-      if (index) {
-        // Determine GSI or LSI, then push to the respective array in the accum.
-        const indexArray =
-          index?.global === true ? accum.GlobalSecondaryIndexes : accum.LocalSecondaryIndexes;
-
-        indexArray.push({
-          IndexName: index.name,
-          KeySchema: [
-            {
-              AttributeName: keyAttrName,
-              KeyType: "HASH",
-            },
-            ...(index?.rangeKey
-              ? [{ AttributeName: index.rangeKey, KeyType: "RANGE" as const }]
-              : []),
-          ],
-          Projection: {
-            ProjectionType: !index?.project // if undefined or false, default "KEYS_ONLY"
-              ? "KEYS_ONLY"
-              : index.project === true
-                ? "ALL"
-                : "INCLUDE",
-            ...(Array.isArray(index.project) && { NonKeyAttributes: index.project }),
-          },
-          ...(!!index?.throughput && {
-            ProvisionedThroughput: {
-              ReadCapacityUnits: index.throughput.read,
-              WriteCapacityUnits: index.throughput.write,
-            },
-          }),
-        });
-      }
-
-      return accum;
-    },
-    {
-      AttributeDefinitions: [],
-      KeySchema: [],
-      GlobalSecondaryIndexes: [],
-      LocalSecondaryIndexes: [],
     }
-  );
+
+    // Indexes
+    if (index) {
+      // Determine GSI or LSI, then push to the respective array
+      const indexArray = index?.global === true ? GlobalSecondaryIndexes : LocalSecondaryIndexes;
+
+      indexArray.push({
+        IndexName: index.name,
+        KeySchema: [
+          {
+            AttributeName: keyAttrName,
+            KeyType: "HASH",
+          },
+          ...(index?.rangeKey
+            ? [{ AttributeName: index.rangeKey, KeyType: "RANGE" as const }]
+            : []),
+        ],
+        Projection: {
+          ProjectionType: !index?.project // if undefined or false, default "KEYS_ONLY"
+            ? "KEYS_ONLY"
+            : index.project === true
+              ? "ALL"
+              : "INCLUDE",
+          ...(Array.isArray(index.project) && { NonKeyAttributes: index.project }),
+        },
+        ...(!!index?.throughput && {
+          ProvisionedThroughput: {
+            ReadCapacityUnits: index.throughput.read,
+            WriteCapacityUnits: index.throughput.write,
+          },
+        }),
+      });
+    }
+  }
 
   // Create the table
   return await this.ddbClient.createTable({
     TableName: this.tableName,
     ...createTableArgs,
-    ...createTableArgsFromSchema,
+    AttributeDefinitions,
+    KeySchema,
+    GlobalSecondaryIndexes,
+    LocalSecondaryIndexes,
   });
 };

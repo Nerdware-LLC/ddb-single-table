@@ -5,7 +5,7 @@ import { hasKey } from "@nerdware/ts-type-safety-utils";
  *
  * 1. `obj` is a truthy object
  * 2. `obj` has the provided `key` as an own-property
- * 3. `obj[key]` is neither `null` nor undefined
+ * 3. `obj[key]` is neither `null` nor `undefined`
  */
 export const hasDefinedProperty = <Obj extends Record<PropertyKey, any>, Key extends PropertyKey>(
   obj: Obj,

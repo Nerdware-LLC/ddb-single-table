@@ -67,6 +67,7 @@ export default [
         "error",
         { checksVoidReturn: { arguments: false } },
       ],
+      "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-boolean-literal-compare": "off", // Allow "if (x === true)"
       "@typescript-eslint/no-unnecessary-condition": "off", // Allow option chains to convey "dont know if preceding exists"
       "@typescript-eslint/no-unsafe-argument": "off",
@@ -78,10 +79,11 @@ export default [
           varsIgnorePattern: "^_",
           args: "after-used",
           argsIgnorePattern: "^_",
-          ignoreRestSiblings: true,
+          ignoreRestSiblings: false,
         },
       ],
       "@typescript-eslint/only-throw-error": "off", // <-- rule results in false positives for Error-like objects/subclasses
+      "@typescript-eslint/prefer-for-of": "off", // Allow basic for-loops for performance
       "@typescript-eslint/prefer-nullish-coalescing": [
         "error",
         {
