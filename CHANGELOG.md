@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.7.0-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.0-next.1...v2.7.0-next.2) (2024-06-10)
+
 # [2.7.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.3...v2.7.0-next.1) (2024-06-10)
 
 
