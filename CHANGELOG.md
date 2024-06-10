@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.6.3-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.2...v2.6.3-next.1) (2024-06-10)
+
+
+### Performance Improvements
+
+* replace Object.entries with for-loops ([faa57a0](https://github.com/Nerdware-LLC/ddb-single-table/commit/faa57a07bed8e012cc99a11894502caacb1da18f))
+
 ## [2.6.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.1...v2.6.2) (2024-06-09)
 
 ## [2.6.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.0...v2.6.1) (2024-06-08)

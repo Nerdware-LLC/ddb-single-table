@@ -33,9 +33,9 @@ export const getValidatedComparisonValues = (attrName: string, rawWhereQueryValu
     // If the value IS an object, ensure it's a valid WhereQuery comparison object.
 
     // First, ensure the object contains exactly one K-V pair.
-    const rawWhereQueryValueEntries = Object.entries(rawWhereQueryValue);
+    const rawWhereQueryValueKeys = Object.keys(rawWhereQueryValue);
 
-    if (rawWhereQueryValueEntries.length !== 1) {
+    if (rawWhereQueryValueKeys.length !== 1) {
       throw new InvalidExpressionError({
         expressionName: "KeyConditionExpression",
         invalidValue: rawWhereQueryValue,
@@ -47,7 +47,8 @@ export const getValidatedComparisonValues = (attrName: string, rawWhereQueryValu
     }
 
     // Extract the K-V pair from the lone entry
-    const [whereKey, whereValue] = rawWhereQueryValueEntries[0];
+    const whereKey = rawWhereQueryValueKeys[0];
+    const whereValue = rawWhereQueryValue[whereKey];
 
     // Ensure the key is a valid operator
     if (!isValidWhereQueryOperator(whereKey)) {

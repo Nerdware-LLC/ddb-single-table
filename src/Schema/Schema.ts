@@ -4,9 +4,7 @@ import type {
   TableKeysSchemaType,
   ModelSchemaType,
   SchemaMetadata,
-  AnyValidSchemaEntries,
-  ModelSchemaEntries,
-  TableKeysSchemaEntries,
+  AnyValidAttributeConfig,
 } from "./types.js";
 
 /**
@@ -22,10 +20,9 @@ import type {
  */
 export class Schema {
   /**
-   * This method ensures the provided `schema` is a valid `Schema` object, and if valid, returns
-   * it as an array of entries (i.e., returns `Object.entries(schema)`).
+   * This method ensures the provided `schema` is a valid `Schema` object by performing the
+   * following validation checks:
    *
-   * This method performs the following `Schema` validation checks:
    * 1. Ensure the provided `schema` is a non-empty enumerable object.
    * 2. Ensure a valid "type" is specified for all attributes.
    * 3. Ensure "map", "array", and "tuple" attributes include a valid "schema" config.
@@ -54,20 +51,25 @@ export class Schema {
       });
     }
 
-    // Convert the schema to entries
-    const schemaEntries = Object.entries(schema) as AnyValidSchemaEntries;
+    // Get the schema's keys/attrNames
+    const schemaAttrNames: Array<keyof S> = Object.keys(schema);
+    const numAttributes = schemaAttrNames.length;
 
     // Ensure schema is not empty
-    if (schemaEntries.length === 0) {
+    if (numAttributes === 0) {
       throw new SchemaValidationError({
         schemaName,
         problem: `schema does not contain any attributes`,
       });
     }
 
-    // Iterate over schema entries and validate the attribute configs
-    schemaEntries.forEach(([attrName, attrConfig]) => {
-      const { type, schema, oneOf } = attrConfig;
+    // Iterate over schema keys and validate the attribute configs
+    for (let i = 0; i < numAttributes; i++) {
+      // const schema = schema;
+      const attrName = schemaAttrNames[i] as string;
+      const attrConfig = schema[schemaAttrNames[i]] as AnyValidAttributeConfig;
+
+      const { type, schema: nestedSchema, oneOf } = attrConfig;
 
       // Ensure "type" was provided
       if (!type) {
@@ -82,7 +84,7 @@ export class Schema {
       // TYPE: "map" | "array" | "tuple" (nested-schema types)
       if (["map", "array", "tuple"].includes(type)) {
         // NESTED TYPES: ensure a nested "schema" is defined
-        if (!schema) {
+        if (!nestedSchema) {
           throw new SchemaValidationError({
             schemaName,
             problem: `attribute "${attrName}" is of type "${type}", but does not specify a nested "schema"`,
@@ -90,9 +92,9 @@ export class Schema {
         }
         // NESTED TYPES: ensure "schema" is correct type
         if (
-          (type === "map" && !isType.map(schema)) ||
-          (type === "array" && !isType.array(schema)) ||
-          (type === "tuple" && !isType.array(schema))
+          (type === "map" && !isType.map(nestedSchema)) ||
+          (type === "array" && !isType.array(nestedSchema)) ||
+          (type === "tuple" && !isType.array(nestedSchema))
         ) {
           throw new SchemaValidationError({
             schemaName,
@@ -118,7 +120,7 @@ export class Schema {
       }
 
       // Check if "default" is specified
-      if (hasKey(attrConfig as any, "default")) {
+      if (hasKey(attrConfig, "default")) {
         // If the default is not a function, ensure its type matches the attr's defined "type"
         const defaultValue = attrConfig.default;
 
@@ -129,10 +131,6 @@ export class Schema {
           });
         }
       }
-    });
-
-    return schemaEntries as S extends TableKeysSchemaType
-      ? TableKeysSchemaEntries
-      : ModelSchemaEntries;
+    }
   };
 }
