@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.7.0-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.0-next.1...v2.7.0-next.2) (2024-06-10)
+
+# [2.7.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.3...v2.7.0-next.1) (2024-06-10)
+
+
+### Features
+
+* add 'transformValues' and 'validate' ioActions to processKeyArgs ([5c0d2e5](https://github.com/Nerdware-LLC/ddb-single-table/commit/5c0d2e5bc4dc631c32cf73cc95aea24ef52232b7))
+
 ## [2.6.3](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.2...v2.6.3) (2024-06-10)
 
 

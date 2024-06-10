@@ -831,9 +831,10 @@ export class Model<
       [
         ioActions.aliasMapping,
         ioActions.setDefaults,
+        ioActions.transformValues,
         ioActions.typeChecking,
-        ioActions.convertJsTypes, // FIXME what other IO-Actions should be applied to keys?
-        //                           FIXME WHY NOT attr validation?
+        ioActions.validate,
+        ioActions.convertJsTypes,
         ioActions.checkRequired,
       ],
       {
