@@ -25,8 +25,8 @@ export const createTable = async function <TableKeysSchema extends TableKeysSche
 ) {
   // If createTableArgs were provided, provide some minor early validation:
   if (
-    createTableArgs?.BillingMode === "PAY_PER_REQUEST" &&
-    !!createTableArgs?.ProvisionedThroughput
+    createTableArgs.BillingMode === "PAY_PER_REQUEST" &&
+    !!createTableArgs.ProvisionedThroughput
   ) {
     throw new DdbSingleTableError(
       `Invalid "createTable" args: "ProvisionedThroughput" should not be provided when "BillingMode" is "PAY_PER_REQUEST".`
@@ -66,7 +66,7 @@ export const createTable = async function <TableKeysSchema extends TableKeysSche
     // Indexes
     if (index) {
       // Determine GSI or LSI, then push to the respective array
-      const indexArray = index?.global === true ? GlobalSecondaryIndexes : LocalSecondaryIndexes;
+      const indexArray = index.global === true ? GlobalSecondaryIndexes : LocalSecondaryIndexes;
 
       indexArray.push({
         IndexName: index.name,
@@ -75,19 +75,17 @@ export const createTable = async function <TableKeysSchema extends TableKeysSche
             AttributeName: keyAttrName,
             KeyType: "HASH",
           },
-          ...(index?.rangeKey
-            ? [{ AttributeName: index.rangeKey, KeyType: "RANGE" as const }]
-            : []),
+          ...(index.rangeKey ? [{ AttributeName: index.rangeKey, KeyType: "RANGE" as const }] : []),
         ],
         Projection: {
-          ProjectionType: !index?.project // if undefined or false, default "KEYS_ONLY"
+          ProjectionType: !index.project // if undefined or false, default "KEYS_ONLY"
             ? "KEYS_ONLY"
             : index.project === true
               ? "ALL"
               : "INCLUDE",
           ...(Array.isArray(index.project) && { NonKeyAttributes: index.project }),
         },
-        ...(!!index?.throughput && {
+        ...(!!index.throughput && {
           ProvisionedThroughput: {
             ReadCapacityUnits: index.throughput.read,
             WriteCapacityUnits: index.throughput.write,

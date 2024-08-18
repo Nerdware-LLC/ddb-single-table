@@ -30,6 +30,8 @@ const INVALID_DAYJS_CTOR_ARG_TYPES = new Set(["symbol", "bigint"]);
 export const isConvertibleToDate = (value?: unknown): value is ValidTimestamp => {
   // `value` is cast to any, bc the first two checks ensure it won't throw
   return (
-    !!value && !INVALID_DAYJS_CTOR_ARG_TYPES.has(typeof value) && dayjs(value as any).isValid()
+    !!value &&
+    !INVALID_DAYJS_CTOR_ARG_TYPES.has(typeof value) &&
+    dayjs(value as DayJsCtorParamType).isValid()
   );
 };

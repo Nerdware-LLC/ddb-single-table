@@ -19,7 +19,7 @@ export const typeChecking: IOAction = function (
     if (!hasDefinedProperty(item, attrName)) continue;
 
     // Check the type of its value (can't check unknown attributes if schema allows for them)
-    if (!isType[attrConfig.type](item[attrName], attrConfig?.oneOf ?? attrConfig?.schema ?? [])) {
+    if (!isType[attrConfig.type](item[attrName], attrConfig.oneOf ?? attrConfig.schema ?? [])) {
       // Throw error if there's a type mismatch
       throw new ItemInputError(
         `Invalid type of value provided for ${getAttrErrID(modelName, attrName, attrConfig)}.` +
@@ -34,7 +34,7 @@ export const typeChecking: IOAction = function (
     }
 
     // Run recursively on nested attributes
-    if (attrConfig?.schema) {
+    if (attrConfig.schema) {
       this.recursivelyApplyIOAction(this.typeChecking, item[attrName], {
         parentItem: item,
         modelName,

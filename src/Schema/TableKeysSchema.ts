@@ -76,7 +76,7 @@ export class TableKeysSchema extends Schema {
       }
 
       // Ensure all key/index attributes are `required`
-      if (required !== true) {
+      if ((required as boolean) !== true) {
         throw new SchemaValidationError({
           schemaName,
           problem: `attribute "${keyAttrName}" is not "required"`,
@@ -131,9 +131,9 @@ export class TableKeysSchema extends Schema {
 
         indexes[index.name] = {
           name: index.name,
-          type: index?.global === true ? "GLOBAL" : "LOCAL",
+          type: index.global === true ? "GLOBAL" : "LOCAL",
           indexPK: keyAttrName,
-          ...(index?.rangeKey && { indexSK: index.rangeKey }),
+          ...(index.rangeKey && { indexSK: index.rangeKey }),
         };
       }
     }

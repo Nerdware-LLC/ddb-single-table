@@ -15,7 +15,7 @@ export const transformValues: IOAction = function (
     const [attrName, attrConfig] = schemaEntries[i];
 
     // See if a transformValue fn is defined
-    const transformValue = attrConfig?.transformValue?.[ioDirection];
+    const transformValue = attrConfig.transformValue?.[ioDirection];
     // If schema has transformValue toDB/fromDB, pass the existing value into the fn
     if (hasKey(item as any, attrName) && isFunction(transformValue)) {
       // Get new value; any type mismatches are caught later by the `typeChecking` method
@@ -25,7 +25,7 @@ export const transformValues: IOAction = function (
     }
 
     // Run recursively on nested attributes if parent value exists
-    if (attrConfig?.schema && hasKey(item as any, attrName)) {
+    if (attrConfig.schema && hasKey(item as any, attrName)) {
       item[attrName] = this.recursivelyApplyIOAction(this.transformValues, item[attrName], {
         parentItem: item,
         ioDirection,

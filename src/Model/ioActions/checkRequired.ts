@@ -16,7 +16,7 @@ export const checkRequired: IOAction = function (
     const [attrName, attrConfig] = schemaEntries[i];
 
     // Check if item is missing a required field
-    if (attrConfig?.required === true && !hasDefinedProperty(item, attrName)) {
+    if (attrConfig.required === true && !hasDefinedProperty(item, attrName)) {
       // Throw error if required field is missing
       throw new ItemInputError(
         `A value is required for ${getAttrErrID(modelName, attrName, attrConfig)}.`
@@ -24,7 +24,7 @@ export const checkRequired: IOAction = function (
     }
 
     // Run recursively on nested attributes if parent exists
-    if (attrConfig?.schema && hasDefinedProperty(item, attrName)) {
+    if (attrConfig.schema && hasDefinedProperty(item, attrName)) {
       this.recursivelyApplyIOAction(this.checkRequired, item[attrName], {
         parentItem: item,
         modelName,

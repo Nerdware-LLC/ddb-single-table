@@ -32,7 +32,7 @@ export class DdbConnectionError extends DdbSingleTableError {
   constructor(arg?: unknown) {
     let message = (isType.string(arg) && arg) || DdbConnectionError.DEFAULT_MSG;
 
-    if (isType.map(arg) && isType.string(arg?.message)) {
+    if (isType.map(arg) && isType.string(arg.message)) {
       message += ` (${arg.message})`;
     }
 
@@ -77,8 +77,8 @@ export class SchemaValidationError extends DdbSingleTableError {
   constructor(message: SchemaValidationErrorPayload) {
     const msgOrFormattedString =
       isPlainObject(message) &&
-      isType.string(message?.schemaName) &&
-      isType.string(message?.problem)
+      isType.string(message.schemaName) &&
+      isType.string(message.problem)
         ? `${message.schemaName} is invalid: ${message.problem}.`
         : message;
 
@@ -125,9 +125,9 @@ export class InvalidExpressionError extends DdbSingleTableError {
       isType.string(arg) && arg
         ? arg
         : isType.map(arg) &&
-            isType.string(arg?.expressionName) &&
-            isType.string(arg?.invalidValueDescription) &&
-            isType.string(arg?.problem)
+            isType.string(arg.expressionName) &&
+            isType.string(arg.invalidValueDescription) &&
+            isType.string(arg.problem)
           ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n` +
             `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
           : InvalidExpressionError.DEFAULT_MSG;

@@ -23,7 +23,7 @@ export const setDefaults: IOAction = function (
       item[attrName] = isFunction(attrDefault) ? attrDefault(parentItem) : attrDefault;
     }
     // Run recursively on nested attributes if parent value exists
-    if (attrConfig?.schema && hasKey(item as any, attrName)) {
+    if (attrConfig.schema && hasKey(item as any, attrName)) {
       item[attrName] = this.recursivelyApplyIOAction(this.setDefaults, item[attrName], {
         parentItem,
         ...ctx,

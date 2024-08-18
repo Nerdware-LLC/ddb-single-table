@@ -18,7 +18,7 @@ export const validate: IOAction = function (
     if (!hasDefinedProperty(item, attrName)) continue;
 
     // Run "validate" fn if defined in the schema
-    if (!!attrConfig?.validate && !attrConfig.validate(item[attrName])) {
+    if (!!attrConfig.validate && !attrConfig.validate(item[attrName])) {
       // Throw error if validation fails
       throw new ItemInputError(
         `Invalid value for ${getAttrErrID(modelName, attrName, attrConfig)}.`
@@ -26,7 +26,7 @@ export const validate: IOAction = function (
     }
 
     // Run recursively on nested attributes
-    if (attrConfig?.schema) {
+    if (attrConfig.schema) {
       this.recursivelyApplyIOAction(this.validate, item[attrName], {
         parentItem: item,
         modelName,
