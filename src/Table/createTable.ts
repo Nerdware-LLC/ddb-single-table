@@ -1,8 +1,7 @@
-import { Table } from "./Table.js";
 import { DdbSingleTableError } from "../utils/errors.js";
 import type { CreateTableInput } from "../DdbClientWrapper/types.js";
 import type { TableKeysSchemaType } from "../Schema/types.js";
-import type { TableCreateTableParameters } from "./types.js";
+import type { TableInstance, TableCreateTableParameters } from "./types.js";
 
 /**
  * [`CreateTable`][ddb-docs-create-table] operation wrapper which uses the provided
@@ -21,7 +20,7 @@ import type { TableCreateTableParameters } from "./types.js";
  * @throws `DdbSingleTableError` if `BillingMode` is "PAY_PER_REQUEST" and `ProvisionedThroughput` is provided.
  */
 export const createTable = async function <TableKeysSchema extends TableKeysSchemaType>(
-  this: InstanceType<typeof Table<TableKeysSchema>>,
+  this: TableInstance<TableKeysSchema>,
   createTableArgs: TableCreateTableParameters = {}
 ) {
   // If createTableArgs were provided, provide some minor early validation:
