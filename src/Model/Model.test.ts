@@ -75,6 +75,11 @@ describe("Model", () => {
   // Assign var to _ddbDocClient "spy target" (private instance property, hence `as any`):
   const ddbDocClientSpyTarget = (mockModel.ddbClient as any)._ddbDocClient;
 
+  // Arrange spy target to return empty object by default:
+  beforeEach(() => {
+    vi.spyOn(ddbDocClientSpyTarget, "send").mockResolvedValue({});
+  });
+
   // Mock items/keys for method inputs and defining expected results:
   const {
     mockItems,

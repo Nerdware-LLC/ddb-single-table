@@ -44,6 +44,12 @@ describe("DdbClientWrapper", () => {
   const ddbClientSpyTarget = (mockDdbClientWrapper as any)._ddbClient;
   const ddbDocClientSpyTarget = (mockDdbClientWrapper as any)._ddbDocClient;
 
+  // Arrange spy targets to return empty objects by default:
+  beforeEach(() => {
+    vi.spyOn(ddbClientSpyTarget, "send").mockResolvedValue({});
+    vi.spyOn(ddbDocClientSpyTarget, "send").mockResolvedValue({});
+  });
+
   // Mock item inputs:
   const mockItems = [
     { id: "USER-1", name: "Human McPerson", data: 32 },
@@ -89,9 +95,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.getItem(getItemValidInput);
       expect(result.Item).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.getItem(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.getItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -127,9 +132,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.batchGetItems(batchGetItemValidInput);
       expect(result.Responses).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.batchGetItems(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.batchGetItems(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -160,9 +164,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.putItem(putItemValidInput);
       expect(result.Attributes).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.putItem(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.putItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -201,9 +204,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.updateItem(updateItemValidInput);
       expect(result.Attributes).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.updateItem(updateItemValidInput);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.updateItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -234,9 +236,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.deleteItem(deleteItemValidInput);
       expect(result.Attributes).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.deleteItem(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.deleteItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -269,11 +270,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.batchWriteItems(batchWriteItemValidInput);
-      expect(result).toBeUndefined();
+      expect(result.ConsumedCapacity).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.batchWriteItems(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.batchWriteItems(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -308,9 +308,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.query(queryValidInput);
       expect(result.Items).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.query(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.query(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -340,9 +339,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.scan(scanValidInput);
       expect(result.Items).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.scan(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.scan(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -372,9 +370,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.describeTable(describeTableValidInput);
       expect(result.Table).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.describeTable(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.describeTable(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -412,9 +409,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.createTable(createTableValidInput);
       expect(result.TableDescription).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.createTable(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.createTable(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -441,9 +437,8 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.listTables();
       expect(result.TableNames).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.listTables(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.listTables(null as any)).resolves.not.toThrow();
     });
   });
 });
