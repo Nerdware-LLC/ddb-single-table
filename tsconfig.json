@@ -16,13 +16,14 @@
     "types": ["node", "vitest/globals"],
 
     // Emit:
+    "declaration": true,
+    "declarationMap": true,
     "noEmitOnError": true,
 
     // Completeness:
     "skipLibCheck": false,
 
     // Output Formatting:
-    "declaration": true,
     "noErrorTruncation": true,
 
     // Interop Constraints:
