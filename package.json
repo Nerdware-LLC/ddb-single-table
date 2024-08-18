@@ -15,11 +15,12 @@
   "files": [
     "dist"
   ],
-  "module": "dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
-  "main": "dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
   "exports": {
     ".": {
+      "types": "./dist/esm/index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     }
@@ -53,14 +54,14 @@
     "build": "scripts/cicd.build.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.623.0",
-    "@aws-sdk/lib-dynamodb": "^3.623.0",
-    "@nerdware/ts-type-safety-utils": "^1.0.14",
+    "@aws-sdk/client-dynamodb": "^3.632.0",
+    "@aws-sdk/lib-dynamodb": "^3.632.0",
+    "@nerdware/ts-type-safety-utils": "^1.0.15",
     "dayjs": "^1.11.12"
   },
   "devDependencies": {
     "@serverless-guru/prettier-plugin-import-order": "^0.4.2",
-    "@types/node": "^22.1.0",
+    "@types/node": "^22.4.0",
     "@vitest/coverage-v8": "^2.0.5",
     "aws-sdk-client-mock": "^4.0.1",
     "eslint": "^8.57.0",
@@ -70,7 +71,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-vitest": "^0.5.4",
     "prettier": "^3.3.3",
-    "type-fest": "^4.23.0",
+    "type-fest": "^4.25.0",
     "typescript": "^5.5.4",
     "typescript-eslint": "^7.18.0",
     "vitest": "^2.0.4",
@@ -78,7 +79,7 @@
   },
   "overrides": {
     "@serverless-guru/prettier-plugin-import-order": {
-      "prettier": "^3.2.5"
+      "prettier": "$prettier"
     }
   }
 }
