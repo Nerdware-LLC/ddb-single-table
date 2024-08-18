@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.7.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.1...v2.7.2) (2024-08-18)
+
+
+### Bug Fixes
+
+* rm unnecessary opt chains ([6f7c758](https://github.com/Nerdware-LLC/ddb-single-table/commit/6f7c7584d8eeaecad0d0602caa92c0ed71383472))
+
 ## [2.7.2-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.1...v2.7.2-next.1) (2024-08-18)
 
 
