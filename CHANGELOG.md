@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.7.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.0...v2.7.1-next.1) (2024-08-18)
+
+
+### Bug Fixes
+
+* **types:** add `TableInstance` type alias ([9c93b65](https://github.com/Nerdware-LLC/ddb-single-table/commit/9c93b65e45fa3d8f7f75b5366e355deb22b6a4fc))
+
 # [2.7.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.6.3...v2.7.0) (2024-08-03)
 
 

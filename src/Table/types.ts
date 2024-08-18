@@ -11,6 +11,7 @@ import type {
   MergeModelAndTableKeysSchema,
 } from "../Schema/types.js";
 import type { BaseItem, ItemTypeFromSchema } from "../types/itemTypes.js";
+import type { Table } from "./Table.js";
 
 /** `Table` class constructor params. @public */
 export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> = Simplify<
@@ -19,6 +20,10 @@ export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> 
     tableKeysSchema: TableKeysSchema;
     logger?: (str: string) => void;
   } & DdbClientWrapperConstructorParams
+>;
+
+export type TableInstance<TableKeysSchema extends TableKeysSchemaType> = InstanceType<
+  typeof Table<TableKeysSchema>
 >;
 
 /** A config object specifying the table's keys and indexes. */
