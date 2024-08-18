@@ -34,7 +34,7 @@ describe("errors", () => {
       expect(errorWithDefaultMsg instanceof ErrorClass).toBe(true);
       expect(errorWithDefaultMsg.name).toBe(name);
       expect(errorWithDefaultMsg.message).toBe(
-        ErrorClass?.DEFAULT_MSG ?? DdbSingleTableError.DEFAULT_MSG
+        ErrorClass.DEFAULT_MSG || DdbSingleTableError.DEFAULT_MSG
       );
     });
 
@@ -45,7 +45,7 @@ describe("errors", () => {
         expect(errorWithDefaultMsg instanceof ErrorClass).toBe(true);
         expect(errorWithDefaultMsg.name).toBe(name);
         expect(errorWithDefaultMsg.message).toBe(
-          ErrorClass?.DEFAULT_MSG ?? DdbSingleTableError.DEFAULT_MSG
+          ErrorClass.DEFAULT_MSG || DdbSingleTableError.DEFAULT_MSG
         );
       });
     });
@@ -53,7 +53,7 @@ describe("errors", () => {
     test(`returns a ${name} with a stack property containing a stack trace`, () => {
       const error = new ErrorClass();
       expect(typeof error.stack).toBe("string");
-      expect(error?.stack?.length).toBeGreaterThan(0);
+      expect(error.stack?.length).toBeGreaterThan(0);
     });
 
     test("returns a string containing the name and message properties when calling the toString method", () => {

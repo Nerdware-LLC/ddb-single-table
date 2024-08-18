@@ -41,7 +41,7 @@ export const validateWhereQueryComparand = <Operator extends WhereQueryOperator>
     // For "between", value must be `[string, string]` or `[number, number]`
     if (
       !isType.array(value) ||
-      value?.length !== 2 ||
+      value.length !== 2 ||
       !(
         (isType.string(value[0]) && isType.string(value[1])) ||
         (isType.number(value[0]) && isType.number(value[1]))

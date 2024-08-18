@@ -72,7 +72,7 @@ export class Schema {
       const { type, schema: nestedSchema, oneOf } = attrConfig;
 
       // Ensure "type" was provided
-      if (!type) {
+      if (!(type as unknown)) {
         throw new SchemaValidationError({
           schemaName,
           problem: `attribute "${attrName}" does not specify a "type"`,

@@ -57,11 +57,11 @@ export const convertJsTypes: IOAction = function (
     const itemValue = item[attrName];
 
     // If the attribute type is "Date" or "Buffer", use the DDB_TYPE_MAP
-    const typeConverterFn = DDB_TYPE_MAP?.[attrConfig.type]?.[ioDirection];
+    const typeConverterFn = DDB_TYPE_MAP[attrConfig.type]?.[ioDirection];
 
     if (typeConverterFn) {
       item[attrName] = typeConverterFn(itemValue);
-    } else if ((attrConfig.type === "map" || attrConfig.type === "array") && attrConfig?.schema) {
+    } else if ((attrConfig.type === "map" || attrConfig.type === "array") && attrConfig.schema) {
       // Run recursively on nested attributes
       (item as BaseItem)[attrName] = this.recursivelyApplyIOAction(this.convertJsTypes, itemValue, {
         parentItem: item,

@@ -1,6 +1,6 @@
 {
   "name": "@nerdware/ddb-single-table",
-  "version": "2.7.1",
+  "version": "2.7.2-next.1",
   "description": "A schema-based DynamoDB modeling tool, high-level API, and type-generator built for single-table designs.",
   "author": {
     "name": "Trevor Anderson",
@@ -60,20 +60,22 @@
     "dayjs": "^1.11.12"
   },
   "devDependencies": {
+    "@eslint/js": "^9.9.0",
     "@serverless-guru/prettier-plugin-import-order": "^0.4.2",
+    "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.4.0",
     "@vitest/coverage-v8": "^2.0.5",
     "aws-sdk-client-mock": "^4.0.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
-    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-import-x": "^3.1.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-vitest": "^0.5.4",
     "prettier": "^3.3.3",
     "type-fest": "^4.25.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^7.18.0",
+    "typescript-eslint": "^8.1.0",
     "vitest": "^2.0.4",
     "vitest-github-actions-reporter": "^0.11.1"
   },

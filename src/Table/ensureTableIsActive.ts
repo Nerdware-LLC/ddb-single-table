@@ -47,7 +47,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       // DescribeTable will throw if Table doesn't exist
       const response = await this.describeTable();
 
-      const tableStatus = response?.Table?.TableStatus;
+      const tableStatus = response.Table?.TableStatus;
 
       if (tableStatus === "ACTIVE") {
         clearTimeout(timeoutTimerID);
@@ -67,11 +67,11 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       // Sanity type-check: ensure `err` is an object.
       if (!isError(err) && !isPlainObject(err)) throw err;
 
-      // If `err?.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
-      if ((err as { code?: unknown })?.code === "ECONNREFUSED") throw new DdbConnectionError(err);
+      // If `err.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
+      if ((err as { code?: unknown }).code === "ECONNREFUSED") throw new DdbConnectionError(err);
 
       // If `err` is a "ResourceNotFoundException", Table doesn't exist - see if it should be created.
-      if (err?.name !== "ResourceNotFoundException") throw err;
+      if (err.name !== "ResourceNotFoundException") throw err;
 
       // If Table doesn't exist AND !createIfNotExists, throw error.
       if (!createIfNotExists) {
@@ -96,7 +96,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       );
 
       // Get the TableStatus from the response
-      const tableStatus = response?.TableDescription?.TableStatus;
+      const tableStatus = response.TableDescription?.TableStatus;
 
       // Update this bool flag so ensure CreateTable is only ever called once.
       hasCreateTableBeenCalled = true;

@@ -55,7 +55,7 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
   } catch (err) {
     // If a batch op throws, NONE of the requests were successful, check if `err.code` is retryable.
     const maybeErrCode = (err as any)?.code as unknown;
-    if (!isString(maybeErrCode) || !ERR_CODE_SHOULD_RETRY?.[maybeErrCode]) throw err;
+    if (!isString(maybeErrCode) || !ERR_CODE_SHOULD_RETRY[maybeErrCode]) throw err;
     // If `err.code` indicates the op should be retried, run again with all batchRequestObjects.
     unprocessedRequestObjects = batchRequestObjects;
   }

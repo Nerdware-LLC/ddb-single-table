@@ -14,7 +14,7 @@ export const transformItem: IOAction = function (
   { schemaOptions, ioDirection }
 ) {
   // If schemaOptions has transformItem toDB/fromDB, pass the existing item into the fn
-  const transformItem = schemaOptions?.transformItem?.[ioDirection];
+  const transformItem = schemaOptions.transformItem?.[ioDirection];
 
   // If the new item has type mismatches, they're caught by the `typeChecking` method
   if (isFunction(transformItem)) item = transformItem(item);

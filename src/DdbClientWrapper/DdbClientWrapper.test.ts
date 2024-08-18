@@ -44,6 +44,12 @@ describe("DdbClientWrapper", () => {
   const ddbClientSpyTarget = (mockDdbClientWrapper as any)._ddbClient;
   const ddbDocClientSpyTarget = (mockDdbClientWrapper as any)._ddbDocClient;
 
+  // Arrange spy targets to return empty objects by default:
+  beforeEach(() => {
+    vi.spyOn(ddbClientSpyTarget, "send").mockResolvedValue({});
+    vi.spyOn(ddbDocClientSpyTarget, "send").mockResolvedValue({});
+  });
+
   // Mock item inputs:
   const mockItems = [
     { id: "USER-1", name: "Human McPerson", data: 32 },
@@ -78,7 +84,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.getItem(getItemValidInput);
 
       // Assert the result
-      expect(result?.Item).toStrictEqual(mockItem);
+      expect(result.Item).toStrictEqual(mockItem);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(GetCommand);
@@ -87,11 +93,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Item" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.getItem(getItemValidInput);
-      expect(result?.Item).toBeUndefined();
+      expect(result.Item).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.getItem(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.getItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -116,7 +121,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.batchGetItems(batchGetItemValidInput);
 
       // Assert the result
-      expect(result?.Responses?.[mockTableName]).toStrictEqual(mockItems);
+      expect(result.Responses?.[mockTableName]).toStrictEqual(mockItems);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(BatchGetCommand);
@@ -125,11 +130,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Responses" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.batchGetItems(batchGetItemValidInput);
-      expect(result?.Responses).toBeUndefined();
+      expect(result.Responses).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.batchGetItems(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.batchGetItems(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -149,7 +153,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.putItem(putItemValidInput);
 
       // Assert the result
-      expect(result?.Attributes).toStrictEqual(mockItem);
+      expect(result.Attributes).toStrictEqual(mockItem);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(PutCommand);
@@ -158,11 +162,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Attributes" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.putItem(putItemValidInput);
-      expect(result?.Attributes).toBeUndefined();
+      expect(result.Attributes).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.putItem(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.putItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -190,7 +193,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.updateItem(updateItemValidInput);
 
       // Assert the result
-      expect(result?.Attributes).toStrictEqual(mockUpdatedItem);
+      expect(result.Attributes).toStrictEqual(mockUpdatedItem);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(UpdateCommand);
@@ -199,11 +202,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Attributes" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.updateItem(updateItemValidInput);
-      expect(result?.Attributes).toBeUndefined();
+      expect(result.Attributes).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.updateItem(updateItemValidInput);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.updateItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -223,7 +225,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.deleteItem(deleteItemValidInput);
 
       // Assert the result
-      expect(result?.Attributes).toStrictEqual(mockItem);
+      expect(result.Attributes).toStrictEqual(mockItem);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(DeleteCommand);
@@ -232,11 +234,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Attributes" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.deleteItem(deleteItemValidInput);
-      expect(result?.Attributes).toBeUndefined();
+      expect(result.Attributes).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.deleteItem(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.deleteItem(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -260,7 +261,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.batchWriteItems(batchWriteItemValidInput);
 
       // Assert the result (will be undefined because nothing is returned)
-      expect(result?.UnprocessedItems).toStrictEqual(mockBatchWriteRequests);
+      expect(result.UnprocessedItems).toStrictEqual(mockBatchWriteRequests);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(BatchWriteCommand);
@@ -269,11 +270,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.batchWriteItems(batchWriteItemValidInput);
-      expect(result).toBeUndefined();
+      expect(result.ConsumedCapacity).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.batchWriteItems(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.batchWriteItems(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -297,7 +297,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.query(queryValidInput);
 
       // Assert the result
-      expect(result?.Items).toStrictEqual(mockItems);
+      expect(result.Items).toStrictEqual(mockItems);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = spies.ddbDocClient.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(QueryCommand);
@@ -306,11 +306,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Items" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.query(queryValidInput);
-      expect(result?.Items).toBeUndefined();
+      expect(result.Items).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.query(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.query(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -329,7 +328,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.scan(scanValidInput);
 
       // Assert the result
-      expect(result?.Items).toStrictEqual(mockItems);
+      expect(result.Items).toStrictEqual(mockItems);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(ScanCommand);
@@ -338,11 +337,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Items" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.scan(scanValidInput);
-      expect(result?.Items).toBeUndefined();
+      expect(result.Items).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.scan(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.scan(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -361,7 +359,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.describeTable(describeTableValidInput);
 
       // Assert the result
-      expect(result?.Table).toStrictEqual({ TableName: mockTableName });
+      expect(result.Table).toStrictEqual({ TableName: mockTableName });
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(DescribeTableCommand);
@@ -370,11 +368,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "Table" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.describeTable(describeTableValidInput);
-      expect(result?.Table).toBeUndefined();
+      expect(result.Table).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.describeTable(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.describeTable(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -401,7 +398,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.createTable(createTableValidInput);
 
       // Assert the result
-      expect(result?.TableDescription).toStrictEqual({ TableName: mockTableName });
+      expect(result.TableDescription).toStrictEqual({ TableName: mockTableName });
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(CreateTableCommand);
@@ -410,11 +407,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "TableDescription" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.createTable(createTableValidInput);
-      expect(result?.TableDescription).toBeUndefined();
+      expect(result.TableDescription).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.createTable(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.createTable(null as any)).resolves.not.toThrow();
     });
   });
 
@@ -430,7 +426,7 @@ describe("DdbClientWrapper", () => {
       const result = await mockDdbClientWrapper.listTables();
 
       // Assert the result
-      expect(result?.TableNames).toStrictEqual(mockTableNames);
+      expect(result.TableNames).toStrictEqual(mockTableNames);
       // Assert the arg provided to the client's `send` method
       const sdkCommand = ddbClientSpy.mock.lastCall?.[0];
       expect(sdkCommand).toBeInstanceOf(ListTablesCommand);
@@ -439,11 +435,10 @@ describe("DdbClientWrapper", () => {
     });
     test(`returns undefined "TableNames" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.listTables();
-      expect(result?.TableNames).toBeUndefined();
+      expect(result.TableNames).toBeUndefined();
     });
-    test(`returns undefined and does not throw when called with invalid arguments`, async () => {
-      const result = await mockDdbClientWrapper.listTables(null as any);
-      expect(result).toBeUndefined();
+    test(`does not throw when called with invalid arguments`, async () => {
+      await expect(mockDdbClientWrapper.listTables(null as any)).resolves.not.toThrow();
     });
   });
 });

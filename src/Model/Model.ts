@@ -181,12 +181,12 @@ export class Model<
     const unaliasedKeys = this.processKeyArgs(primaryKeys);
 
     const response = await this.ddbClient.getItem({
-      ...(getItemOpts ?? {}),
+      ...getItemOpts,
       TableName: this.tableName,
       Key: unaliasedKeys,
     });
 
-    if (response?.Item) {
+    if (response.Item) {
       return this.processItemAttributes.fromDB<ItemType>(response.Item);
     }
   };
@@ -250,11 +250,11 @@ export class Model<
         },
       });
       // Get any successfully returned items from the response
-      const items = response?.Responses?.[this.tableName];
+      const items = response.Responses?.[this.tableName];
       // If the response returned items, add them to the `batchGetItems` array
       if (isArray(items)) returnedItems.push(...items);
       // Return any unprocessed keys
-      return response?.UnprocessedKeys?.[this.tableName]?.Keys;
+      return response.UnprocessedKeys?.[this.tableName]?.Keys;
     };
 
     // Submit the function to the batch-requests handler
@@ -420,7 +420,7 @@ export class Model<
       ReturnValues: "ALL_NEW",
     });
 
-    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
+    return this.processItemAttributes.fromDB<ItemType>(response.Attributes ?? {});
   };
 
   /**
@@ -445,7 +445,7 @@ export class Model<
       ReturnValues: "ALL_OLD",
     });
 
-    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
+    return this.processItemAttributes.fromDB<ItemType>(response.Attributes ?? {});
   };
 
   /**
@@ -564,7 +564,7 @@ export class Model<
         },
       });
       // Return any unprocessed items
-      return response?.UnprocessedItems?.[this.tableName];
+      return response.UnprocessedItems?.[this.tableName];
     };
 
     // Submit the function to the batch-requests handler
@@ -629,7 +629,7 @@ export class Model<
         for (const indexName in this.indexes) {
           if (
             pkAttrName === this.indexes[indexName].indexPK &&
-            (!skAttrName || skAttrName === this.indexes[indexName]?.indexSK)
+            (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
           ) {
             IndexName = indexName;
             break;
@@ -649,7 +649,7 @@ export class Model<
       ...(!!limit && { Limit: limit }),
     });
 
-    const items = response?.Items ?? [];
+    const items = response.Items ?? [];
 
     // If `items` is undefined, return an empty array instead of undefined
     return items.map((item) => this.processItemAttributes.fromDB(item));
@@ -668,11 +668,11 @@ export class Model<
    */
   readonly scan = async (scanOpts: ScanOpts = {}): Promise<Array<ItemType>> => {
     const response = await this.ddbClient.scan({
-      ...(scanOpts ?? {}),
+      ...scanOpts,
       TableName: this.tableName,
     });
 
-    const items = response?.Items ?? [];
+    const items = response.Items ?? [];
 
     return items.map((item) => this.processItemAttributes.fromDB(item));
   };
