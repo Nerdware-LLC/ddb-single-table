@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.7.3](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.2...v2.7.3) (2024-08-28)
+
+
+### Bug Fixes
+
+* **Model:** add opt-chains to simplify mock setups ([224b985](https://github.com/Nerdware-LLC/ddb-single-table/commit/224b9857a7f43826e18e551320cb79973bb20408))
+
 ## [2.7.3-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.2...v2.7.3-next.1) (2024-08-28)
 
 
