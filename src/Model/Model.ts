@@ -186,7 +186,8 @@ export class Model<
       Key: unaliasedKeys,
     });
 
-    if (response.Item) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+    if (response?.Item) {
       return this.processItemAttributes.fromDB<ItemType>(response.Item);
     }
   };
@@ -250,11 +251,13 @@ export class Model<
         },
       });
       // Get any successfully returned items from the response
-      const items = response.Responses?.[this.tableName];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+      const items = response?.Responses?.[this.tableName];
       // If the response returned items, add them to the `batchGetItems` array
       if (isArray(items)) returnedItems.push(...items);
       // Return any unprocessed keys
-      return response.UnprocessedKeys?.[this.tableName]?.Keys;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+      return response?.UnprocessedKeys?.[this.tableName]?.Keys;
     };
 
     // Submit the function to the batch-requests handler
@@ -420,7 +423,8 @@ export class Model<
       ReturnValues: "ALL_NEW",
     });
 
-    return this.processItemAttributes.fromDB<ItemType>(response.Attributes ?? {});
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
   };
 
   /**
@@ -445,7 +449,8 @@ export class Model<
       ReturnValues: "ALL_OLD",
     });
 
-    return this.processItemAttributes.fromDB<ItemType>(response.Attributes ?? {});
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
   };
 
   /**
@@ -564,7 +569,8 @@ export class Model<
         },
       });
       // Return any unprocessed items
-      return response.UnprocessedItems?.[this.tableName];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+      return response?.UnprocessedItems?.[this.tableName];
     };
 
     // Submit the function to the batch-requests handler
@@ -649,7 +655,8 @@ export class Model<
       ...(!!limit && { Limit: limit }),
     });
 
-    const items = response.Items ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+    const items = response?.Items ?? [];
 
     // If `items` is undefined, return an empty array instead of undefined
     return items.map((item) => this.processItemAttributes.fromDB(item));
@@ -672,7 +679,8 @@ export class Model<
       TableName: this.tableName,
     });
 
-    const items = response.Items ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
+    const items = response?.Items ?? [];
 
     return items.map((item) => this.processItemAttributes.fromDB(item));
   };
