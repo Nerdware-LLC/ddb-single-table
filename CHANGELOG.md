@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.7.4](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.3...v2.7.4) (2025-02-02)
+
+
+### Bug Fixes
+
+* rm "confusing" void-return expression ([cb41c33](https://github.com/Nerdware-LLC/ddb-single-table/commit/cb41c33a0b9ca48e745713977977547e4d02e5e1))
+
 ## [2.7.4-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.3...v2.7.4-next.1) (2025-02-02)
 
 
