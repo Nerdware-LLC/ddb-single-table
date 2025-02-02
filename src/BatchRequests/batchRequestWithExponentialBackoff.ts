@@ -84,7 +84,7 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
     });
 
     // Recursive retries
-    return await batchRequestWithExponentialBackoff(
+    await batchRequestWithExponentialBackoff(
       submitBatchRequest,
       unprocessedRequestObjects,
       { initialDelay, timeMultiplier, maxRetries, maxDelay, useJitter },

@@ -1,8 +1,9 @@
 // @ts-check
 import eslintJS from "@eslint/js";
+import stylisticPlugin from "@stylistic/eslint-plugin";
 import eslintConfigPrettier from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import-x";
-import nodePlugin from "eslint-plugin-node";
+import nodePlugin from "eslint-plugin-n";
 import vitestPlugin from "eslint-plugin-vitest";
 import globals from "globals";
 import tsEslint from "typescript-eslint";
@@ -14,58 +15,87 @@ export default tsEslint.config(
     files: ["src/**/*.[tj]s", "__mocks__/**/*", "./*.[tj]s"],
     linterOptions: { reportUnusedDisableDirectives: true },
     languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
       globals: globals.node,
       parser: tsEslint.parser,
       parserOptions: {
         projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
+      "@stylistic": stylisticPlugin,
       "@typescript-eslint": tsEslint.plugin,
       "import-x": importPlugin,
-      node: nodePlugin,
+      "n": nodePlugin,
     },
     settings: {
+      "import-x/extensions": [".ts", ".js"],
       "import-x/parsers": {
         "@typescript-eslint/parser": [".ts", ".js"],
       },
       "import-x/resolver": {
-        node: true,
-        typescript: true,
+        node: {
+          extensions: [".ts", ".js"],
+        },
+        typescript: {
+          project: ["tsconfig.json"],
+        },
       },
     },
     rules: {
       // MERGE PRESETS:
+      ...stylisticPlugin.configs.customize(
+        { semi: true, quotes: "double", arrowParens: true, braceStyle: "1tbs" } // prettier-ignore
+      ).rules,
       ...eslintJS.configs.recommended.rules,
       ...importPlugin.configs.recommended.rules,
-      ...importPlugin.configs.typescript.rules,
-      ...nodePlugin.configs.recommended.rules,
-      ...tsEslint.configs.eslintRecommended.rules, // turns off base eslint rules covered by ts-eslint
+      ...nodePlugin.configs["flat/recommended-module"].rules,
       ...[
         ...tsEslint.configs.strictTypeChecked,
         ...tsEslint.configs.stylisticTypeChecked, // prettier-ignore
       ].reduce((accum, config) => ({ ...accum, ...config.rules }), {}),
+
       // RULE CUSTOMIZATIONS:
+
+      // RULES: eslint (builtin)
       "default-case": "error", //      switch-case statements must have a default case
       "default-case-last": "error", // switch-case statements' default case must be last
-      eqeqeq: ["error", "always"],
+      "eqeqeq": ["error", "always"],
       "no-console": ["warn", { allow: ["info", "warn", "error"] }],
       "prefer-const": ["warn", { destructuring: "all" }],
-      semi: ["error", "always"],
-      "import-x/named": "off", //                      TS performs this check
-      "import-x/namespace": "off", //                  TS performs this check
-      "import-x/default": "off", //                    TS performs this check
-      "import-x/no-named-as-default": "off", //        TS performs this check
-      "import-x/no-named-as-default-member": "off", // TS performs this check
-      "node/no-missing-import": "off", //     Does not work with path aliases
-      "node/no-process-env": "error",
-      "node/no-unpublished-import": ["error", { allowModules: ["type-fest"] }],
+      "prefer-object-has-own": "error",
+      "prefer-promise-reject-errors": "error",
+
+      /* RULES: import-x (eslint-plugin-import-x)
+      As recommended by typescript-eslint, the following import-x rules are disabled because they
+      degrade performance and TypeScript provides the same checks as part of standard type checking.
+      https://typescript-eslint.io/troubleshooting/typed-linting/performance#eslint-plugin-import */
+      "import-x/default": "off",
+      "import-x/named": "off",
+      "import-x/namespace": "off",
+      "import-x/no-named-as-default-member": "off",
+      "import-x/no-unresolved": "off",
+
+      // RULES: n (eslint-plugin-n)
+      "n/no-missing-import": "off", // Does not work with path aliases
+      "n/no-process-env": "error",
+      "n/no-unpublished-import": ["error", { allowModules: ["type-fest"] }],
+
+      // RULES: @typescript-eslint (typescript-eslint)
       "@typescript-eslint/array-type": "off", //                      Allow "T[]" and "Array<T>"
       "@typescript-eslint/consistent-indexed-object-style": "off", // Allow "Record<K, V>" and "{ [key: K]: V }"
       "@typescript-eslint/consistent-type-definitions": "off", //     Allow "type" and "interface", there are subtle usage differences
-      "@typescript-eslint/no-confusing-void-expression": "off", //    Allow 1-line arrow fns to return void for readability
+      "@typescript-eslint/no-confusing-void-expression": [
+        "error",
+        { ignoreArrowShorthand: true }, // Allow 1-line arrow fns to return void for readability
+      ],
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-extraneous-class": ["error", { allowStaticOnly: true }],
+      "@typescript-eslint/no-extraneous-class": [
+        "error",
+        { allowStaticOnly: true },
+      ],
       "@typescript-eslint/no-inferrable-types": "off",
       "@typescript-eslint/no-misused-promises": [
         "error",
@@ -106,7 +136,9 @@ export default tsEslint.config(
           allowRegExp: false,
         },
       ],
-      ...eslintConfigPrettier.rules, // <-- must be last, removes rules that conflict with prettier
+
+      // RULES: eslint-config-prettier (must be last to remove rules that conflict with prettier)
+      ...eslintConfigPrettier.rules,
     },
   },
   ////////////////////////////////////////////////////////////////
@@ -127,6 +159,7 @@ export default tsEslint.config(
       "vitest/prefer-lowercase-title": ["error", { ignore: ["describe"] }],
       "vitest/prefer-to-have-length": "warn",
       "vitest/valid-expect": "error",
+      "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
     },

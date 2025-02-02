@@ -1,22 +1,13 @@
 {
-  // See https://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.
-  // Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
-
-  // List of extensions which should be recommended for users of this workspace.
   "recommendations": [
-    // TypeScript features:
-    "ms-vscode.vscode-typescript-next",
-    "yoavbls.pretty-ts-errors",
-
-    // Linting/formatting features:
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-
-    // Markdown/documentation features:
-    "bierner.markdown-preview-github-styles",
-    "bierner.markdown-mermaid"
+    "bierner.markdown-mermaid", //               MermaidJS charts in md previews
+    "bierner.markdown-preview-github-styles", // GitHub-flavored md previews
+    "christian-kohler.path-intellisense", //     Path auto-completion
+    "dbaeumer.vscode-eslint", //                 ESLint
+    "esbenp.prettier-vscode", //                 Prettier
+    "redhat.vscode-yaml", //                     YAML lang server
+    "vscode-icons-team.vscode-icons", //         vscode-icons
+    "yoavbls.pretty-ts-errors" //                Pretty TS errors❤️
   ],
-
-  // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
   "unwantedRecommendations": []
 }

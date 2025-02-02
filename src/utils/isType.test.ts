@@ -69,8 +69,6 @@ describe("isType", () => {
     test("returns true when called with a boolean", () => {
       expect(isType.boolean(true)).toBe(true);
       expect(isType.boolean(false)).toBe(true);
-      expect(isType.boolean(!"")).toBe(true);
-      expect(isType.boolean(!!"")).toBe(true);
     });
     test("returns false when called with a non-boolean argument", () => {
       expect(isType.boolean()).toBe(false);
