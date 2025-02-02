@@ -26,7 +26,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
     maxRetries = 20,
     createIfNotExists = false,
   }: EnsureTableIsActiveParams = {}
-) {
+): Promise<void> {
   // Get timeout and frequency in milliseconds for use in setTimeout calls
   const timeoutMilliseconds = timeoutSeconds * 1000;
   const frequencyMilliseconds = frequencySeconds * 1000;
