@@ -62,7 +62,7 @@
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@serverless-guru/prettier-plugin-import-order": "^0.4.2",
-    "@stylistic/eslint-plugin": "^3.0.1",
+    "@stylistic/eslint-plugin": "^4.0.1",
     "@types/eslint__js": "^9.14.0",
     "@types/node": "^22.13.0",
     "@vitest/coverage-v8": "^3.0.4",
