@@ -1,0 +1,22 @@
+{
+  // debugger
+  "debug.toolBarLocation": "commandCenter",
+
+  "editor.bracketPairColorization.enabled": false,
+
+  // prettier
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // eslint
+  "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.codeActionsOnSave.rules": ["!prefer-const", "*"], // When I say `let`, I mean `let`!
+  "eslint.format.enable": false,
+
+  // typescript
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": "file:///home/trevor/projects/fixit-api/.github/workflows/*.yaml"
+  }
+}
