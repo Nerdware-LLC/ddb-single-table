@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "bierner.markdown-mermaid", //               MermaidJS charts in md previews
     "bierner.markdown-preview-github-styles", // GitHub-flavored md previews
     "christian-kohler.path-intellisense", //     Path auto-completion
     "dbaeumer.vscode-eslint", //                 ESLint
