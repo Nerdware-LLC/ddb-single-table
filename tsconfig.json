@@ -1,39 +1,28 @@
 {
   // This base tsconfig is used for development of the project's src files.
 
-  "include": ["src", "__mocks__", "./*.[tj]s"],
+  "include": ["src", "__mocks__", "./*"],
 
   "compilerOptions": {
-    // Language and Environment:
-    "target": "ESNext",
-    "lib": ["ESNext"],
-    "allowJs": false,
-
-    // Modules:
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "resolveJsonModule": true,
-    "types": ["node", "vitest/globals"],
-
-    // Emit:
+    "allowJs": true,
     "declaration": true,
     "declarationMap": true,
-    "noEmitOnError": true,
-
-    // Completeness:
-    "skipLibCheck": false,
-
-    // Output Formatting:
-    "noErrorTruncation": true,
-
-    // Interop Constraints:
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-
-    // Type Checking:
     "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ESNext"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "noEmitOnError": true,
+    "noErrorTruncation": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
-    "strict": true
+    "noUnusedLocals": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": false,
+    "strict": true,
+    "target": "ESNext",
+    "types": ["node", "vitest/globals"]
   }
 }

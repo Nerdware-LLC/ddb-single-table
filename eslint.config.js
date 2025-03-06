@@ -1,15 +1,14 @@
-// @ts-check
 import eslintJS from "@eslint/js";
 import stylisticPlugin from "@stylistic/eslint-plugin";
+import vitestPlugin from "@vitest/eslint-plugin";
 import eslintConfigPrettier from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import-x";
 import nodePlugin from "eslint-plugin-n";
-import vitestPlugin from "eslint-plugin-vitest";
 import globals from "globals";
 import tsEslint from "typescript-eslint";
 
 export default tsEslint.config(
-  ////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
   // ALL FILES
   {
     files: ["src/**/*.[tj]s", "__mocks__/**/*", "./*.[tj]s"],
@@ -36,12 +35,8 @@ export default tsEslint.config(
         "@typescript-eslint/parser": [".ts", ".js"],
       },
       "import-x/resolver": {
-        node: {
-          extensions: [".ts", ".js"],
-        },
-        typescript: {
-          project: ["tsconfig.json"],
-        },
+        node: { extensions: [".ts", ".js"] },
+        typescript: { project: ["tsconfig.json"] },
       },
     },
     rules: {
@@ -77,6 +72,14 @@ export default tsEslint.config(
       "import-x/namespace": "off",
       "import-x/no-named-as-default-member": "off",
       "import-x/no-unresolved": "off",
+      "import-x/order": [
+        "warn",
+        {
+          "groups": ["builtin", "external", "internal", "parent", "sibling", "type"], // prettier-ignore
+          "alphabetize": { order: "asc", orderImportKind: "desc" },
+          "newlines-between": "never",
+        },
+      ],
 
       // RULES: n (eslint-plugin-n)
       "n/no-missing-import": "off", // Does not work with path aliases
@@ -141,7 +144,7 @@ export default tsEslint.config(
       ...eslintConfigPrettier.rules,
     },
   },
-  ////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
   // TEST FILES
   {
     files: ["src/**/*.test.ts", "**/tests/**/*", "**/__mocks__/**/*"],
@@ -164,5 +167,5 @@ export default tsEslint.config(
       "@typescript-eslint/no-unsafe-assignment": "off",
     },
   }
-  ////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////
 );

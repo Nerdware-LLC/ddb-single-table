@@ -1,6 +1,6 @@
 import { getExpressionAttrTokens } from "../helpers.js";
-import type { UpdateItemInput } from "../../DdbClientWrapper/index.js";
 import type { GenerateUpdateExpressionOpts } from "./types.js";
+import type { UpdateItemInput } from "../../DdbClientWrapper/index.js";
 
 /**
  * This function uses the provided `itemAttributes` to generate the following `updateItem` args:

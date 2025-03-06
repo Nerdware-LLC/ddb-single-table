@@ -1,4 +1,3 @@
-import type { ConditionalPick, ConditionalExcept, Simplify } from "type-fest";
 import type {
   ModelSchemaType,
   BaseAttributeConfig,
@@ -6,6 +5,7 @@ import type {
   ModelSchemaNestedMap,
   ModelSchemaNestedArray,
 } from "../Schema/types.js";
+import type { ConditionalPick, ConditionalExcept, Simplify } from "type-fest";
 
 /** An interface representing an Item with supported value types. */
 export interface BaseItem {

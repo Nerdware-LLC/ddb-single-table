@@ -1,6 +1,5 @@
-######################################################################
-# NodeJS gitignore template:
-# https://github.com/github/gitignore/blob/main/Node.gitignore
+#####################################################################
+# GIT IGNORE
 
 # Packages/npm/yarn/lerna
 node_modules
@@ -60,9 +59,6 @@ pids
 # DynamoDB-local files
 .dynamodb/
 
-#---------------------------------------------------------------------
-# Nerdware gitignore entries
-
 # Notes
 NOTE*
 TODO*
@@ -91,6 +87,7 @@ schema.json
 
 # VSCode-related
 .vscode/*
+!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -98,4 +95,4 @@ schema.json
 .history/
 .vscode-test
 
-######################################################################
+#####################################################################

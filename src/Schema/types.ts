@@ -1,6 +1,6 @@
-import type { SetOptional, Simplify } from "type-fest";
 import type { CombineUnionOfObjects } from "../types/helpers.js";
 import type { BaseItem, SupportedAttributeValueTypes } from "../types/itemTypes.js";
+import type { SetOptional, Simplify } from "type-fest";
 
 ///////////////////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:

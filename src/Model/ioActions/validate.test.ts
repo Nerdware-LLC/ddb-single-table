@@ -1,7 +1,7 @@
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { validate } from "./validate.js";
-import type { ModelSchemaType } from "../../Schema/index.js";
 import type { IOActions, IOActionContext } from "./types.js";
+import type { ModelSchemaType } from "../../Schema/index.js";
 
 describe("IOAction: validate", () => {
   // Mock `this` context with bound methods: `validate` and `recursivelyApplyIOAction`

@@ -1,7 +1,7 @@
 import { convertJsTypes } from "./convertJsTypes.js";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
-import type { ModelSchemaType } from "../../Schema/index.js";
 import type { IOActions, IOActionContext } from "./types.js";
+import type { ModelSchemaType } from "../../Schema/index.js";
 
 describe("IOAction: convertJsTypes", () => {
   // Mock `this` context with bound methods: `convertJsTypes` and `recursivelyApplyIOAction`

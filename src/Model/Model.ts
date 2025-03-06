@@ -1,25 +1,10 @@
 import { isArray } from "@nerdware/ts-type-safety-utils";
-import { ioActions } from "./ioActions/index.js";
 import { handleBatchRequests, type BatchRequestFunction } from "../BatchRequests/index.js";
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions/index.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { ItemInputError } from "../utils/errors.js";
-import type { SetOptional } from "type-fest";
-import type {
-  ModelSchemaType,
-  ModelSchemaOptions,
-  ModelSchemaEntries,
-  ModelSchemaAttributeConfig,
-} from "../Schema/types.js";
-import type { TableKeysAndIndexes } from "../Table/types.js";
-import type {
-  BaseItem,
-  ItemKeys,
-  ItemTypeFromSchema,
-  ItemCreationParameters,
-  ItemParameters,
-} from "../types/itemTypes.js";
+import { ioActions } from "./ioActions/index.js";
 import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions/index.js";
 import type {
   AttributesAliasesMap,
@@ -34,6 +19,21 @@ import type {
   QueryOpts,
   ScanOpts,
 } from "./types.js";
+import type {
+  ModelSchemaType,
+  ModelSchemaOptions,
+  ModelSchemaEntries,
+  ModelSchemaAttributeConfig,
+} from "../Schema/types.js";
+import type { TableKeysAndIndexes } from "../Table/types.js";
+import type {
+  BaseItem,
+  ItemKeys,
+  ItemTypeFromSchema,
+  ItemCreationParameters,
+  ItemParameters,
+} from "../types/itemTypes.js";
+import type { SetOptional } from "type-fest";
 
 /**
  * Each Model instance is provided with CRUD methods featuring parameter and return types which

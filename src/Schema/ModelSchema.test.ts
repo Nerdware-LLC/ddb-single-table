@@ -1,6 +1,6 @@
 import { ModelSchema } from "./ModelSchema.js";
-import type { TableKeysAndIndexes } from "../Table/index.js";
 import type { ModelSchemaType, ModelSchemaMetadata } from "./types.js";
+import type { TableKeysAndIndexes } from "../Table/index.js";
 
 describe("ModelSchema", () => {
   describe("ModelSchema.validate()", () => {

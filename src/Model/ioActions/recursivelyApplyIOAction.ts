@@ -1,6 +1,6 @@
 import { isType } from "../../utils/isType.js";
-import type { ModelSchemaType, ModelSchemaEntries } from "../../Schema/types.js";
 import type { IOActions, IOActionRecursiveApplicator } from "./types.js";
+import type { ModelSchemaType, ModelSchemaEntries } from "../../Schema/types.js";
 
 /**
  * Applies the provided `ioAction` to nested attribute types.

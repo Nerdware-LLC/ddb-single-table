@@ -1,7 +1,7 @@
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { transformValues } from "./transformValues.js";
-import type { ModelSchemaType } from "../../Schema/index.js";
 import type { IOActions, IOActionContext, IODirection } from "./types.js";
+import type { ModelSchemaType } from "../../Schema/index.js";
 
 describe("IOAction: transformValues", () => {
   // Mock `this` context with bound methods: `transformValues` and `recursivelyApplyIOAction`

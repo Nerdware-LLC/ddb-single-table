@@ -1,8 +1,13 @@
-import { createTable } from "./createTable.js";
-import { ensureTableIsActive } from "./ensureTableIsActive.js";
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { Model } from "../Model/Model.js";
 import { TableKeysSchema } from "../Schema/TableKeysSchema.js";
+import { createTable } from "./createTable.js";
+import { ensureTableIsActive } from "./ensureTableIsActive.js";
+import type {
+  TableConstructorParams,
+  TableKeysAndIndexes,
+  TableCreateModelMethod,
+} from "./types.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
@@ -10,11 +15,6 @@ import type {
   MergeModelAndTableKeysSchema,
 } from "../Schema/types.js";
 import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../types/itemTypes.js";
-import type {
-  TableConstructorParams,
-  TableKeysAndIndexes,
-  TableCreateModelMethod,
-} from "./types.js";
 
 /**
  * `Table` provides an easy-to-use API for managing your DynamoDB table and the
