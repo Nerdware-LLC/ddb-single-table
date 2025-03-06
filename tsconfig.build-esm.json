@@ -11,6 +11,9 @@
     // General build settings used for both ESM and CommonJS builds:
     "types": ["node"],
     "skipLibCheck": true,
+    "allowJs": false,
+    "checkJs": false,
+    "noEmit": false,
 
     // ESM build settings:
     "module": "NodeNext",
