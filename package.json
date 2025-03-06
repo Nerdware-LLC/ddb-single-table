@@ -54,9 +54,9 @@
     "build": "scripts/cicd.build.sh"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.738.0",
-    "@aws-sdk/lib-dynamodb": "^3.738.0",
-    "@nerdware/ts-type-safety-utils": "^1.0.15",
+    "@aws-sdk/client-dynamodb": "^3.758.0",
+    "@aws-sdk/lib-dynamodb": "^3.758.0",
+    "@nerdware/ts-type-safety-utils": "^1.2.1",
     "dayjs": "^1.11.13"
   },
   "devDependencies": {
