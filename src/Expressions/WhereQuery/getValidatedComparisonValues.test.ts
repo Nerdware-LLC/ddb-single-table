@@ -1,5 +1,5 @@
-import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
 import { InvalidExpressionError } from "../../utils/index.js";
+import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
 
 describe("getValidatedComparisonValues()", () => {
   // short-hand eq

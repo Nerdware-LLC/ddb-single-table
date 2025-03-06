@@ -1,4 +1,3 @@
-import type { Simplify } from "type-fest";
 import type { BatchOperationParams } from "../BatchRequests/types.js";
 import type {
   GetItemInput,
@@ -20,6 +19,7 @@ import type {
   AttrAliasOrName,
   SupportedAttributeValueTypes,
 } from "../types/itemTypes.js";
+import type { Simplify } from "type-fest";
 
 /** A map of attribute names to corresponding aliases, or vice versa. */
 export type AttributesAliasesMap = Record<string, string>;

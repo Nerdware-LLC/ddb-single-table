@@ -1,8 +1,8 @@
-import { Model } from "./index.js";
 import * as batchRequestsModule from "../BatchRequests/index.js";
 import * as whereQueryModule from "../Expressions/WhereQuery/index.js";
 import { Table, ModelSchema } from "../index.js";
 import type { ItemTypeFromSchema } from "../index.js";
+import { Model } from "./index.js";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts

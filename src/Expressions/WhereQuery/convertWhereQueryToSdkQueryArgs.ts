@@ -1,10 +1,10 @@
-import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
-import { WHERE_QUERY_OPERATOR_TO_EXPRESSION } from "./whereQueryOperatorToExpression.js";
 import { isType, InvalidExpressionError } from "../../utils/index.js";
 import { getExpressionAttrTokens } from "../helpers.js";
+import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
+import { WHERE_QUERY_OPERATOR_TO_EXPRESSION } from "./whereQueryOperatorToExpression.js";
+import type { WhereQueryComparisonObject } from "./types.js";
 import type { QueryInput } from "../../DdbClientWrapper/index.js";
 import type { BaseItem } from "../../types/itemTypes.js";
-import type { WhereQueryComparisonObject } from "./types.js";
 
 /**
  * This function converts `WhereQuery` objects into the following `QueryCommand`
