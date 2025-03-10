@@ -37,7 +37,7 @@ describe("Model", () => {
           throughput: { read: 5, write: 5 },
         },
       },
-    } as const,
+    },
     ddbClient: {
       region: "local",
       endpoint: "http://localhost:8000",
@@ -65,7 +65,7 @@ describe("Model", () => {
       },
     },
     ...ModelSchema.TIMESTAMP_ATTRIBUTES,
-  } as const);
+  });
 
   type MockItem = ItemTypeFromSchema<typeof mockModelSchema>;
 

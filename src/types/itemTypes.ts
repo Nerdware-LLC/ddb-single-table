@@ -85,7 +85,7 @@ type ItemTypeOpts = {
  *       }
  *     ]
  *   }
- * } as const;
+ * };
  *
  * type UserItem = ItemTypeFromSchema<typeof userModelSchema>;
  * // Resultant UserItem type is equivalent to the type below
@@ -157,7 +157,7 @@ export type ItemTypeFromSchema<
  *       }
  *     ]
  *   }
- * } as const;
+ * };
  *
  * type UserItem = ItemCreationParameters<typeof userModelSchema>;
  * // Resultant UserItem type is equivalent to the type below

@@ -85,7 +85,7 @@ describe("IOAction: checkRequired", () => {
         },
       ],
     },
-  } as const satisfies ModelSchemaType;
+  } satisfies ModelSchemaType;
 
   const mockCtx = {
     modelName: "MockModel",

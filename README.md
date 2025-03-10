@@ -96,7 +96,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
            throughput: { read: 5, write: 5 },
          },
        },
-     } as const, // For TypeScript, all schema must end with `as const`
+     },
      // You can provide your own DDB client instance or configs for a new one:
      ddbClient: {
        // This example shows how to connect to dynamodb-local:
@@ -197,7 +197,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
              applied for both write and read operations. */
         },
       },
-   } as const); // <-- Don't forget to add `as const`!
+   });
 
    // The `ItemTypeFromSchema` type is a helper type which converts
    // your schema into a Typescript type for your model's items.
@@ -228,9 +228,10 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
    //   const newUser: UserItem = await UserModel.createItem(...);
 
    // The `newUser` is of type `UserItem`, with all keys aliased as specified:
-   const { id, sk, email, profile, checklist, createdAt, updatedAt }: UserItem = {
-     ...newUser,
-   };
+   const { id, sk, email, profile, checklist, createdAt, updatedAt }: UserItem =
+     {
+       ...newUser,
+     };
 
    // You can also use the model to query for items using `where` syntax:
    const usersWhoAreDefinitelyHuman = await UserModel.query({

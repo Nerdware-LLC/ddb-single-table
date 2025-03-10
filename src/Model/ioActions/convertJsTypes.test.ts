@@ -97,7 +97,7 @@ describe("IOAction: convertJsTypes", () => {
         },
       ],
     },
-  } as const satisfies ModelSchemaType;
+  } satisfies ModelSchemaType;
 
   const mockCtx = {
     modelName: "MockModel",

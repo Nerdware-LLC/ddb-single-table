@@ -81,7 +81,7 @@ import type { SetOptional } from "type-fest";
  * attributes may be defined using the item's generated `id` value.
  *
  * @class
- * @template Schema - The Model's readonly schema (_don't forget to use `as const`_).
+ * @template Schema - The Model's schema.
  * @template ItemType - A type which reflects a complete instance of a Model item.
  * @template ItemCreationParams - The parameters used to create a new item instance.
  * @param {string} modelName - The name of the Model.
@@ -89,7 +89,7 @@ import type { SetOptional } from "type-fest";
  * @param {ModelSchemaOptions} [modelSchemaOptions] - Options for the Model's schema.
  */
 export class Model<
-  Schema extends ModelSchemaType,
+  const Schema extends ModelSchemaType,
   ItemType extends BaseItem = ItemTypeFromSchema<Schema>,
   ItemCreationParams extends BaseItem = ItemCreationParameters<Schema>,
 > implements TableKeysAndIndexes
