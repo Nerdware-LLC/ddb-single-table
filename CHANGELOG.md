@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.8.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.5...v2.8.0-next.1) (2025-03-10)
+
+
+### Features
+
+* impl const type-params to rm need for 'as const' on schemas ([5d5e551](https://github.com/Nerdware-LLC/ddb-single-table/commit/5d5e551acd78138a9b8cc930a88b72a368030767))
+
 ## [2.7.5](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.4...v2.7.5) (2025-03-06)
 
 ## [2.7.5-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.4...v2.7.5-next.1) (2025-03-06)
