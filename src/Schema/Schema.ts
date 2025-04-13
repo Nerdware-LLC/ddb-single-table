@@ -33,7 +33,7 @@ export class Schema {
    * @param schemaType - The type of schema being validated ("TableKeysSchema" or "ModelSchema").
    * @param name - A name to identify the schema in any error messages (defaults to "schemaType" if not provided).
    */
-  static readonly validateAttributeTypes = <S extends TableKeysSchemaType | ModelSchemaType>(
+  static readonly validateAttributeTypes = <const S extends TableKeysSchemaType | ModelSchemaType>(
     schema: S,
     { schemaType, name: schemaName = schemaType }: SchemaMetadata
   ) => {

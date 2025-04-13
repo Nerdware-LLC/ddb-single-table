@@ -18,7 +18,9 @@ import type { TableKeysSchemaType } from "../Schema/types.js";
  * until either the table is active, or `maxRetries` number of attempts have been made,
  * or `timeout` number of seconds have passed.
  */
-export const ensureTableIsActive = async function <TableKeysSchema extends TableKeysSchemaType>(
+export const ensureTableIsActive = async function <
+  const TableKeysSchema extends TableKeysSchemaType,
+>(
   this: TableInstance<TableKeysSchema>,
   {
     timeout: timeoutSeconds = 30,

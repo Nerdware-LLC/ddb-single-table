@@ -19,7 +19,7 @@ import type { TableKeysSchemaType } from "../Schema/types.js";
  * @returns The response from the `CreateTable` operation.
  * @throws `DdbSingleTableError` if `BillingMode` is "PAY_PER_REQUEST" and `ProvisionedThroughput` is provided.
  */
-export const createTable = async function <TableKeysSchema extends TableKeysSchemaType>(
+export const createTable = async function <const TableKeysSchema extends TableKeysSchemaType>(
   this: TableInstance<TableKeysSchema>,
   createTableArgs: TableCreateTableParameters = {}
 ) {
