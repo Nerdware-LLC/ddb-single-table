@@ -10,9 +10,13 @@ import dayjs, { type ConfigType as DayJsCtorParamType } from "dayjs";
 export type ValidTimestamp = Exclude<DayJsCtorParamType, null | undefined>;
 
 /**
- * `typeof` strings that represent types of args which cause the `dayjs` ctor to throw.
+ * `typeof` strings of value-types which should not be provided to the `dayjs` constructor.
  */
-const INVALID_DAYJS_CTOR_ARG_TYPES = new Set(["symbol", "bigint"]);
+const INVALID_TIMESTAMP_VALUE_TYPES = new Set([
+  "symbol", //  <-- causes `dayjs()` to throw
+  "bigint", //  <-- causes `dayjs()` to throw
+  "boolean", // <-- causes false positives in `dayjs.isValid`
+]);
 
 /**
  * This type-guard function tests if the provided `value` can be converted into a valid Date object.
@@ -31,7 +35,7 @@ export const isConvertibleToDate = (value?: unknown): value is ValidTimestamp =>
   // `value` is cast to any, bc the first two checks ensure it won't throw
   return (
     !!value &&
-    !INVALID_DAYJS_CTOR_ARG_TYPES.has(typeof value) &&
+    !INVALID_TIMESTAMP_VALUE_TYPES.has(typeof value) &&
     dayjs(value as DayJsCtorParamType).isValid()
   );
 };
