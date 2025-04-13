@@ -27,7 +27,7 @@ import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../ty
  * @param marshallingConfigs - Marshalling configs for the DynamoDBDocumentClient instance.
  * @param logger - A custom function to use for logging (defaults to `console.info`).
  */
-export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
+export class Table<const TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
   // INSTANCE PROPERTIES:
   readonly tableName: string;
   readonly tableKeysSchema: TKSchema;
@@ -73,7 +73,7 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
    * ModelSchema which can be provided to the `ItemTypeFromSchema` generic type-gen util to produce
    * a complete Model-item type, even if the ModelSchema does not specify the table's keys.
    */
-  readonly getModelSchema = <ModelSchema extends ModelSchemaType<TKSchema>>(
+  readonly getModelSchema = <const ModelSchema extends ModelSchemaType<TKSchema>>(
     modelSchema: ModelSchema
   ) => {
     return TableKeysSchema.getMergedModelSchema<TKSchema, ModelSchema>({
@@ -119,11 +119,11 @@ export class Table<TKSchema extends TableKeysSchemaType> implements TableKeysAnd
    * ```
    */
   readonly createModel: TableCreateModelMethod<TKSchema> = <
-    ModelSchema extends ModelSchemaType<TKSchema>,
-    ItemType extends BaseItem = ItemTypeFromSchema<
+    const ModelSchema extends ModelSchemaType<TKSchema>,
+    const ItemType extends BaseItem = ItemTypeFromSchema<
       MergeModelAndTableKeysSchema<TKSchema, ModelSchema>
     >,
-    ItemCreationParams extends BaseItem = ItemCreationParameters<
+    const ItemCreationParams extends BaseItem = ItemCreationParameters<
       MergeModelAndTableKeysSchema<TKSchema, ModelSchema>
     >,
   >(

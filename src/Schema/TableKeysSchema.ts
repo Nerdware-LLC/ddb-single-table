@@ -187,8 +187,8 @@ export class TableKeysSchema extends Schema {
    * @throws {@link SchemaValidationError} - If the provided ModelSchema contains invalid key/index attribute configs.
    */
   static readonly getMergedModelSchema = <
-    TableKeysSchema extends TableKeysSchemaType,
-    ModelSchema extends ModelSchemaType<TableKeysSchema>,
+    const TableKeysSchema extends TableKeysSchemaType,
+    const ModelSchema extends ModelSchemaType<TableKeysSchema>,
   >({
     tableKeysSchema,
     modelSchema,

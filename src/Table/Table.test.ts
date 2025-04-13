@@ -53,11 +53,11 @@ describe("Table", () => {
         tableKeysSchema: {
           partitionKey: { type: "string", isHashKey: true, required: true },
           sortKey: { type: "string", isRangeKey: true, required: true },
-        } as const,
+        },
       });
 
       // Act on the table instance's getModelSchema method:
-      const result = table.getModelSchema({ fooAttribute: { type: "string" } } as const);
+      const result = table.getModelSchema({ fooAttribute: { type: "string" } });
 
       // Assert the result:
       expect(result).toStrictEqual({

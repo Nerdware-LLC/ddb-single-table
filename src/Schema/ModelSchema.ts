@@ -1,12 +1,14 @@
 import { hasKey } from "@nerdware/ts-type-safety-utils";
 import { SchemaValidationError } from "../utils/errors.js";
 import { Schema } from "./Schema.js";
+import { BASE_TIMESTAMP_ATTRIBUTE_CONFIG } from "./baseTimestampAttrConfig.js";
 import type {
   ModelSchemaType,
   ModelSchemaOptions,
   ModelSchemaMetadata,
   KeyAttributeConfig,
   ModelSchemaEntries,
+  ModelSchemaNestedMap,
 } from "./types.js";
 import type { TableKeysAndIndexes } from "../Table/index.js";
 
@@ -23,13 +25,21 @@ import type { TableKeysAndIndexes } from "../Table/index.js";
 export class ModelSchema extends Schema {
   static readonly DEFAULT_OPTIONS = {
     allowUnknownAttributes: false,
-    autoAddTimestamps: true,
+    autoAddTimestamps: false,
   } as const satisfies ModelSchemaOptions;
 
   static readonly TIMESTAMP_ATTRIBUTES = {
-    createdAt: { type: "Date", required: true, default: () => new Date() },
-    updatedAt: { type: "Date", required: true, default: () => new Date() },
-  } as const;
+    createdAt: {
+      ...BASE_TIMESTAMP_ATTRIBUTE_CONFIG,
+    },
+    updatedAt: {
+      ...BASE_TIMESTAMP_ATTRIBUTE_CONFIG,
+      transformValue: {
+        /** This toDB ensures `updatedAt` is updated on every write operation. */
+        toDB: () => new Date(),
+      },
+    },
+  } as const satisfies ModelSchemaNestedMap;
 
   /**
    * This function validates the provided `modelSchema`, and if valid, returns an

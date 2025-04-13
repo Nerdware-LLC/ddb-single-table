@@ -30,7 +30,7 @@ export type AttributesAliasesMap = Record<string, string>;
  * @internal
  */
 export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> = {
-  // Required - filter out RangeKey if configured with a functional default
+  // Required — filter out RangeKey if configured with a functional default
   -readonly [Key in keyof Schema as Schema[Key] extends
     | { isHashKey: true }
     | { isRangeKey: true; default?: undefined }
@@ -125,7 +125,7 @@ export type UpsertItemOpts = ModifyClientParamsForModel<PutItemInput>;
  * ### Auto-Generation of UpdateExpression
  *
  * The `model.updateItem()` method uses the `update` param to auto-generate arguments for the
- * underlying `UpdateItem` operation - specifically `UpdateExpression`, `ExpressionAttributeNames`,
+ * underlying `UpdateItem` operation — specifically `UpdateExpression`, `ExpressionAttributeNames`,
  * and `ExpressionAttributeValues`.
  *
  * - `update` — The item attributes to be updated.

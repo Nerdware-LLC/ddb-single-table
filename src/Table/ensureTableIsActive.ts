@@ -10,7 +10,7 @@ import type { TableKeysSchemaType } from "../Schema/types.js";
  * The function checks the DDB table's status using the Table instance's `describeTable`
  * method. If the method returns a `ResourceNotFoundException`, the table does not exist.
  * If the table does not exist and `createIfNotExists` is set to `true`, the function
- * creates the table using the Table instance's `createTable` method - this function then
+ * creates the table using the Table instance's `createTable` method — this function then
  * continues the process of waiting for the table to become active.
  *
  * Regardless of whether the table initially existed or not, if it is not active, the
@@ -18,7 +18,9 @@ import type { TableKeysSchemaType } from "../Schema/types.js";
  * until either the table is active, or `maxRetries` number of attempts have been made,
  * or `timeout` number of seconds have passed.
  */
-export const ensureTableIsActive = async function <TableKeysSchema extends TableKeysSchemaType>(
+export const ensureTableIsActive = async function <
+  const TableKeysSchema extends TableKeysSchemaType,
+>(
   this: TableInstance<TableKeysSchema>,
   {
     timeout: timeoutSeconds = 30,
@@ -70,7 +72,7 @@ export const ensureTableIsActive = async function <TableKeysSchema extends Table
       // If `err.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
       if ((err as { code?: unknown }).code === "ECONNREFUSED") throw new DdbConnectionError(err);
 
-      // If `err` is a "ResourceNotFoundException", Table doesn't exist - see if it should be created.
+      // If `err` is a "ResourceNotFoundException", Table doesn't exist — see if it should be created.
       if (err.name !== "ResourceNotFoundException") throw err;
 
       // If Table doesn't exist AND !createIfNotExists, throw error.

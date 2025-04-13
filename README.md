@@ -34,18 +34,60 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 
 </div>
 
-- [🚀 Getting Started](#-getting-started)
 - [✨ Key Features](#-key-features)
+- [🚀 Getting Started](#-getting-started)
+- [🧙‍♂️ Data IO Order of Operations](#️-data-io-order-of-operations)
+  - [`toDB`](#todb)
+  - [`fromDB`](#fromdb)
+- [📖 Schema API](#-schema-api)
+  - [Schema Types](#schema-types)
+    - [1. Table-Keys Schema](#1-table-keys-schema)
+    - [2. Model Schema](#2-model-schema)
+  - [Attribute Configs](#attribute-configs)
+  - [Key Attribute Configs](#key-attribute-configs)
+    - [`isHashKey`](#ishashkey)
+    - [`isRangeKey`](#israngekey)
+    - [`index`](#index)
+  - [`alias`](#alias)
+  - [`type`](#type)
+    - [Nested Data Types](#nested-data-types)
+    - [Enums](#enums)
+  - [`schema`](#schema)
+  - [`oneOf`](#oneof)
+  - [`required`](#required)
+  - [`default`](#default)
+  - [`validate`](#validate)
+  - [`transformValue`](#transformvalue)
+- [⚙️ Model Schema Options](#️-model-schema-options)
+  - [`autoAddTimestamps`](#autoaddtimestamps)
+  - [`allowUnknownAttributes`](#allowunknownattributes)
+  - [`transformItem`](#transformitem)
+  - [`validateItem`](#validateitem)
+- [📦 Batch Requests](#-batch-requests)
   - [Batch Retries with Exponential Backoff](#batch-retries-with-exponential-backoff)
 - [❓ FAQ](#-faq)
-  - [Q: _Why "single-table-first"?_](#q-why-single-table-first)
-  - [Q: _How does DDB-ST interact with the underlying DynamoDB client?_](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client)
-  - [Q: _What version of the AWS SDK does DDB-ST use?_](#q-what-version-of-the-aws-sdk-does-ddb-st-use)
 - [🤝 Contributing](#-contributing)
 - [📝 License](#-license)
 - [💬 Contact](#-contact)
 
 ---
+
+## ✨ Key Features
+
+- Easy-to-use declarative API for managing DDB tables, connections, and models
+- Auto-generated typings for model items
+- Custom attribute aliases for each model
+- Create attributes/properties from combinations of other attributes/properties
+- Type checking and conversions for all DDB attribute types
+- Validation checks for individual properties _and_ entire objects
+- Where-style query API
+- Default values
+- Property-level get/set modifiers
+- Schema-level get/set modifiers
+- Required/nullable property assertions
+- Easy access to a streamlined DynamoDB client (more info [here](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client))
+- Automatic retries for batch operations using exponential backoff (more info [here](#-batch-requests))
+- Support for transactions — _group up to 100 operations into a single atomic transaction!_
 
 ## 🚀 Getting Started
 
@@ -96,7 +138,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
            throughput: { read: 5, write: 5 },
          },
        },
-     } as const, // For TypeScript, all schema must end with `as const`
+     },
      // You can provide your own DDB client instance or configs for a new one:
      ddbClient: {
        // This example shows how to connect to dynamodb-local:
@@ -126,7 +168,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
        type: "string",
        alias: "id", // <-- Each Model can have custom aliases for keys
        default: ({ createdAt }: { createdAt: Date }) => {
-        return `USER#${createdAt.getTime()}`
+         return `USER#${createdAt.getTime()}`
        },
        validate: (id: string) => /^USER#\d{10,}$/.test(id),
        required: true,
@@ -134,7 +176,8 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
      sk: {
        type: "string",
        default: (userItem: { pk: string }) => {
-          return `#DATA#${userItem.pk}`
+         // Functional defaults are called with the entire UNALIASED item as the first arg.
+         return `#DATA#${userItem.pk}` // <-- Not userItem.id
        },
        validate: (sk: string) => /^#DATA#USER#\d{10,}$/.test(sk)
        required: true,
@@ -146,13 +189,13 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
        required: true,
      },
      profile: {
-      type: "map", // Nested attributes ftw!
-      schema: {
-        displayName: { type: "string", required: true },
-        businessName: { type: "string" },
-        photoUrl: { type: "string" },
-        // You can nest attributes up to the DynamoDB max depth of 32
-      },
+       type: "map", // Nested attributes ftw!
+       schema: {
+         displayName: { type: "string", required: true },
+         businessName: { type: "string" },
+         photoUrl: { type: "string" },
+         // You can nest attributes up to the DynamoDB max depth of 32
+       },
      },
      checklist: {
        type: "array",
@@ -165,7 +208,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
                // Nested attributes have the same awesome schema capabilities!
                type: "string",
                default: (userItem: { sk: string }) => {
-                return `FOO_CHECKLIST_ID#${userItem.sk}#${Date.now()}`
+                 return `FOO_CHECKLIST_ID#${userItem.sk}#${Date.now()}`
                },
                validate: (id: string) => isValid.checklistID(id),
                required: true,
@@ -197,7 +240,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
              applied for both write and read operations. */
         },
       },
-   } as const); // <-- Don't forget to add `as const`!
+   });
 
    // The `ItemTypeFromSchema` type is a helper type which converts
    // your schema into a Typescript type for your model's items.
@@ -228,9 +271,10 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
    //   const newUser: UserItem = await UserModel.createItem(...);
 
    // The `newUser` is of type `UserItem`, with all keys aliased as specified:
-   const { id, sk, email, profile, checklist, createdAt, updatedAt }: UserItem = {
-     ...newUser,
-   };
+   const { id, sk, email, profile, checklist, createdAt, updatedAt }: UserItem =
+     {
+       ...newUser,
+     };
 
    // You can also use the model to query for items using `where` syntax:
    const usersWhoAreDefinitelyHuman = await UserModel.query({
@@ -247,60 +291,394 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 
 5. [**Profit**](https://knowyourmeme.com/memes/profit)! 💰🥳🎉 <!-- huzzah! 🐧 -->
 
-## ✨ Key Features
+## 🧙‍♂️ Data IO Order of Operations
 
-- Easy-to-use declarative API for managing DDB tables, connections, and models
-- Auto-generated typings for model items
-- Custom attribute aliases for each model
-- Create attributes/properties from combinations of other attributes/properties
-- Type checking and conversions for all DDB attribute types
-- Validation checks for individual properties
-- Validation checks for entire objects
-- Where-style query API
-- Default values
-- Property-level get/set modifiers
-- Schema-level get/set modifiers
-- Required/nullable property assertions
-- Easy access to a streamlined DynamoDB client (more info [here](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client))
-- Automatic retries for batch operations using exponential backoff (more info [here](#batch-retries-with-exponential-backoff))
-- Support for transactions - _group up to 100 operations into a single atomic transaction!_
+When any Model method is invoked, it begins a request-response cycle in which DDB-ST applies a series of transformations and validations to ensure that the data conforms to the schema defined for the Model. DDB-ST collectively refers to these transformations and validations as _"**IO-Actions**"_, and they are categorized into two groups: `toDB` and `fromDB`. The `toDB` actions are applied to Model-method arguments before they're passed off to the underlying AWS SDK, while the `fromDB` actions are applied to all values returned from the AWS SDK before they're returned to the caller.
+
+The `toDB` and `fromDB` flows both have a specific order in which **IO-Actions** are applied.
+
+> [!IMPORTANT]
+> Some Model-methods will skip certain **IO-Actions** depending on the method's purpose. For example, `Model.updateItem` skips the [**`"Required" Checks`**](#required) **IO-Action**, since the method is commonly used to write partial updates to items.
+
+### `toDB`
+
+| Order | IO-Action                                         | Description                                            | Skipped by Method(s) |
+| :---: | :------------------------------------------------ | :----------------------------------------------------- | :------------------- |
+|   1   | [**`Alias Mapping`**](#alias)                     | Replaces attribute _aliases_ with attribute names.     |                      |
+|   2   | [**`Set Defaults`**](#default)                    | Applies defaults defined in the schema.                | `updateItem`         |
+|   3   | [**`Attribute toDB Modifiers`**](#transformvalue) | Runs your `transformValue.toDB` functions.             |                      |
+|   4   | [**`Item toDB Modifier`**](#transformitem)        | Runs your `transformItem.toDB` function.               | `updateItem`         |
+|   5   | [**`Type Checking`**](#type)                      | Checks properties for conformance with their `"type"`. |                      |
+|   6   | [**`Attribute Validation`**](#validate)           | Validates individual item properties.                  |                      |
+|   7   | [**`Item Validation`**](#validateitem)            | Validates an item in its entirety.                     | `updateItem`         |
+|   8   | [**`Convert JS Types`**](#type)                   | Converts JS types into DynamoDB types.                 |                      |
+|   9   | [**`"Required" Checks`**](#required)              | Checks for the existence of `"required"` attributes.   | `updateItem`         |
+
+### `fromDB`
+
+| Order | IO-Action                                           | Description                                        |
+| :---: | :-------------------------------------------------- | :------------------------------------------------- |
+|   1   | [**`Convert JS Types`**](#type)                     | Converts DynamoDB types into JS types.             |
+|   2   | [**`Attribute fromDB Modifiers`**](#transformvalue) | Runs your `transformValue.fromDB` functions.       |
+|   3   | [**`Item fromDB Modifier`**](#transformitem)        | Runs your `transformItem.fromDB` function.         |
+|   4   | [**`Alias Mapping`**](#alias)                       | Replaces attribute names with attribute _aliases_. |
+
+## 📖 Schema API
+
+DDB-ST provides a declarative schema API for defining your table and model schemas. The schema is defined as a plain object, with each attribute defined as a key in the object. Each attribute can include any number of configs, which are used to define the attribute's type, validation, default value, and other properties.
+
+### Schema Types
+
+There are two kinds of schema in DDB-ST:
+
+<ul><!-- This ul is used to provide left-indentation without breaking auto-toc's header recognition. -->
+
+#### 1. Table-Keys Schema<!-- Using `1. #### Table-Keys Schema` breaks auto-toc's header recognition. -->
+
+- This schema defines the table's hash and range keys, as well as any keys which serve as primary/hash keys for secondary indexes.
+- There is only 1 **Table-Keys Schema**, and the attributes defined within it are shared across all Models.
+- If a Model will simply re-use all of the existing configs for an attribute defined in the **Table-Keys Schema**, then the attribute can be omitted from the Model's schema. In practice, however, it is encouraged to always include such attributes in the Model's schema, as this will make it easier to understand the Model and its schema.
+
+#### 2. Model Schema
+
+- Each Model has its own schema that may include any number of key and non-key attribute definitions.
+- If a **Model Schema** includes key attributes, those attributes must also be defined in the **Table-Keys Schema**.
+- Each **Model Schema** may specify its own custom configs for key attributes, including `alias`, `default`, `validate`, and `transformValue`. Attribute configs that affect a key attribute's type (`type`, `required`) must match the **Table-Keys Schema**.
+
+</ul>
+
+### Attribute Configs
+
+The following schema configs are used to define attributes in your schema:
+
+| Config Name                         | Description                                              | Can Use in<br>Table-Keys Schema? | Can Use in<br>Model Schema? |
+| :---------------------------------- | :------------------------------------------------------- | :------------------------------: | :-------------------------: |
+| [`isHashKey`](#ishashkey)           | Indicates whether the attribute is a table hash key.     |                ✅                |             ❌              |
+| [`isRangeKey`](#israngekey)         | Indicates whether the attribute is a table range key.    |                ✅                |             ❌              |
+| [`index`](#index)                   | Secondary-index configs defined on the index's hash key. |                ✅                |             ❌              |
+| [`alias`](#alias)                   | An optional alias to apply to the attribute.             |                ✅                |             ✅              |
+| [`type`](#type)                     | The attribute's type.                                    |                ✅                |             ✅              |
+| [`schema`](#schema)                 | An optional schema for nested attributes.                |                ✅                |             ✅              |
+| [`oneOf`](#oneof)                   | An optional array of allowed values for enum attributes. |                ✅                |             ✅              |
+| [`required`](#required)             | Indicates whether the attribute is required.             |                ✅                |             ✅              |
+| [`default`](#default)               | An optional default value to apply.                      |                ✅                |             ✅              |
+| [`validate`](#validate)             | An optional validation function to apply.                |                ✅                |             ✅              |
+| [`transformValue`](#transformvalue) | An optional dictionary of data transformation hooks.     |                ✅                |             ✅              |
+
+### Key Attribute Configs
+
+#### `isHashKey`
+
+A boolean value which indicates whether the attribute is a table hash key.
+
+```ts
+const TableKeysSchema = {
+  pk: {
+    type: "string",
+    isHashKey: true,
+    required: true, // Key attributes must always include `required: true`
+  },
+} as const satisfies TableKeysSchemaType;
+```
+
+#### `isRangeKey`
+
+A boolean value which indicates whether the attribute is a table range key.
+
+```ts
+const TableKeysSchema = {
+  sk: {
+    type: "string",
+    isHashKey: true,
+    required: true, // Key attributes must always include `required: true`
+  },
+  // ... other attributes ...
+} as const satisfies TableKeysSchemaType;
+```
+
+#### `index`
+
+Secondary index configs, defined within the the attribute config of the index's hash-key.
+
+> See type: [`SecondaryIndexConfig`](./src/Schema/types.ts#L150)
+
+```ts
+const TableKeysSchema = {
+  fooIndexHashKey: {
+    type: "string",
+    required: true, // Key attributes must always include `required: true`
+    index: {
+      // The index config must specify a `name` — all other index configs are optional.
+      name: "FooIndex",
+
+      // `rangeKey` defines the attribute to use for the index's range key, if any.
+      rangeKey: "barIndexRangeKey",
+
+      /**
+       * `global` is a boolean that indicates whether the index is global.
+       *
+       *   `true`     = global index (default)
+       *   `false`    = local index
+       */
+      global: true,
+
+      /**
+       * `project` is used to configured the index's projection type.
+       *
+       *   `true`     = project ALL attributes
+       *   `false`    = project ONLY the index keys (default)
+       *   `string[]` = project ONLY the specified attributes
+       */
+      project: true,
+
+      /**
+       * `throughput` is used to configured provisioned throughput for the index.
+       *
+       * If your table's billing mode is PROVISIONED, this is optional.
+       * If your table's billing mode is PAY_PER_REQUEST, do not include this.
+       */
+      throughput: {
+        read: 5, //  RCU (Read Capacity Units)
+        write: 5, // WCU (Write Capacity Units)
+      },
+    },
+  },
+  // ... other attributes ...
+} as const satisfies TableKeysSchemaType;
+```
+
+### `alias`
+
+An optional Model-specific alias to apply to a key attribute. An attribute's `alias` serves as its name outside of the database for the Model in which the `alias` is defined. For example, a key attribute named `"pk"` will always be `"pk"` in the database, but if a Model configures the field with an alias of `"id"`, then objects returned from the Model's methods will include the field `"id"` rather than `"pk"`. Similarly, the attribute alias can be used in arguments provided to Model methods.
+
+During write operations, if the object provided to the Model method contains a key matching a schema-defined `alias` value, the key is replaced with the attribute's name. For both read and write operations, when data is returned from the database, this key-switch occurs in reverse — any object keys which match an attribute with a defined `alias` will be replaced with their respective `alias`.
+
+> [!IMPORTANT]
+> All of a Model's `alias` values must be unique, or the Model's constructor will throw an error.
+
+### `type`
+
+The attribute's type. The following `type` values are supported:
+
+| Attribute Type | DynamoDB Representation              | Can use for<br>KEY attributes? | Can use for<br>NON-KEY attributes? |
+| :------------- | :----------------------------------- | :----------------------------: | :--------------------------------: |
+| `"string"`     | "S" (String)                         |               ✅               |                 ✅                 |
+| `"number"`     | "N" (Number)                         |               ✅               |                 ✅                 |
+| `"Buffer"`     | "B" (Binary)                         |               ✅               |                 ✅                 |
+| `"boolean"`    | "BOOL" (Boolean)                     |               ❌               |                 ✅                 |
+| `"Date"`       | Converted to Unix timestamp (Number) |               ❌               |                 ✅                 |
+| `"map"`        | "M" (Map)                            |               ❌               |                 ✅                 |
+| `"array"`      | "L" (List)                           |               ❌               |                 ✅                 |
+| `"tuple"`      | "L" (List)                           |               ❌               |                 ✅                 |
+| `"enum"`       | "S" (String)                         |               ❌               |                 ✅                 |
+
+#### Nested Data Types
+
+The `"map"`, `"array"`, and `"tuple"` types facilitate nested data structures up to the DynamoDB max depth of 32.
+
+Nested data structures are defined using the [`schema`](#schema) attribute config.
+
+#### Enums
+
+The `enum` type is used to limit the possible values of a string attribute to a specific set of values using the [`oneOf`](#oneof) attribute config.
+
+### `schema`
+
+The `schema` attribute config is used with `"map"`, `"array"`, and `"tuple"` attributes to define nested data structures. The way `schema` is used depends on the attribute's `type`:
+
+```ts
+const UserModelSchema = {
+  // A map attribute with a nested schema:
+  myMap: {
+    type: "map",
+    schema: {
+      fooKey: { type: "string", required: true },
+      anotherField: { type: "string" },
+    },
+  },
+
+  // An array attribute that simply holds strings:
+  myArray: {
+    type: "array",
+    schema: [{ type: "string" }],
+  },
+
+  // An array attribute with a nested map schema:
+  myChecklist: {
+    type: "array",
+    schema: [
+      {
+        type: "map",
+        schema: {
+          id: { type: "string", required: true },
+          description: { type: "string", required: true },
+          isCompleted: { type: "boolean", required: true, default: false },
+        },
+      },
+    ],
+  },
+
+  // A tuple attribute with a nested schema:
+  coordinates: {
+    type: "tuple",
+    schema: [
+      { type: "number", required: true }, // latitude
+      { type: "number", required: true }, // longitude
+    ],
+  },
+} as const satisfies ModelSchemaType;
+```
+
+### `oneOf`
+
+The `oneOf` attribute config is used with `"enum"` attributes to specify allowed values. It is provided as an array of strings which represent the allowed values for the attribute.
+
+For example, the following schema defines an attribute `status` which can only be one of the three values: `"active"`, `"inactive"`, or `"pending"`:
+
+```ts
+const UserModelSchema = {
+  status: {
+    type: "enum",
+    oneOf: ["active", "inactive", "pending"],
+  },
+} as const satisfies ModelSchemaType;
+```
+
+### `required`
+
+Optional boolean flag indicating whether a value is required for create-operations. If `true`, an error will be thrown if the attribute value is `undefined` or `null`. Note that this check is performed after all other schema-defined transformations and validations have been applied.
+
+> [!NOTE]
+>
+> **Default:** `false` for non-key attributes (keys are always required)
+
+A boolean value which indicates whether the attribute is required. If `true`, the attribute must be present in the object provided to the Model method. If `false`, the attribute is optional.
+
+### `default`
+
+Optional default value to apply. This can be configured as either a straight-forward primitive value, or a function which returns a default value. If one key is derived from another, this default is also applied to `Where`-query args and other related APIs.
+
+> With the exception of `updateItem` calls, an attribute's value is set to this `default` if the initial value provided to the Model method is `undefined` or `null`.
+
+- ##### When using a primitive-value `default`
+
+  - The primitive's type must match the attribute's `type`, otherwise the Model's
+    constructor will throw an error.
+
+- ##### When using a function `default`
+
+  - The function is called with the entire item-object provided to the Model method _**with
+    UNALIASED keys**_, and the attribute value is set to the function's returned value.
+  - _This package does not validate functional `default`s._
+
+Bear in mind that key and index attributes are always processed _before_ all other attributes, thereby making them available to use in `default` functions for other attributes. For example, in the below `LibraryModelSchema`, each `authorID` is generated using the `unaliasedPK` plus a UUID:
+
+```ts
+const LibraryModelSchema = {
+  unaliasedPK: {
+    isHashKey: true,
+    type: "string",
+    default: () => makeLibraryID(),
+    alias: "libraryID" /* <-- NOTE: This alias will NOT be available
+                            in the below authorID `default` function. */,
+  },
+  authors: {
+    type: "array",
+    schema: [
+      {
+        type: "map",
+        schema: {
+          authorID: {
+            type: "string",
+            default: (entireLibraryItem) => {
+              // unaliasedPK is available here because it is a key attribute!
+              return entireLibraryItem.unaliasedPK + getUUID();
+            },
+          },
+        },
+      },
+    ],
+  },
+};
+```
+
+### `validate`
+
+The `validate` attribute config is used to specify a custom validation function for an attribute. The function is called with the attribute's value as its first argument, and it should return `true` if the value is valid, or `false` if it is not.
+
+### `transformValue`
+
+The `transformValue` attribute config is an optional dictionary of [`toDB`](#todb) and/or [`fromDB`](#fromdb) transformation functions which are called with the attribute's value. `transformValue` configs can include both `toDB` and `fromDB` functions, or just one of them.
+
+`transformValue` functions must return either a value of the attribute's configured `"type"`, or `null` if the attribute is not `required` (`null` values for `required` attributes will cause a validation error to be thrown). If the attribute is required, the function must return a value of the attribute's configured `"type"`. Returning `undefined` either explicitly or implicitly will always be ignored, i.e., the value will remain as it was before the `transformValue` function was called.
+
+## ⚙️ Model Schema Options
+
+The following options are available when creating a Model:
+
+### `autoAddTimestamps`
+
+> [!NOTE]
+>
+> **Default:** `false`
+
+This boolean indicates whether the Model should automatically add `createdAt` and `updatedAt` attributes to the Model schema. When enabled, timestamp fields are added _before_ any `default` functions defined in your schema are called, so your `default` functions can access the timestamp values for use cases like UUID generation.
+
+### `allowUnknownAttributes`
+
+> [!NOTE]
+>
+> **Default:** `false`
+
+Whether the Model allows items to include properties which aren't defined in its schema on create/upsert operations. This may also be set to an array of strings to only allow certain attributes — this can be useful if the Model includes a `transformItem` function which adds properties to the item.
+
+### `transformItem`
+
+Like its [`transformValue`](#transformvalue) counterpart, the `transformItem` config is an optional dictionary of [`toDB`](#todb) and/or [`fromDB`](#fromdb) transformation functions which are called with an entire item-object, rather than an individual attribute. `transformItem` configs can include both `toDB` and `fromDB` functions, or just one of them. `transformItem` functions must return a "complete" item that effectively replaces the original.
+
+### `validateItem`
+
+Like its [`validate`](#validate) counterpart, the `validateItem` config is used for validation, but it is called with an entire item-object rather than an individual attribute. The `validateItem` function should return `true` if the item is valid, or `false` if it is not.
+
+## 📦 Batch Requests
+
+DDB-ST models provide a high-level API for batching CRUD operations that handles the heavy lifting for you, while also providing the flexibility to customize the behavior of each operation:
+
+- `batchGetItems` — Retrieves multiple items from the database in a single request.
+- `batchUpsertItems` — Creates or updates multiple items in the database in a single request.
+- `batchDeleteItems` — Deletes multiple items from the database in a single request.
+- `batchUpsertAndDeleteItems` — Creates, updates, or deletes multiple items in the database in a single request.
 
 ### Batch Retries with Exponential Backoff
 
-[As recommended by AWS](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.BatchOperations), DDB-ST will automatically retry batch operations which either return unprocessed requests (e.g., `UnprocessedKeys` for `BatchGetItem`), or result in a retryable error. All retries are implemented using a configurable exponential backoff strategy which adheres to AWS best practices.
+[As recommended by AWS](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.BatchOperations), DDB-ST will automatically retry batch operations which either return unprocessed requests (e.g., `UnprocessedKeys` for `BatchGetItem`), or result in a retryable error. In adherence to AWS best practices, all retries are implemented using a configurable exponential backoff strategy (described below).
 
-<details>
-
-  <summary><i><b>Click here for a detailed overview of the exponential backoff strategy.</b></i></summary>
+#### Exponential Backoff Strategy<!-- omit in toc -->
 
 1. First request: no delay
-2. Second request: delay `initialDelay` milliseconds (default: 100)
-3. All subsequent request delays are equal to the previous delay multiplied by the `timeMultiplier` (default: 2), until either:
+2. Second request: delay `initialDelay` milliseconds (_default:_ 100)
+3. All subsequent request delays are equal to the previous delay multiplied by the `timeMultiplier` (_default:_ 2), until either:
 
-   - The `maxRetries` limit is reached (default: 10), or
-   - The `maxDelay` limit is reached (default: 3500, or 3.5 seconds)
+   - The `maxRetries` limit is reached (_default:_ 10), or
+   - The `maxDelay` limit is reached (_default:_ 3500, or 3.5 seconds)
 
    Ergo, the base `delay` calculation can be summarized as follows:
 
    > `delay in milliseconds = initialDelay * timeMultiplier^attemptNumber`
 
-   If `useJitter` is true (default: false), the `delay` is randomized by applying the following to the base `delay`:
+   If `useJitter` is true (_default:_ false), the `delay` is randomized by applying the following to the base `delay`:
 
    > `Math.round( Math.random() * delay )`
 
    Note that the determination as to whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
 
-</details>
-
-<!-- TODO Add more how-to/usage documentation -->
-
 ## ❓ FAQ
 
-### Q: _Why "single-table-first"?_
+### Q: _Why "single-table-first"?_<!-- omit in toc -->
 
 **A:** Single-table design patterns can yield both greater IO and cost performance, while also reducing the amount of infrastructure that needs to be provisioned and maintained. For a technical breakdown as to why this is the case, check out [this fantastic presentation](https://www.youtube.com/watch?v=xfxBhvGpoa0) from one of the designers of DynamoDB speaking at AWS re:Invent.
 
-### Q: _How does DDB-ST interact with the underlying DynamoDB client?_
+### Q: _How does DDB-ST interact with the underlying DynamoDB client?_<!-- omit in toc -->
 
 **A:** DDB-ST provides a single streamlined abstraction over both the document and vanilla DynamoDB clients:
 
@@ -308,7 +686,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 - Utility actions like DescribeTable which aren't included in the document client use the vanilla client.
 - To ensure client resources like socket connections are cleaned up, a listener is attached to the process "exit" event which calls the vanilla client's `destroy()` method. Note that although the document client does expose the same method, calling it on the doc-client results in a no-op.
 
-### Q: _What version of the AWS SDK does DDB-ST use?_
+### Q: _What version of the AWS SDK does DDB-ST use?_<!-- omit in toc -->
 
 **A:** Version 3. For the specific minor/patch release, please refer to the [package.json](./package.json).
 
@@ -337,3 +715,4 @@ Trevor Anderson — [Trevor@Nerdware.cloud](mailto:trevor@nerdware.cloud) — [@
 [**_Dare Mighty Things._**](https://www.youtube.com/watch?v=GO5FwsblpT8)
 
 </div>
+```

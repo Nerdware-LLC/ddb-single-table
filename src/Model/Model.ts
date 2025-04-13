@@ -41,7 +41,7 @@ import type { SetOptional } from "type-fest";
  * sets of schema-aware middleware called {@link ioActions | "IO-Actions" } which provide rich
  * functionality for database-IO like alias mapping, value validation, user-defined transforms, etc.
  *
- * IO-Actions are grouped into two sets based on the request/response cycle:
+ * IO-Actions are grouped into two sets based on the request-response cycle:
  * - **`toDB`**: IO-Actions performed on _request arguments_.
  * - **`fromDB`**: IO-Actions performed on _response values_.
  *
@@ -81,7 +81,7 @@ import type { SetOptional } from "type-fest";
  * attributes may be defined using the item's generated `id` value.
  *
  * @class
- * @template Schema - The Model's readonly schema (_don't forget to use `as const`_).
+ * @template Schema - The Model's readonly schema.
  * @template ItemType - A type which reflects a complete instance of a Model item.
  * @template ItemCreationParams - The parameters used to create a new item instance.
  * @param {string} modelName - The name of the Model.
@@ -89,9 +89,9 @@ import type { SetOptional } from "type-fest";
  * @param {ModelSchemaOptions} [modelSchemaOptions] - Options for the Model's schema.
  */
 export class Model<
-  Schema extends ModelSchemaType,
-  ItemType extends BaseItem = ItemTypeFromSchema<Schema>,
-  ItemCreationParams extends BaseItem = ItemCreationParameters<Schema>,
+  const Schema extends ModelSchemaType,
+  const ItemType extends BaseItem = ItemTypeFromSchema<Schema>,
+  const ItemCreationParams extends BaseItem = ItemCreationParameters<Schema>,
 > implements TableKeysAndIndexes
 {
   // INSTANCE PROPERTIES:

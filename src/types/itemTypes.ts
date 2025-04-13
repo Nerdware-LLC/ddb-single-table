@@ -109,8 +109,8 @@ export type ItemTypeFromSchema<
   Opts extends ItemTypeOpts = {
     aliasKeys: true;
     optionalIfDefault: false;
-    nullableIfOptional: true;
-    autoAddTimestamps: true;
+    nullableIfOptional: false;
+    autoAddTimestamps: false;
   },
 > = Simplify<
   Opts["autoAddTimestamps"] extends true
@@ -178,7 +178,12 @@ export type ItemTypeFromSchema<
  */
 export type ItemCreationParameters<T extends ModelSchemaType> = ItemTypeFromSchema<
   T,
-  { aliasKeys: true; optionalIfDefault: true; nullableIfOptional: true; autoAddTimestamps: false }
+  {
+    aliasKeys: true;
+    optionalIfDefault: true;
+    nullableIfOptional: false;
+    autoAddTimestamps: false;
+  }
 >;
 
 /**

@@ -153,7 +153,7 @@ describe("table.ensureTableIsActive()", () => {
   test(`calls "createTable" with expected args and sets "isTableActive" to true when it returns a "TableStatus" of "ACTIVE"`, async () => {
     const mockTable = new Table({
       tableName: "MockTable",
-      // Yes this is a weird schema - it's just for testing to ensure all
+      // Yes this is a weird schema — it's just for testing to ensure all
       // the createTableArgsFromSchema reducer logic works as expected.
       tableKeysSchema: {
         partitionKey: {
