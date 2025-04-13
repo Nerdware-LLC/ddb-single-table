@@ -56,24 +56,36 @@ export interface BaseAttributeConfig {
   /** Specifies allowed values for attributes of `type: "enum"`. */
   readonly oneOf?: ReadonlyArray<string>;
   /**
-   * Optional attribute default value to apply during write operations. If set to a function,
-   * it is called with the entire raw item-object provided to the Model method, and the attribute
-   * value is set to the function's returned value. With the exception of `updateItem` calls, an
-   * attribute's value is set to this `default` if the initial value provided to the Model method
-   * is `undefined` or `null`. Note that if a specified `default` is a primitive rather than a fn,
-   * and the primitive's type does not match the attribute's `type`, the Model's constructor will
-   * throw an error. _This package does not validate functional `default`s._
+   * ### `default`
+   * Optional attribute default value to apply. This can be configured as either a straight-forward
+   * primitive value, or a function which returns a default value. With the exception of `updateItem`
+   * calls, an attribute's value is set to this `default` if the initial value provided to the Model
+   * method is `undefined` or `null`. If one key is derived from another, this default is also
+   * applied to `Where`-query args and other related APIs.
+   *
+   * #### Usage Notes:
+   *
+   * - ##### When using a primitive-value `default`:
+   *   - The primitive's type must match the attribute's `type`, otherwise the Model's
+   *     constructor will throw an error.
+   *
+   * - ##### When using a function `default`:
+   *   - The function is called with the entire item-object provided to the Model method _**with
+   *     UNALIASED keys**_, and the attribute value is set to the function's returned value.
+   *   - _This package does not validate functional `default`s._
    *
    * Bear in mind that key and index attributes are always processed _before_ all other attributes,
    * thereby making them available to use in `default` functions for other attributes. For example,
-   * in the below `LibraryModelSchema`, each `authorID` is generated using the `libraryID` plus a
+   * in the below `LibraryModelSchema`, each `authorID` is generated using the `unaliasedPK` plus a
    * UUID:
    * ```ts
    * const LibraryModelSchema = {
-   *   libraryID: {
+   *   unaliasedPK: {
    *     isHashKey: true,
    *     type: "string",
-   *     default: () => makeLibraryID()
+   *     default: () => makeLibraryID(),
+   *     alias: "libraryID",  // <-- NOTE: This alias will NOT be available
+   *                          //     in the below authorID `default` function.
    *   },
    *   authors: {
    *     type: "array",
@@ -83,13 +95,15 @@ export interface BaseAttributeConfig {
    *         schema: {
    *           authorID: {
    *             type: "string",
-   *             default: ({ libraryID }) => libraryID + getUUID()
-   *             // libraryID is available here because it is a key attribute!
-   *           },
+   *             default: (entireLibraryItem) => {
+   *               // unaliasedPK is available here because it is a key attribute!
+   *               return entireLibraryItem.unaliasedPK + getUUID();
+   *             }
+   *           }
    *         }
    *       }
-   *    ],
-   *   },
+   *     ]
+   *   }
    * };
    * ```
    */
