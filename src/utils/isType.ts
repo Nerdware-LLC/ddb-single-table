@@ -27,7 +27,7 @@ export const isNumber = (value?: unknown): value is number => {
 /**
  * Type guard function for `type: "tuple"`
  *
- * > **Note:** This function does not check the types of values _within_ the provided tuple - that
+ * > **Note:** This function does not check the types of values _within_ the provided tuple — that
  *   is accomplished by the `typeChecking` IO-Action which is applied recursively to nested values
  *   via `recursivelyApplyIOAction`.
  */

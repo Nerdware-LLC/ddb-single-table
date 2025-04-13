@@ -53,7 +53,7 @@ export type DdbClientWrapperConstructorParams = {
 
 /**
  * A union of deprecated/legacy SDK command parameter names. To prevent their use, this
- * package omits them from all ddb client parameter typings - those used internally, as
+ * package omits them from all ddb client parameter typings — those used internally, as
  * well as the typings exposed to end users.
  * @internal
  */
@@ -73,9 +73,9 @@ type LegacyDdbSdkParameters =
  * object types in order to prevent ts2589 errors ("Type instantiation is excessively deep and
  * possibly infinite"). I've tried refactoring this to be tail-recursive to benefit from
  * [tail-recursion elimination on conditional types][ts-tail-rec], but this does not currently
- * seem to be possible for mapped _object_ types/interfaces - only mapped tuples - since the
+ * seem to be possible for mapped _object_ types/interfaces — only mapped tuples — since the
  * implementation relies on applying the spread operator to an accumulator of the relevant type,
- * and the spread operator cannot currently be used on object types/interfaces - only tuples.
+ * and the spread operator cannot currently be used on object types/interfaces — only tuples.
  *
  * [ts-tail-rec]: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html#tail-recursion-elimination-on-conditional-types
  * @internal

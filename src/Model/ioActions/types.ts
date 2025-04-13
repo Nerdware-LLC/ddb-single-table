@@ -8,8 +8,8 @@ import type { BaseItem } from "../../types/itemTypes.js";
 import type { AttributesAliasesMap } from "../types.js";
 
 /**
- * Labels corresponding to the request/response cycle which indicate the "direction" data is flowing
- * - either to or from the database.
+ * Labels corresponding to the request-response cycle which indicate the
+ * "direction" data is flowing — either to or from the database.
  */
 export type IODirection = "toDB" | "fromDB";
 
@@ -41,11 +41,9 @@ export interface IOActionContext extends BaseIOActionContext {
 }
 
 /**
- * This extension of the {@link BaseIOActionContext} adds a `schema` property for the
- * {@link IOActionRecursiveApplicator} which is set to the [`schema` of a nested attribute][nested-schema] .
- *
- * [nested-schema]: {@link ModelSchemaNestedAttributes}
- *
+ * This extension of the {@link BaseIOActionContext} adds a `schema` property
+ * for the {@link IOActionRecursiveApplicator} which is set to the
+ * {@link ModelSchemaNestedAttributes|`schema` of a nested attribute}.
  * @internal
  */
 export interface RecursiveIOActionContext extends BaseIOActionContext {
@@ -67,7 +65,7 @@ export type IOActionRecursiveApplicator = (
    * @remarks Even though IO-Actions only call `recursivelyApplyIOAction` when `attrValue` is a
    * nested object/array, this is not typed as `BaseItem | BaseItem[]` because that forces the
    * IO-Actions to perform type-checking which already occurs in `recursivelyApplyIOAction`, and
-   * non-object/array values will not cause an error - they'd simply be returned as-is. The same
+   * non-object/array values will not cause an error — they'd simply be returned as-is. The same
    * reasoning applies to the return type.
    */
   attrValue: unknown,

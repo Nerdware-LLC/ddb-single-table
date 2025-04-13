@@ -41,7 +41,7 @@ import type { SetOptional } from "type-fest";
  * sets of schema-aware middleware called {@link ioActions | "IO-Actions" } which provide rich
  * functionality for database-IO like alias mapping, value validation, user-defined transforms, etc.
  *
- * IO-Actions are grouped into two sets based on the request/response cycle:
+ * IO-Actions are grouped into two sets based on the request-response cycle:
  * - **`toDB`**: IO-Actions performed on _request arguments_.
  * - **`fromDB`**: IO-Actions performed on _response values_.
  *

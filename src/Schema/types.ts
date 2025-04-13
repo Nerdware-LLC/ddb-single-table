@@ -6,7 +6,7 @@ import type { SetOptional, Simplify } from "type-fest";
 // ATTRIBUTE CONFIG PROPERTY TYPES:
 
 /**
- * Union of {@link SupportedAttributeValueTypes | supported types } represented as string literals.
+ * Union of {@link SupportedAttributeValueTypes|supported types} represented as string literals.
  */
 export type SchemaSupportedTypeStringLiterals =
   | "string"
@@ -20,7 +20,7 @@ export type SchemaSupportedTypeStringLiterals =
   | "enum";
 
 /**
- * Union of supported types for {@link BaseAttributeConfig.default | schema `default` configs }.
+ * Union of supported types for {@link BaseAttributeConfig.default|schema `default` configs}.
  */
 export type AttributeDefault =
   | SupportedAttributeValueTypes
@@ -35,9 +35,9 @@ export interface BaseAttributeConfig {
    * During write operations, if the object provided to the Model method contains a key
    * matching a schema-defined `alias` value, the key is replaced with the attribute's
    * name. For both read and write operations, when data is returned from the database,
-   * this key-switch occurs in reverse - any object keys which match an attribute with a
+   * this key-switch occurs in reverse — any object keys which match an attribute with a
    * defined `alias` will be replaced with their respective `alias`. Note that all `alias`
-   * values must be unique - the Model's constructor will throw an error if the schema
+   * values must be unique — the Model's constructor will throw an error if the schema
    * contains any duplicate `alias` values.
    */
   readonly alias?: string;
@@ -286,7 +286,7 @@ export interface ModelSchemaOptions {
   /**
    * Whether the Model allows items to include properties which aren't defined in its
    * schema on create/upsert operations (default: `false`). This may also be set to
-   * an array of strings to only allow certain attributes - this can be useful if the
+   * an array of strings to only allow certain attributes — this can be useful if the
    * Model includes a `transformItem` function which adds properties to the item.
    */
   readonly allowUnknownAttributes?: boolean | Array<string>;
