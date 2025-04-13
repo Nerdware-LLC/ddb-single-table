@@ -1,6 +1,5 @@
-import type { CombineUnionOfObjects } from "../types/helpers.js";
 import type { BaseItem, SupportedAttributeValueTypes } from "../types/itemTypes.js";
-import type { SetOptional, Simplify } from "type-fest";
+import type { SetOptional, Simplify, AllUnionFields } from "type-fest";
 
 ///////////////////////////////////////////////////////////////////////////////
 // ATTRIBUTE CONFIG PROPERTY TYPES:
@@ -221,13 +220,12 @@ export interface ModelSchemaNestedMap {
 export type UnionOfAttributeConfigs = KeyAttributeConfig | ModelSchemaAttributeConfig;
 
 /**
- * This type reflects a "combination" of all possible attribute configs —
- * _**not**_ an intersection (see {@link CombineUnionOfObjects}).
+ * This type reflects all possible attribute configs.
  *
  * > This type is used for attribute configs when the parent schema type is
  * > unknown, as is the case in many methods of the base `Schema` class.
  */
-export type AnyValidAttributeConfig = CombineUnionOfObjects<UnionOfAttributeConfigs>;
+export type AnyValidAttributeConfig = AllUnionFields<UnionOfAttributeConfigs>;
 
 ///////////////////////////////////////////////////////////////////////////////
 // SCHEMA TYPES:
