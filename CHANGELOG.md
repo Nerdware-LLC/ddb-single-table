@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.8.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.5...v2.8.0) (2025-04-13)
+
+
+### Bug Fixes
+
+* add bool type-check to avoid `dayjs.isValid` false positives ([ebe454e](https://github.com/Nerdware-LLC/ddb-single-table/commit/ebe454ee605077ea8ebdb4c2f517afd709f5a9e4))
+* update tests to reflect that `autoAddTimestamps` is now false by default ([fa333c6](https://github.com/Nerdware-LLC/ddb-single-table/commit/fa333c64988b72ff6d8e3a69eb13da9366ac2039))
+
+
+### Features
+
+* add and impl `BASE_TIMESTAMP_ATTRIBUTE_CONFIG` ([d46a83d](https://github.com/Nerdware-LLC/ddb-single-table/commit/d46a83da620c9e4d917b2b496f50234cc3162c2b))
+* impl `const` type params ([db3e6bf](https://github.com/Nerdware-LLC/ddb-single-table/commit/db3e6bf1952b3cd3730684911e37b3d9922b1f66))
+* set `autoAddTimestamps` and `nullableIfOptional` to `false` by default ([0659f65](https://github.com/Nerdware-LLC/ddb-single-table/commit/0659f65bf1c240400863d276a8602d41e59e27ee))
+
 # [2.8.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.5...v2.8.0-next.1) (2025-04-13)
 
 
