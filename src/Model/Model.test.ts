@@ -136,7 +136,7 @@ describe("Model", () => {
       expect(mockModel.indexes).toStrictEqual(mockTable.indexes);
       expect(mockModel.ddbClient).toStrictEqual(mockTable.ddbClient);
       expect(mockModel.schemaOptions.allowUnknownAttributes).toBe(false);
-      expect(mockModel.schemaOptions.autoAddTimestamps).toBe(true);
+      expect(mockModel.schemaOptions.autoAddTimestamps).toBe(false);
     });
   });
 
@@ -291,11 +291,7 @@ describe("Model", () => {
 
       // Assert `processItemAttributes.toDB` was called with the `item` and `createdAt` key
       expect(spies.processItemAttributesToDB).toHaveBeenCalledOnce();
-      expect(spies.processItemAttributesToDB).toHaveBeenCalledWith({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(spies.processItemAttributesToDB).toHaveBeenCalledWith(mockItem);
       expect(spies.processItemAttributesToDB).toHaveReturnedWith({
         ...unaliasedMockItem,
         createdAt: expect.any(Number),
@@ -354,11 +350,7 @@ describe("Model", () => {
 
       // Assert `processItemAttributes.toDB` was called with the `item`
       expect(spies.processItemAttributesToDB).toHaveBeenCalledOnce();
-      expect(spies.processItemAttributesToDB).toHaveBeenCalledWith({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(spies.processItemAttributesToDB).toHaveBeenCalledWith(mockItem);
       expect(spies.processItemAttributesToDB).toHaveReturnedWith({
         ...unaliasedMockItem,
         createdAt: expect.any(Number),
@@ -519,9 +511,9 @@ describe("Model", () => {
       expect(spies.clientUpdateItem).toHaveBeenCalledWith({
         TableName: mockTable.tableName,
         Key: unaliasedMockItemKeys,
-        UpdateExpression: "SET #sk = :sk, #updatedAt = :updatedAt",
-        ExpressionAttributeNames: { "#sk": "sk", "#updatedAt": "updatedAt" },
-        ExpressionAttributeValues: { ":sk": mockUpdatedHandle, ":updatedAt": expect.any(Number) },
+        UpdateExpression: "SET #sk = :sk",
+        ExpressionAttributeNames: { "#sk": "sk" },
+        ExpressionAttributeValues: { ":sk": mockUpdatedHandle },
         ReturnValues: "ALL_NEW",
       });
     });
