@@ -620,7 +620,7 @@ The following options are available when creating a Model:
 
 > [!NOTE]
 >
-> **Default:** `true`
+> **Default:** `false`
 
 This boolean indicates whether the Model should automatically add `createdAt` and `updatedAt` attributes to the Model schema. When enabled, timestamp fields are added _before_ any `default` functions defined in your schema are called, so your `default` functions can access the timestamp values for use cases like UUID generation.
 

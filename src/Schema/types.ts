@@ -288,7 +288,7 @@ export type MergeModelAndTableKeysSchema<
 export interface ModelSchemaOptions {
   /**
    * Whether write methods should add `"createdAt"` and `"updatedAt"` operation timestamps to
-   * item parameters when creating or updating items respectively (default: `true`). Currently
+   * item parameters when creating or updating items respectively (default: `false`). Currently
    * only numerical unix timestamps are supported, but other formats like ISO-8601 strings may
    * be supported in the future if there is demand for it.
    *

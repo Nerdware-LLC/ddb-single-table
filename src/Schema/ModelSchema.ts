@@ -25,7 +25,7 @@ import type { TableKeysAndIndexes } from "../Table/index.js";
 export class ModelSchema extends Schema {
   static readonly DEFAULT_OPTIONS = {
     allowUnknownAttributes: false,
-    autoAddTimestamps: true,
+    autoAddTimestamps: false,
   } as const satisfies ModelSchemaOptions;
 
   static readonly TIMESTAMP_ATTRIBUTES = {
