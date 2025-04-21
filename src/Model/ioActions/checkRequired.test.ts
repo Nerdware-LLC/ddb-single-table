@@ -27,7 +27,8 @@ describe("IOAction: checkRequired", () => {
             // missing "notRequiredPublisherProp"
             address: {
               street: "123 Main St",
-              // missing "notRequiredAddressProp"
+              nullableAddressProp: null,
+              // missing "notRequiredAddressProp" and "nullishAddressProp"
             },
           },
         },
@@ -35,7 +36,7 @@ describe("IOAction: checkRequired", () => {
     ],
   };
 
-  // Mock schema with an attribute with a nest-depth of 5 (the current max for ItemTypeFromSchema)
+  // Mock schema with an attribute with a nest-depth of 5
   const mockSchema = {
     id: { type: "string", required: true },
     books: {
@@ -75,6 +76,8 @@ describe("IOAction: checkRequired", () => {
                       schema: {
                         street: { type: "string", required: true },
                         notRequiredAddressProp: { type: "string" },
+                        nullishAddressProp: { type: "string", nullable: true },
+                        nullableAddressProp: { type: "string", nullable: true, required: true },
                       },
                     },
                   },
@@ -116,12 +119,11 @@ describe("IOAction: checkRequired", () => {
                     ...mockCtx.schema.books.schema[0].schema.author.schema.publisher,
                     schema: {
                       ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema,
+                      // prettier-ignore
                       address: {
-                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema
-                          .address,
+                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address,
                         schema: {
-                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema
-                            .address.schema,
+                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema,
                           MISSING_ATTR: { type: "string", required: true },
                         },
                       },
@@ -144,5 +146,74 @@ describe("IOAction: checkRequired", () => {
     expect(() =>
       checkRequired.call(mockThis, mockItem, contextWithAddressMISSING_ATTR as any)
     ).toThrowError(`A value is required for MockModel property "MISSING_ATTR".`);
+  });
+
+  test(`throws an ItemInputError when a non-"nullable" field is null`, () => {
+    // Same mockSchema as above, but with "NON_NULL_ATTR" added to the `address` nested schema
+    const mockSchemaWithAddressNON_NULL_ATTR = {
+      ...mockCtx.schema,
+      books: {
+        ...mockCtx.schema.books,
+        schema: [
+          {
+            ...mockCtx.schema.books.schema[0],
+            schema: {
+              ...mockCtx.schema.books.schema[0].schema,
+              author: {
+                ...mockCtx.schema.books.schema[0].schema.author,
+                schema: {
+                  ...mockCtx.schema.books.schema[0].schema.author.schema,
+                  publisher: {
+                    ...mockCtx.schema.books.schema[0].schema.author.schema.publisher,
+                    schema: {
+                      ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema,
+                      // prettier-ignore
+                      address: {
+                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address,
+                        schema: {
+                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema,
+                          NON_NULL_ATTR: { type: "string", nullable: false },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const contextWithAddressNON_NULL_ATTR = {
+      ...mockCtx,
+      schema: mockSchemaWithAddressNON_NULL_ATTR,
+      schemaEntries: Object.entries(mockSchemaWithAddressNON_NULL_ATTR),
+    };
+
+    expect(() =>
+      checkRequired.call(
+        mockThis,
+        {
+          ...mockItem,
+          books: [
+            {
+              ...mockItem.books[0],
+              author: {
+                ...mockItem.books[0].author,
+                publisher: {
+                  ...mockItem.books[0].author.publisher,
+                  address: {
+                    ...mockItem.books[0].author.publisher.address,
+                    NON_NULL_ATTR: null, // <-- this should cause an error
+                  },
+                },
+              },
+            },
+          ],
+        },
+        contextWithAddressNON_NULL_ATTR as any
+      )
+    ).toThrowError(`A non-null value is required for MockModel property "NON_NULL_ATTR".`);
   });
 });
