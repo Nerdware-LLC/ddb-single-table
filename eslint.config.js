@@ -1,8 +1,9 @@
 import eslintJS from "@eslint/js";
 import stylisticPlugin from "@stylistic/eslint-plugin";
 import vitestPlugin from "@vitest/eslint-plugin";
-import eslintConfigPrettier from "eslint-config-prettier";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 import importPlugin from "eslint-plugin-import-x";
+import jsdocPlugin from "eslint-plugin-jsdoc";
 import nodePlugin from "eslint-plugin-n";
 import globals from "globals";
 import tsEslint from "typescript-eslint";
@@ -27,6 +28,7 @@ export default tsEslint.config(
       "@stylistic": stylisticPlugin,
       "@typescript-eslint": tsEslint.plugin,
       "import-x": importPlugin,
+      "jsdoc": jsdocPlugin,
       "n": nodePlugin,
     },
     settings: {
@@ -47,6 +49,7 @@ export default tsEslint.config(
       ...eslintJS.configs.recommended.rules,
       ...importPlugin.configs.recommended.rules,
       ...nodePlugin.configs["flat/recommended-module"].rules,
+      ...jsdocPlugin.configs["flat/recommended-typescript"].rules,
       ...[
         ...tsEslint.configs.strictTypeChecked,
         ...tsEslint.configs.stylisticTypeChecked, // prettier-ignore
@@ -82,9 +85,18 @@ export default tsEslint.config(
       ],
 
       // RULES: n (eslint-plugin-n)
-      "n/no-missing-import": "off", // Does not work with path aliases
+      "n/no-missing-import": ["error", { ignoreTypeImport: true }],
       "n/no-process-env": "error",
-      "n/no-unpublished-import": ["error", { allowModules: ["type-fest"] }],
+      "n/no-unpublished-import": ["error", { ignoreTypeImport: true }],
+
+      // RULES: jsdoc (eslint-plugin-jsdoc)
+      "jsdoc/check-param-names": "off",
+      "jsdoc/empty-tags": "off", //       Allow comments on 'empty' tags
+      "jsdoc/require-jsdoc": "off",
+      "jsdoc/require-param": "off", //    Don't require jsdoc @param tags
+      "jsdoc/require-property": "off", // Don't require jsdoc @property tags
+      "jsdoc/require-returns": "off", //  Don't require jsdoc @returns tags
+      "jsdoc/tag-lines": "off", //        Allow blank lines around jsdoc tags for readability
 
       // RULES: @typescript-eslint (typescript-eslint)
       "@typescript-eslint/array-type": "off", //                      Allow "T[]" and "Array<T>"
