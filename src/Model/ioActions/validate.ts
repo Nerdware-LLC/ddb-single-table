@@ -3,7 +3,9 @@ import type { IOActions, IOAction } from "./types.js";
 
 /**
  * This `IOAction` validates an item's individual properties using
- * attribute's respective `"validate"` functions provided in the schema.
+ * attribute's respective `"validate"` functions defined in the schema.
+ *
+ * @throws {ItemInputError} If any attribute's `"validate"` function returns `false`.
  */
 export const validate: IOAction = function (
   this: IOActions,

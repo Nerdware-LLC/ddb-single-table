@@ -3,8 +3,8 @@ import type {
   ModelSchemaOptions,
   ModelSchemaNestedAttributes,
   ModelSchemaEntries,
-} from "../../Schema/types.js";
-import type { BaseItem } from "../../types/itemTypes.js";
+} from "../../Schema/types/index.js";
+import type { BaseItem } from "../../types/index.js";
 import type { AttributesAliasesMap } from "../types.js";
 
 /**
@@ -15,7 +15,6 @@ export type IODirection = "toDB" | "fromDB";
 
 /**
  * IO-Action context properties available to all IO-Action functions.
- * @internal
  */
 interface BaseIOActionContext {
   /** The calling Model's name. */
@@ -32,7 +31,6 @@ interface BaseIOActionContext {
 
 /**
  * The IO-Action context object passed to all IO-Action functions.
- * @internal
  */
 export interface IOActionContext extends BaseIOActionContext {
   schema: ModelSchemaType;
@@ -44,25 +42,26 @@ export interface IOActionContext extends BaseIOActionContext {
  * This extension of the {@link BaseIOActionContext} adds a `schema` property
  * for the {@link IOActionRecursiveApplicator} which is set to the
  * {@link ModelSchemaNestedAttributes|`schema` of a nested attribute}.
- * @internal
  */
 export interface RecursiveIOActionContext extends BaseIOActionContext {
   schema: ModelSchemaNestedAttributes;
 }
 
-/** A function that performs an IO-Action. @internal */
+/**
+ * A function that performs an IO-Action.
+ */
 export type IOAction = (this: IOActions, item: BaseItem, context: IOActionContext) => BaseItem;
 
 /**
  * A function that recursively applies a given IO-Action to an item and its nested attributes.
- * @internal
  */
 export type IOActionRecursiveApplicator = (
   this: IOActions,
   ioAction: IOAction,
   /**
    * The item/items to which the IO-Action should be applied.
-   * @remarks Even though IO-Actions only call `recursivelyApplyIOAction` when `attrValue` is a
+   *
+   * **NOTE:** Even though IO-Actions only call `recursivelyApplyIOAction` when `attrValue` is a
    * nested object/array, this is not typed as `BaseItem | BaseItem[]` because that forces the
    * IO-Actions to perform type-checking which already occurs in `recursivelyApplyIOAction`, and
    * non-object/array values will not cause an error — they'd simply be returned as-is. The same
@@ -75,7 +74,6 @@ export type IOActionRecursiveApplicator = (
 /**
  * A dictionary to which all IO-Action functions belong.
  * > **This object serves as the `this` context for all IO-Action functions.**
- * @internal
  */
 export type IOActions = Readonly<
   {
@@ -94,7 +92,9 @@ export type IOActions = Readonly<
   >
 >;
 
-/** An array of enabled {@link IOAction} functions. @internal */
+/**
+ * An array of enabled {@link IOAction} functions.
+ */
 export type IOActionsSet = Array<IOAction>;
 
 /**
