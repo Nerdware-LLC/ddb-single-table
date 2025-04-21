@@ -8,7 +8,7 @@ import {
   stringifyNestedSchema,
   type InvalidExpressionErrorPayload,
 } from "./errors.js";
-import type { ModelSchemaNestedAttributes } from "../Schema/index.js";
+import type { ModelSchemaNestedAttributes } from "../Schema/types/index.js";
 
 // This describe block includes tests that are the same for all error classes.
 describe("errors", () => {
