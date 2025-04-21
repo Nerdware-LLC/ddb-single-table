@@ -1,31 +1,28 @@
 import { hasKey } from "@nerdware/ts-type-safety-utils";
 import { SchemaValidationError } from "../utils/errors.js";
-import { Schema } from "./Schema.js";
+import { BaseSchema } from "./BaseSchema.js";
 import type {
-  TableKeysSchemaType,
-  ModelSchemaType,
   BaseAttributeConfig,
   KeyAttributeConfig,
+  TableKeysSchemaType,
+  ModelSchemaType,
   TableKeysSchemaMetadata,
   MergeModelAndTableKeysSchema,
-} from "./types.js";
+} from "./types/index.js";
 import type { TableKeysAndIndexes } from "../Table/types.js";
 
 /**
- * This class and its `Schema` parent class currently only serve to organize schema-related types,
+ * This class and its `BaseSchema` parent currently only serve to organize schema-related types,
  * validation methods, etc., but may be used to create schema instances in the future. This is
  * currently not the case, as schema attributes would need to be nested under an instance property
  * (e.g. `this.attributes`), which would require a lot of refactoring. If/when this is implemented,
  * schema instances would also be given "metadata" props like "name", "version", "schemaType", etc.
- *
- * @class TableKeysSchema
- * @internal
  */
-export class TableKeysSchema extends Schema {
+export class TableKeysSchema extends BaseSchema {
   /**
    * This function validates the provided `tableKeysSchema`, and if valid, returns a
-   * {@link TableKeysAndIndexes | TableKeysAndIndexes object } specifying the `tableHashKey`,
-   * `tableRangeKey`, and a map of any included `indexes`.
+   * {@link TableKeysAndIndexes} object specifying the `tableHashKey`, `tableRangeKey`,
+   * and a map of any included `indexes`.
    *
    * This function performs the following validation checks:
    *
@@ -36,16 +33,16 @@ export class TableKeysSchema extends Schema {
    * 5. Ensure there are no duplicate index names.
    *
    * @param tableKeysSchema - The schema to validate.
-   * @param name - The `name` specified in the {@link SchemaMetadata | schema's metadata }.
-   * @returns A {@link TableKeysAndIndexes | TableKeysAndIndexes object }.
+   * @param name - The `name` specified in the {@link SchemaMetadata|schema's metadata}.
+   * @returns A {@link TableKeysAndIndexes} object.
    * @throws A {@link SchemaValidationError} if the provided TableKeysSchema is invalid.
    */
-  static readonly validate = (
-    tableKeysSchema: TableKeysSchemaType,
+  static readonly validate = <const S extends TableKeysSchemaType>(
+    tableKeysSchema: S,
     { name: schemaName = "TableKeysSchema" }: Pick<TableKeysSchemaMetadata, "name"> = {}
   ): TableKeysAndIndexes => {
     // First run the base Schema validation checks:
-    Schema.validateAttributeTypes(tableKeysSchema, {
+    BaseSchema.validateAttributeTypes(tableKeysSchema, {
       schemaType: "TableKeysSchema",
       name: schemaName,
     });
@@ -184,7 +181,7 @@ export class TableKeysSchema extends Schema {
    *
    * @param tableKeysSchema - The TableKeysSchema to merge into the ModelSchema.
    * @param modelSchema - The ModelSchema to merge the TableKeysSchema into.
-   * @throws {@link SchemaValidationError} - If the provided ModelSchema contains invalid key/index attribute configs.
+   * @throws `SchemaValidationError` if the provided ModelSchema contains invalid key/index attribute configs.
    */
   static readonly getMergedModelSchema = <
     const TableKeysSchema extends TableKeysSchemaType,

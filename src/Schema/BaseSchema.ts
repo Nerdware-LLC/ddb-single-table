@@ -5,7 +5,7 @@ import type {
   ModelSchemaType,
   SchemaMetadata,
   AnyValidAttributeConfig,
-} from "./types.js";
+} from "./types/index.js";
 
 /**
  * The base class for `TableKeysSchema` and `ModelSchema`. This class and its subclasses currently
@@ -14,11 +14,8 @@ import type {
  * to be nested under an instance property (e.g. `this.attributes`), which would require a lot of
  * refactoring. If/when this is implemented, schema instances would also be given "metadata" props
  * like "name", "version", "format", "schemaType", etc.
- *
- * @class Schema
- * @internal
  */
-export class Schema {
+export class BaseSchema {
   /**
    * This method ensures the provided `schema` is a valid `Schema` object by performing the
    * following validation checks:

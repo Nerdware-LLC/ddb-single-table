@@ -1,45 +1,30 @@
 import { hasKey } from "@nerdware/ts-type-safety-utils";
 import { SchemaValidationError } from "../utils/errors.js";
-import { Schema } from "./Schema.js";
-import { BASE_TIMESTAMP_ATTRIBUTE_CONFIG } from "./baseTimestampAttrConfig.js";
+import { BaseSchema } from "./BaseSchema.js";
+import { TIMESTAMP_ATTRIBUTES } from "./timestampAttributes.js";
+import type { TableKeysAndIndexes } from "../Table/index.js";
 import type {
+  KeyAttributeConfig,
   ModelSchemaType,
   ModelSchemaOptions,
   ModelSchemaMetadata,
-  KeyAttributeConfig,
   ModelSchemaEntries,
-  ModelSchemaNestedMap,
-} from "./types.js";
-import type { TableKeysAndIndexes } from "../Table/index.js";
+} from "./types/index.js";
 
 /**
- * This class and its `Schema` parent class currently only serve to organize schema-related types,
+ * This class and its `BaseSchema` parent currently only serve to organize schema-related types,
  * validation methods, etc., but may be used to create schema instances in the future. This is
  * currently not the case, as schema attributes would need to be nested under an instance property
  * (e.g. `this.attributes`), which would require a lot of refactoring. If/when this is implemented,
  * schema instances would also be given "metadata" props like "name", "version", "schemaType", etc.
- *
- * @class ModelSchema
- * @internal
  */
-export class ModelSchema extends Schema {
+export class ModelSchema extends BaseSchema {
   static readonly DEFAULT_OPTIONS = {
     allowUnknownAttributes: false,
     autoAddTimestamps: false,
   } as const satisfies ModelSchemaOptions;
 
-  static readonly TIMESTAMP_ATTRIBUTES = {
-    createdAt: {
-      ...BASE_TIMESTAMP_ATTRIBUTE_CONFIG,
-    },
-    updatedAt: {
-      ...BASE_TIMESTAMP_ATTRIBUTE_CONFIG,
-      transformValue: {
-        /** This toDB ensures `updatedAt` is updated on every write operation. */
-        toDB: () => new Date(),
-      },
-    },
-  } as const satisfies ModelSchemaNestedMap;
+  static readonly TIMESTAMP_ATTRIBUTES = TIMESTAMP_ATTRIBUTES;
 
   /**
    * This function validates the provided `modelSchema`, and if valid, returns an
@@ -56,14 +41,14 @@ export class ModelSchema extends Schema {
    * @param modelSchema - The schema to validate.
    * @param name - A name to identify the schema in any error messages.
    * @returns An object specifying the Model's alias maps.
-   * @throws {@link SchemaValidationError} - If the provided ModelSchema is invalid.
+   * @throws `SchemaValidationError` if the provided ModelSchema is invalid.
    */
   static readonly validate = (
     modelSchema: ModelSchemaType,
     { name: schemaName }: Pick<ModelSchemaMetadata, "name">
   ) => {
     // First run the base Schema validation checks:
-    Schema.validateAttributeTypes(modelSchema, {
+    BaseSchema.validateAttributeTypes(modelSchema, {
       schemaType: "ModelSchema",
       name: schemaName,
     });
