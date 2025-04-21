@@ -1,4 +1,3 @@
-import type { NestDepthMax32, IterateNestDepthMax32 } from "../../types/index.js";
 import type {
   CreateTableInput as SDK_CreateTableInput,
   CreateTableOutput as SDK_CreateTableOutput,
@@ -46,15 +45,15 @@ type LegacyDdbSdkParameters =
 /**
  * This internal generic util-type is used by {@link FixDocClientType} to handle mapped values.
  */
-type FixDocClientValueType<T, NestDepth extends NestDepthMax32> =
-  IterateNestDepthMax32<NestDepth> extends 32
+type FixDocClientValueType<T, NestDepth extends NestDepthMax10> =
+  IterateNestDepthMax10<NestDepth> extends 10
     ? T
     : T extends Record<PropertyKey, unknown>
       ? keyof OmitIndexSignature<T> extends never // <-- If it only contains an index signature, don't map it.
-        ? Record<keyof T, FixDocClientValueType<T[keyof T], IterateNestDepthMax32<NestDepth>>>
-        : FixDocClientType<T, IterateNestDepthMax32<NestDepth>>
+        ? Record<keyof T, FixDocClientValueType<T[keyof T], IterateNestDepthMax10<NestDepth>>>
+        : FixDocClientType<T, IterateNestDepthMax10<NestDepth>>
       : T extends Array<infer El>
-        ? Array<FixDocClientValueType<El, IterateNestDepthMax32<NestDepth>>>
+        ? Array<FixDocClientValueType<El, IterateNestDepthMax10<NestDepth>>>
         : IsAny<T> extends true
           ? unknown
           : T;
@@ -73,10 +72,10 @@ type FixDocClientValueType<T, NestDepth extends NestDepthMax32> =
  */
 type FixDocClientType<
   Input extends object,
-  NestDepth extends NestDepthMax32 = 0,
+  NestDepth extends NestDepthMax10 = 0,
   T extends Omit<Input, LegacyDdbSdkParameters> = Omit<Input, LegacyDdbSdkParameters>,
 > = Simplify<
-  IterateNestDepthMax32<NestDepth> extends 32
+  IterateNestDepthMax10<NestDepth> extends 10
     ? T
     : { [Key in keyof T]: FixDocClientValueType<T[Key], NestDepth> }
 >;
@@ -130,3 +129,22 @@ export type DescribeTableOutput = FixDocClientType<SDK_DescribeTableOutput>;
 export type CreateTableOutput = FixDocClientType<SDK_CreateTableOutput>;
 /** Output from `DdbClientWrapper` methods which implement the `ListTables` command. */
 export type ListTablesOutput = FixDocClientType<SDK_ListTablesOutput>;
+
+/**
+ * This generic is used to fix "type instantiation is excessively deep and possibly infinite" errors.
+ */
+// prettier-ignore
+type IterateNestDepthMax10<NestDepth extends NestDepthMax10 = 0> =
+  NestDepth extends 0 ? 1
+  : NestDepth extends 1 ? 2
+  : NestDepth extends 2 ? 3
+  : NestDepth extends 3 ? 4
+  : NestDepth extends 4 ? 5
+  : NestDepth extends 5 ? 6
+  : NestDepth extends 6 ? 7
+  : NestDepth extends 7 ? 8
+  : NestDepth extends 8 ? 9
+  : NestDepth extends 9 ? 10
+  : 10;
+
+type NestDepthMax10 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
