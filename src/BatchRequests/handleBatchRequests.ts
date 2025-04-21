@@ -1,5 +1,5 @@
 import { batchRequestWithExponentialBackoff } from "./batchRequestWithExponentialBackoff.js";
-import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "./types.js";
+import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "./types/index.js";
 
 /**
  * This DynamoDB batch-requests handler invokes the provided `submitBatchRequest` function with

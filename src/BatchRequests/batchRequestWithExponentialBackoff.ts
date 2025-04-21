@@ -1,6 +1,6 @@
 import { isString, isArray, safeJsonStringify } from "@nerdware/ts-type-safety-utils";
 import { DdbSingleTableError } from "../utils/errors.js";
-import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types.js";
+import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types/index.js";
 
 /**
  * This DynamoDB batch-requests helper handles submission and retry logic for batch operations like
@@ -103,7 +103,6 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
  * [ddb-docs-errors]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
  *
  * @see [DynamoDB Docs: Error messages and codes][ddb-docs-errors]
- * @internal
  */
 const ERR_CODE_SHOULD_RETRY: Record<string, boolean> = {
   // Applicable to PROVISIONED BillingMode:
