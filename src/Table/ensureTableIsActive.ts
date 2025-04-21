@@ -1,7 +1,7 @@
 import { isError, isPlainObject } from "@nerdware/ts-type-safety-utils";
 import { DdbSingleTableError, DdbConnectionError } from "../utils/errors.js";
 import type { TableInstance, EnsureTableIsActiveParams } from "./types.js";
-import type { TableKeysSchemaType } from "../Schema/types.js";
+import type { TableKeysSchemaType } from "../Schema/types/index.js";
 
 /**
  * This method of the `Table` class is used to check if a DynamoDB table is active and

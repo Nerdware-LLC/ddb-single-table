@@ -2,18 +2,20 @@ import type { Table } from "./Table.js";
 import type {
   DdbClientWrapperConstructorParams,
   CreateTableInput,
-} from "../DdbClientWrapper/index.js";
+} from "../DdbClientWrapper/types/index.js";
 import type { Model } from "../Model/Model.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
-} from "../Schema/types.js";
-import type { BaseItem, ItemTypeFromSchema } from "../types/itemTypes.js";
+} from "../Schema/types/index.js";
+import type { BaseItem, ItemTypeFromSchema } from "../types/index.js";
 import type { Simplify, Except } from "type-fest";
 
-/** `Table` class constructor params. @public */
+/**
+ * Constructor params for the {@link Table} class.
+ */
 export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> = Simplify<
   {
     tableName: string;
@@ -22,11 +24,16 @@ export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> 
   } & DdbClientWrapperConstructorParams
 >;
 
+/**
+ * An instance of the {@link Table} class.
+ */
 export type TableInstance<TableKeysSchema extends TableKeysSchemaType> = InstanceType<
   typeof Table<TableKeysSchema>
 >;
 
-/** A config object specifying the table's keys and indexes. */
+/**
+ * A config object specifying the {@link Table}'s keys and indexes.
+ */
 export type TableKeysAndIndexes = {
   tableHashKey: string;
   tableRangeKey?: string | undefined;
@@ -43,7 +50,9 @@ export type TableKeysAndIndexes = {
     | undefined;
 };
 
-/** This type defines the `createModel` method of Table class instances. */
+/**
+ * The `createModel` method of {@link Table} class instances.
+ */
 export type TableCreateModelMethod<TableKeysSchema extends TableKeysSchemaType> = <
   ModelSchema extends ModelSchemaType<TableKeysSchema>,
   ItemType extends BaseItem = ItemTypeFromSchema<
@@ -57,7 +66,9 @@ export type TableCreateModelMethod<TableKeysSchema extends TableKeysSchemaType> 
   typeof Model<MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema>, ItemType>
 >;
 
-/** Params which govern the behavior of the `table.ensureTableIsActive()` method. */
+/**
+ * Params which govern the behavior of the `table.ensureTableIsActive()` method.
+ */
 export type EnsureTableIsActiveParams = {
   /** The max number of attempts that should be made to connect to the table (default: 20). */
   maxRetries?: number;
@@ -74,7 +85,9 @@ export type EnsureTableIsActiveParams = {
   createIfNotExists?: boolean | TableCreateTableParameters;
 };
 
-/** Params for the `table.createTable()` method. */
+/**
+ * Params for the `table.createTable()` method.
+ */
 export type TableCreateTableParameters = Simplify<
   Except<
     CreateTableInput,

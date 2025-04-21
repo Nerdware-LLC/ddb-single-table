@@ -3,8 +3,8 @@ import { getExpressionAttrTokens } from "../helpers.js";
 import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
 import { WHERE_QUERY_OPERATOR_TO_EXPRESSION } from "./whereQueryOperatorToExpression.js";
 import type { WhereQueryComparisonObject } from "./types.js";
-import type { QueryInput } from "../../DdbClientWrapper/index.js";
-import type { BaseItem } from "../../types/itemTypes.js";
+import type { QueryInput } from "../../DdbClientWrapper/types/index.js";
+import type { BaseItem } from "../../types/index.js";
 
 /**
  * This function converts `WhereQuery` objects into the following `QueryCommand`

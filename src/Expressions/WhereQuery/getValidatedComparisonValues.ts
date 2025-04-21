@@ -7,8 +7,7 @@ import type { WhereQueryOperator, WhereQueryComparand } from "./types.js";
  * and if they're valid, returns the appropriate comparison operator and comparand
  * to use in the `KeyConditionExpression`.
  *
- * @throws {@link InvalidExpressionError} if the args are invalid.
- * @internal
+ * @throws `InvalidExpressionError` if the args are invalid.
  */
 export const getValidatedComparisonValues = (attrName: string, rawWhereQueryValue: unknown) => {
   // Determine the operator and comparand to use in the expression

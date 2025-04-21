@@ -1,4 +1,4 @@
-import type { BatchOperationParams } from "../BatchRequests/types.js";
+import type { BatchOperationParams } from "../BatchRequests/types/index.js";
 import type {
   GetItemInput,
   BatchGetItemsInput,
@@ -8,26 +8,23 @@ import type {
   BatchWriteItemsInput,
   QueryInput,
   ScanInput,
-} from "../DdbClientWrapper/types.js";
+} from "../DdbClientWrapper/types/index.js";
 import type {
   WhereQueryParams,
   UpdateItemAutoGenUpdateExpressionParams,
 } from "../Expressions/index.js";
-import type { TableKeysSchemaType, ModelSchemaType } from "../Schema/types.js";
-import type {
-  BaseItem,
-  AttrAliasOrName,
-  SupportedAttributeValueTypes,
-} from "../types/itemTypes.js";
-import type { Simplify } from "type-fest";
+import type { TableKeysSchemaType, ModelSchemaType } from "../Schema/types/index.js";
+import type { BaseItem, AttrAliasOrName, SupportedAttributeValueType } from "../types/index.js";
+import type { Simplify, Except } from "type-fest";
 
-/** A map of attribute names to corresponding aliases, or vice versa. */
+/**
+ * A map of attribute names to corresponding aliases, or vice versa.
+ */
 export type AttributesAliasesMap = Record<string, string>;
 
 /**
  * This generic is used by the Model class to provide intellisense for the aliased key params
  * that methods like `getItem()` and `deleteItem()` accept as input.
- * @internal
  */
 export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> = {
   // Required — filter out RangeKey if configured with a functional default
@@ -40,7 +37,7 @@ export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> 
   // This map will set RangeKey to optional if configured with a functional default
   -readonly [Key in keyof Schema as Schema[Key] extends {
     isRangeKey: true;
-    default: (item: any) => SupportedAttributeValueTypes;
+    default: (item: any) => SupportedAttributeValueType;
   }
     ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
     : never]+?: string | number;
@@ -50,7 +47,8 @@ export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> 
  * A union of SDK command parameter names which are handled by Model methods and are therefore
  * omitted from the method parameter typings.
  *
- * @remarks
+ * **NOTES:**
+ *
  * - `ReturnValues` - Providing a custom ReturnValues arg to a Model method will often (but not
  *   _always_) change the attributes present in the returned object. Therefore, every Model method
  *   which uses a DDB operation which supports this param would require a generic return type to
@@ -58,8 +56,6 @@ export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> 
  *   future release, but considering users have direct access to the underlying DDB operations via
  *   the `DdbClientWrapper` (which passes all args directly to the SDK command), the Model class
  *   will not support custom `ReturnValues` at this time.
- *
- * @internal
  */
 type InternallyHandledDdbSdkParameters =
   | "TableName"
@@ -72,10 +68,8 @@ type InternallyHandledDdbSdkParameters =
  * This internal generic util takes a DdbClientWrapper input type `<T>` and applies the following
  * modifications to it:
  *
- * - Removes all {@link InternallyHandledDdbSdkParameters | parameters which are provided by Model methods }
+ * - Removes all {@link InternallyHandledDdbSdkParameters|parameters which are provided by Model methods}.
  * - Adds any additional parameters provided by the `AdditionalParams` type param.
- *
- * @internal
  */
 type ModifyClientParamsForModel<
   T,
@@ -86,9 +80,12 @@ type ModifyClientParamsForModel<
     : Omit<T, InternallyHandledDdbSdkParameters>
 >;
 
+///////////////////////////////////////////////////////////////////////////////
 // MODEL METHOD PARAM TYPES:
 
-/** `model.getItem()` parameters which are passed to the underlying `GetItem` SDK command. */
+/**
+ * `model.getItem()` parameters which are passed to the underlying `GetItem` SDK command.
+ */
 export type GetItemOpts = ModifyClientParamsForModel<GetItemInput>;
 
 /**
@@ -109,14 +106,16 @@ export type BatchGetItemsOpts = ModifyClientParamsForModel<
  *   existing items, this method does not support user-provided ConditionExpressions.
  */
 export type CreateItemOpts = ModifyClientParamsForModel<
-  Omit<
+  Except<
     UpsertItemOpts,
     "ConditionExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
     // The ommission of ConditionExpression makes EAN/EAV unneccessary
   >
 >;
 
-/** `model.upsertItem()` parameters which are passed to the underlying `PutItem` SDK command. */
+/**
+ * `model.upsertItem()` parameters which are passed to the underlying `PutItem` SDK command.
+ */
 export type UpsertItemOpts = ModifyClientParamsForModel<PutItemInput>;
 
 /**
@@ -139,10 +138,14 @@ export type UpdateItemOpts<ItemParams extends BaseItem> = ModifyClientParamsForM
   UpdateItemAutoGenUpdateExpressionParams<ItemParams>
 >;
 
-/** `model.deleteItem()` parameters which are passed to the underlying `DeleteItem` SDK command. */
+/**
+ * `model.deleteItem()` parameters which are passed to the underlying `DeleteItem` SDK command.
+ */
 export type DeleteItemOpts = ModifyClientParamsForModel<DeleteItemInput>;
 
-/** Model method parameters which are passed to the underlying `BatchWriteItem` SDK command. */
+/**
+ * Model method parameters which are passed to the underlying `BatchWriteItem` SDK command.
+ */
 export type BatchWriteItemsOpts = ModifyClientParamsForModel<
   BatchWriteItemsInput,
   BatchOperationParams
@@ -176,5 +179,7 @@ export type QueryOpts<ItemParams extends Record<string, unknown>> = ModifyClient
   }
 >;
 
-/** `model.scan()` parameters which are passed to the underlying `Scan` SDK command. */
+/**
+ * `model.scan()` parameters which are passed to the underlying `Scan` SDK command.
+ */
 export type ScanOpts = ModifyClientParamsForModel<ScanInput>;

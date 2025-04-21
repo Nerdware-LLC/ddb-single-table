@@ -4,8 +4,8 @@ import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions/index.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { ItemInputError } from "../utils/errors.js";
-import { ioActions } from "./ioActions/index.js";
-import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions/index.js";
+import { ioActions } from "./ioActions/ioActions.js";
+import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions/types.js";
 import type {
   AttributesAliasesMap,
   KeyParameters,
@@ -21,18 +21,18 @@ import type {
 } from "./types.js";
 import type {
   ModelSchemaType,
+  ModelSchemaAttributeConfig,
   ModelSchemaOptions,
   ModelSchemaEntries,
-  ModelSchemaAttributeConfig,
-} from "../Schema/types.js";
+} from "../Schema/types/index.js";
 import type { TableKeysAndIndexes } from "../Table/types.js";
 import type {
   BaseItem,
   ItemKeys,
   ItemTypeFromSchema,
   ItemCreationParameters,
-  ItemParameters,
-} from "../types/itemTypes.js";
+  ItemUpdateParameters,
+} from "../types/index.js";
 import type { SetOptional } from "type-fest";
 
 /**
@@ -60,7 +60,7 @@ import type { SetOptional } from "type-fest";
  *   6. **`Attribute Validation`** — Validates individual item properties.
  *   7. **`Item Validation`** — Validates an item in its entirety.
  *   8. **`Convert JS Types`** — Converts JS types into DynamoDB types.
- *   9. **`"Required" Checks`** — Checks for the existence of `"required"` attributes.
+ *   9. **`"Required" Checks`** — Checks for `"required"` and `"nullable"` attributes.
  *
  * **`fromDB`**:
  *   1. **`Convert JS Types`** — Converts DynamoDB types into JS types.
@@ -80,7 +80,6 @@ import type { SetOptional } from "type-fest";
  * a default value for an `id` attribute which is used as the table hash key, other non-key
  * attributes may be defined using the item's generated `id` value.
  *
- * @class
  * @template Schema - The Model's readonly schema.
  * @template ItemType - A type which reflects a complete instance of a Model item.
  * @template ItemCreationParams - The parameters used to create a new item instance.
@@ -391,7 +390,11 @@ export class Model<
    */
   readonly updateItem = async (
     primaryKeys: KeyParameters<Schema>,
-    { update, updateOptions, ...updateItemOpts }: UpdateItemOpts<ItemParameters<ItemCreationParams>>
+    {
+      update,
+      updateOptions,
+      ...updateItemOpts
+    }: UpdateItemOpts<ItemUpdateParameters<ItemCreationParams>>
   ): Promise<ItemType> => {
     // Process `update`, and add `updatedAt` timestamp if `autoAddTimestamps` is enabled
     const toDBupdateAttributes = this.processItemAttributes.toDB(

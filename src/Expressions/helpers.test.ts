@@ -1,4 +1,4 @@
-import { DdbSingleTableError } from "../utils/index.js";
+import { DdbSingleTableError } from "../utils/errors.js";
 import { getExpressionAttrTokens } from "./helpers.js";
 
 describe("getExpressionAttrTokens()", () => {

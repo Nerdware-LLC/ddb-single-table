@@ -1,4 +1,4 @@
-import { InvalidExpressionError } from "../../utils/index.js";
+import { InvalidExpressionError } from "../../utils/errors.js";
 import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
 
 describe("getValidatedComparisonValues()", () => {

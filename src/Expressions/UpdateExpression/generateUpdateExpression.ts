@@ -1,6 +1,6 @@
 import { getExpressionAttrTokens } from "../helpers.js";
 import type { GenerateUpdateExpressionOpts } from "./types.js";
-import type { UpdateItemInput } from "../../DdbClientWrapper/index.js";
+import type { UpdateItemInput } from "../../DdbClientWrapper/types/index.js";
 
 /**
  * This function uses the provided `itemAttributes` to generate the following `updateItem` args:
@@ -24,7 +24,6 @@ import type { UpdateItemInput } from "../../DdbClientWrapper/index.js";
 export const generateUpdateExpression = (
   itemAttributes: { [attrName: string]: unknown },
   { nullHandling }: GenerateUpdateExpressionOpts = {}
-  // IDEA Try adding a `nullHandling` option to Schema-types for per-attribute control.
 ) => {
   const shouldAddToRemoveClause =
     nullHandling !== "SET"
