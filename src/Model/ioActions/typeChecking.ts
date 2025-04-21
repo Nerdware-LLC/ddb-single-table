@@ -1,10 +1,17 @@
 import { safeJsonStringify } from "@nerdware/ts-type-safety-utils";
-import { ItemInputError, getAttrErrID, stringifyNestedSchema } from "../../utils/errors.js";
-import { hasDefinedProperty, isType } from "../../utils/index.js";
+import {
+  hasDefinedProperty,
+  isType,
+  ItemInputError,
+  getAttrErrID,
+  stringifyNestedSchema,
+} from "../../utils/index.js";
 import type { IOActions, IOAction } from "./types.js";
 
 /**
- * This `IOAction` ensures item values conform with their "type" as defined in the schema.
+ * This `IOAction` ensures item values conform with their `"type"` as defined in the schema.
+ *
+ * @throws {ItemInputError} If an attribute's value does not match the expected `"type"`.
  */
 export const typeChecking: IOAction = function (
   this: IOActions,

@@ -1,12 +1,14 @@
 import { hasKey } from "@nerdware/ts-type-safety-utils";
 import { ItemInputError } from "../../utils/index.js";
 import type { IOActions, IOAction } from "./types.js";
-import type { BaseItem } from "../../types/itemTypes.js";
+import type { BaseItem } from "../../types/index.js";
 
 /**
  * This `IOAction` swaps attribute-names with their corresponding aliases:
  * - `toDB`: replaces "alias" keys with attribute names
  * - `fromDB`: replaces attribute names with "alias" keys
+ *
+ * @throws If an attribute is not defined in the schema, and `allowUnknownAttributes` is not `true`.
  */
 export const aliasMapping: IOAction = function (
   this: IOActions,

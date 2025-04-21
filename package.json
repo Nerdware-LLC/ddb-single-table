@@ -1,6 +1,6 @@
 {
   "name": "@nerdware/ddb-single-table",
-  "version": "2.8.0",
+  "version": "2.9.0-next.1",
   "description": "A schema-based DynamoDB modeling tool, high-level API, and type-generator built for single-table designs.",
   "author": {
     "name": "Trevor Anderson",
@@ -8,8 +8,8 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "node": ">=22.0.0",
+    "npm": ">=11.0.0"
   },
   "type": "module",
   "files": [
@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.788.0",
-    "@aws-sdk/lib-dynamodb": "^3.788.0",
+    "@aws-sdk/lib-dynamodb": "^3.789.0",
     "@nerdware/ts-type-safety-utils": "^1.2.2",
     "dayjs": "^1.11.13"
   },
@@ -69,13 +69,14 @@
     "eslint": "^9.24.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-import-resolver-typescript": "^4.3.2",
-    "eslint-plugin-import-x": "^4.10.3",
+    "eslint-plugin-import-x": "^4.10.5",
+    "eslint-plugin-jsdoc": "^50.6.9",
     "eslint-plugin-n": "^17.17.0",
     "globals": "^16.0.0",
     "prettier": "^3.5.3",
-    "type-fest": "^4.39.1",
+    "type-fest": "^4.40.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.29.1",
+    "typescript-eslint": "^8.30.1",
     "vitest": "^3.0.8",
     "vitest-github-actions-reporter": "^0.11.1"
   }

@@ -1,5 +1,5 @@
 import { TableKeysSchema } from "./TableKeysSchema.js";
-import type { TableKeysSchemaType } from "./types.js";
+import type { TableKeysSchemaType } from "./types/TableKeysSchemaType.js";
 
 describe("TableKeysSchema", () => {
   // SHARED TEST INPUTS:

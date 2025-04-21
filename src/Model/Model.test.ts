@@ -1,8 +1,9 @@
 import * as batchRequestsModule from "../BatchRequests/index.js";
 import * as whereQueryModule from "../Expressions/WhereQuery/index.js";
-import { Table, ModelSchema } from "../index.js";
-import type { ItemTypeFromSchema } from "../index.js";
-import { Model } from "./index.js";
+import { ModelSchema } from "../Schema/ModelSchema.js";
+import { Table } from "../Table/Table.js";
+import { Model } from "./Model.js";
+import type { ItemTypeFromSchema } from "../types/index.js";
 
 vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
 vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
@@ -61,7 +62,7 @@ describe("Model", () => {
       required: true,
       schema: {
         displayName: { type: "string", required: true },
-        photoUrl: { type: "string" },
+        photoUrl: { type: "string", nullable: true },
       },
     },
     ...ModelSchema.TIMESTAMP_ATTRIBUTES,

@@ -1,7 +1,7 @@
 import { DdbSingleTableError } from "../utils/errors.js";
 import type { TableInstance, TableCreateTableParameters } from "./types.js";
-import type { CreateTableInput } from "../DdbClientWrapper/types.js";
-import type { TableKeysSchemaType } from "../Schema/types.js";
+import type { CreateTableInput } from "../DdbClientWrapper/types/index.js";
+import type { TableKeysSchemaType } from "../Schema/types/index.js";
 
 /**
  * [`CreateTable`][ddb-docs-create-table] operation wrapper which uses the provided

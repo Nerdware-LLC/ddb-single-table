@@ -1,4 +1,4 @@
-import { InvalidExpressionError } from "../../utils/index.js";
+import { InvalidExpressionError } from "../../utils/errors.js";
 import { isValidWhereQueryOperator, validateWhereQueryComparand } from "./isValidWhereQuery.js";
 import type { WhereQueryOperator } from "./types.js";
 

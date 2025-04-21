@@ -10,18 +10,16 @@ import { DdbSingleTableError } from "../utils/errors.js";
  * `attrName`, and then adding a num-sign prefix to the EA-Names key and a colon prefix
  * to the the EA-Values key.
  *
- * @return An object with keys `attrNamesKey` and `attrValuesKey`, to be used as keys in
+ * @returns An object with keys `attrNamesKey` and `attrValuesKey`, to be used as keys in
  * `ExpressionAttributeNames` and `ExpressionAttributeValues` objects, respectively.
  *
- * @throws Error if the `attrName` is empty or falsy.
+ * @throws if the `attrName` is empty or falsy.
  *
  * @example
  * ```ts
  * getExpressionAttrKeys("foo-1");
  * // returns { attrNamesKey: "#foo1", attrValuesKey: ":foo1" }
  * ```
- *
- * @internal
  */
 export const getExpressionAttrTokens = (attrName: string) => {
   if (!attrName) {

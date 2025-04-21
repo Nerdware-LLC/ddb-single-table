@@ -1,6 +1,9 @@
 import { safeJsonStringify, isPlainObject } from "@nerdware/ts-type-safety-utils";
 import { isType } from "./isType.js";
-import type { ModelSchemaNestedAttributes, ModelSchemaAttributeConfig } from "../Schema/types.js";
+import type {
+  ModelSchemaNestedAttributes,
+  ModelSchemaAttributeConfig,
+} from "../Schema/types/index.js";
 
 /**
  * This is the base `error` class for custom errors defined in this package. If the
@@ -43,7 +46,6 @@ export class DdbConnectionError extends DdbSingleTableError {
 
 /**
  * The shape of a DDB-client ECONNREFUSED error (this type is not exported by the SDK).
- * @internal
  */
 export interface DdbClientErrorECONNREFUSED {
   message?: string;
@@ -76,9 +78,7 @@ export class SchemaValidationError extends DdbSingleTableError {
 
   constructor(message: SchemaValidationErrorPayload) {
     const msgOrFormattedString =
-      isPlainObject(message) &&
-      isType.string(message.schemaName) &&
-      isType.string(message.problem)
+      isPlainObject(message) && isType.string(message.schemaName) && isType.string(message.problem)
         ? `${message.schemaName} is invalid: ${message.problem}.`
         : message;
 
@@ -140,7 +140,6 @@ export class InvalidExpressionError extends DdbSingleTableError {
 /**
  * An object that may be passed to the `InvalidExpressionError` constructor for a
  * standardized error message format.
- * @internal
  */
 export interface InvalidExpressionErrorPayload {
   /** The name of the expression being generated. */

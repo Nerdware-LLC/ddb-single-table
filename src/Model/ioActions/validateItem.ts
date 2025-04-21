@@ -3,8 +3,9 @@ import { ItemInputError } from "../../utils/errors.js";
 import type { IOActions, IOAction } from "./types.js";
 
 /**
- * This `IOAction` uses `modelSchemaOptions.validateItem`,
- * if defined, to validate an item in its entirety.
+ * This `IOAction` uses `modelSchemaOptions.validateItem` to validate an item in its entirety.
+ *
+ * @throws {ItemInputError} If the `validateItem` function returns `false`.
  */
 export const validateItem: IOAction = function (
   this: IOActions,

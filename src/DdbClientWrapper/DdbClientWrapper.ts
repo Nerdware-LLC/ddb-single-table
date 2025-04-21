@@ -42,7 +42,7 @@ import type {
   CreateTableOutput,
   ListTablesInput,
   ListTablesOutput,
-} from "./types.js";
+} from "./types/index.js";
 
 /**
  * A unified DynamoDB client with methods for instantiating DynamoDB client commands. Where

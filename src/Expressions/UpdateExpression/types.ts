@@ -1,6 +1,8 @@
-import type { BaseItem } from "../../types/itemTypes.js";
+import type { BaseItem } from "../../types/index.js";
 
-/** Parameters for `generateUpdateExpression`. */
+/**
+ * Parameters for `generateUpdateExpression`.
+ */
 export interface GenerateUpdateExpressionOpts {
   /**
    * Defines the `UpdateExpression` clause to which `null` values are added:

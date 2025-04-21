@@ -13,14 +13,13 @@ import type {
   ModelSchemaType,
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
-} from "../Schema/types.js";
-import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../types/itemTypes.js";
+} from "../Schema/types/index.js";
+import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../types/index.js";
 
 /**
  * `Table` provides an easy-to-use API for managing your DynamoDB table and the
  * {@link Model | Models } that use it. It is the primary entry point for DDBST.
  *
- * @class Table
  * @param tableName - The name of the DynamoDB table.
  * @param tableKeysSchema - The schema of the table's primary and sort keys.
  * @param ddbClient - Either an existing DynamoDBClient instance, or arguments for instantiating a new one.

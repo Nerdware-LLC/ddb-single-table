@@ -5,14 +5,16 @@
 
   "compilerOptions": {
     "allowJs": true,
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
     "lib": ["ESNext"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "noEmit": true,
     "noEmitOnError": true,
     "noErrorTruncation": true,
@@ -23,6 +25,7 @@
     "skipLibCheck": false,
     "strict": true,
     "target": "ESNext",
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "verbatimModuleSyntax": true
   }
 }

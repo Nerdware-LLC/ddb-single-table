@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.9.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.8.0...v2.9.0-next.1) (2025-04-21)
+
+
+### Bug Fixes
+
+* update import path for `Schema` types ([59aa7be](https://github.com/Nerdware-LLC/ddb-single-table/commit/59aa7bebdb5866665bd413d1ef6b6bfebf1af0d0))
+* update import paths ([5fabe55](https://github.com/Nerdware-LLC/ddb-single-table/commit/5fabe550c9bb9d008aea09ce6c75af51d92a7e0e))
+* update import paths for various moved types ([6027934](https://github.com/Nerdware-LLC/ddb-single-table/commit/602793407c261bf806a14e2519fe42744844c02c))
+
+
+### Features
+
+* add `nullable` attr config checks ([d4f74f9](https://github.com/Nerdware-LLC/ddb-single-table/commit/d4f74f9dc482449af9bb8ef6301277408d06a494))
+* add `nullable` type checks, split `itemTypes.ts` into multiple files ([a3255b6](https://github.com/Nerdware-LLC/ddb-single-table/commit/a3255b6d55605e51d59febb976d802261f0c0672))
+
+
+### Reverts
+
+* bring back `IterateNestDepthMax10` to fix "type instantiation is excessively deep and possibly infinite" errors ([1abffb9](https://github.com/Nerdware-LLC/ddb-single-table/commit/1abffb97b10150fe3e8b5884d70498db999a1323))
+
 # [2.8.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.7.5...v2.8.0) (2025-04-13)
 
 

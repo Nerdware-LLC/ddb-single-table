@@ -8,8 +8,6 @@ import type { WhereQueryOperator } from "./types.js";
  * - `valuesKeys` is a tuple of 1-2 keys of ExpressionAttributeValues
  *   - `between` operations require 2 EAV keys
  *   - all other operations require 1 EAV key
- *
- * @internal
  */
 export const WHERE_QUERY_OPERATOR_TO_EXPRESSION = {
   eq: (namesKey: string, valuesKeys: string[]) => `${namesKey} = ${valuesKeys[0]}`,

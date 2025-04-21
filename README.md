@@ -54,6 +54,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
     - [Enums](#enums)
   - [`schema`](#schema)
   - [`oneOf`](#oneof)
+  - [`nullable`](#nullable)
   - [`required`](#required)
   - [`default`](#default)
   - [`validate`](#validate)
@@ -192,8 +193,9 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
        type: "map", // Nested attributes ftw!
        schema: {
          displayName: { type: "string", required: true },
-         businessName: { type: "string" },
-         photoUrl: { type: "string" },
+         businessName: { type: "string", nullable: true },
+         photoUrl: { type: "string", nullable: true },
+         favoriteFood: { type: "string", nullable: true },
          // You can nest attributes up to the DynamoDB max depth of 32
        },
      },
@@ -259,6 +261,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
        displayName: "Guy McHumanPerson",
        businessName: "Definitely Not a Penguin in a Human Costume, LLC",
        photoUrl: "s3://my-bucket-name/path/to/human/photo.jpg",
+       favoriteFood: null,
      },
      checklist: [
        { description: "Find fish to eat" },
@@ -312,7 +315,7 @@ The `toDB` and `fromDB` flows both have a specific order in which **IO-Actions**
 |   6   | [**`Attribute Validation`**](#validate)           | Validates individual item properties.                  |                      |
 |   7   | [**`Item Validation`**](#validateitem)            | Validates an item in its entirety.                     | `updateItem`         |
 |   8   | [**`Convert JS Types`**](#type)                   | Converts JS types into DynamoDB types.                 |                      |
-|   9   | [**`"Required" Checks`**](#required)              | Checks for the existence of `"required"` attributes.   | `updateItem`         |
+|   9   | [**`"Required" Checks`**](#required)              | Checks for `"required"` and `"nullable"` attributes.   | `updateItem`         |
 
 ### `fromDB`
 
@@ -360,6 +363,7 @@ The following schema configs are used to define attributes in your schema:
 | [`type`](#type)                     | The attribute's type.                                    |                ✅                |             ✅              |
 | [`schema`](#schema)                 | An optional schema for nested attributes.                |                ✅                |             ✅              |
 | [`oneOf`](#oneof)                   | An optional array of allowed values for enum attributes. |                ✅                |             ✅              |
+| [`nullable`](#nullable)             | Indicates whether the attribute value may be `null`.     |                ✅                |             ✅              |
 | [`required`](#required)             | Indicates whether the attribute is required.             |                ✅                |             ✅              |
 | [`default`](#default)               | An optional default value to apply.                      |                ✅                |             ✅              |
 | [`validate`](#validate)             | An optional validation function to apply.                |                ✅                |             ✅              |
@@ -544,15 +548,21 @@ const UserModelSchema = {
 } as const satisfies ModelSchemaType;
 ```
 
+### `nullable`
+
+Optional boolean flag indicating whether a value may be `null`. Unless this is explicitly `true`, an error will be thrown if the attribute value is `null`.
+
+> [!NOTE]
+>
+> **Default:** `false`
+
 ### `required`
 
-Optional boolean flag indicating whether a value is required for create-operations. If `true`, an error will be thrown if the attribute value is `undefined` or `null`. Note that this check is performed after all other schema-defined transformations and validations have been applied.
+Optional boolean flag indicating whether a value is required for create-operations. If `true`, an error will be thrown if the attribute value is missing or `undefined`. Note that this check is performed after all other schema-defined transformations and validations have been applied.
 
 > [!NOTE]
 >
 > **Default:** `false` for non-key attributes (keys are always required)
-
-A boolean value which indicates whether the attribute is required. If `true`, the attribute must be present in the object provided to the Model method. If `false`, the attribute is optional.
 
 ### `default`
 

@@ -6,7 +6,7 @@ import {
   isArray,
   isPlainObject,
 } from "@nerdware/ts-type-safety-utils";
-import type { SchemaSupportedTypeStringLiterals } from "../Schema/types.js";
+import type { SchemaSupportedTypeStringLiteral } from "../Schema/types/index.js";
 
 /**
  * `number` type guard function
@@ -66,6 +66,6 @@ export const isType = Object.freeze({
   /** Type guard function for `type: "enum"` */
   enum: isEnumMember,
 } as const) satisfies Record<
-  SchemaSupportedTypeStringLiterals,
+  SchemaSupportedTypeStringLiteral,
   (value?: unknown, ...args: unknown[]) => boolean
 >;
