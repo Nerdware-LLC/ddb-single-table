@@ -2,8 +2,6 @@
   // debugger
   "debug.toolBarLocation": "commandCenter",
 
-  "editor.bracketPairColorization.enabled": false,
-
   // prettier
   "editor.defaultFormatter": "esbenp.prettier-vscode",
 
@@ -14,9 +12,5 @@
   "eslint.format.enable": false,
 
   // typescript
-  "typescript.tsdk": "node_modules/typescript/lib",
-
-  "yaml.schemas": {
-    "https://json.schemastore.org/github-workflow.json": "file:///home/trevor/projects/fixit-api/.github/workflows/*.yaml"
-  }
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
