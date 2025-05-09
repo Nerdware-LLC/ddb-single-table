@@ -51,6 +51,7 @@ jobs:
     needs: run-tests # run job if tests passed
     if: needs.run-tests.outputs.success == 'true'
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: test-coverage-reports }
       - uses: codecov/codecov-action@v4

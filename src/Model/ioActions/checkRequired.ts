@@ -19,8 +19,8 @@ export const checkRequired: IOAction = function (
 
     // Check if item is missing a required field
     if (
-      attrConfig.required === true &&
-      (!Object.hasOwn(item, attrName) || isUndefined(item[attrName]))
+      attrConfig.required === true
+      && (!Object.hasOwn(item, attrName) || isUndefined(item[attrName]))
     ) {
       // Throw error if required field is missing
       throw new ItemInputError(

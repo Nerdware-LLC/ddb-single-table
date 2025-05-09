@@ -114,7 +114,7 @@ export class TableKeysSchema extends BaseSchema {
           });
         }
 
-        // See if "indexes" exists on accum yet
+        // See if "indexes" has been defined yet
         if (!indexes) {
           // If accum does not yet have "indexes", add it.
           indexes = {};
@@ -135,14 +135,11 @@ export class TableKeysSchema extends BaseSchema {
       }
     }
 
-    // Ensure table hashKey and rangeKey exist
-    if (!tableHashKey || !tableRangeKey) {
-      const { keyType, keyConfig } = !tableHashKey
-        ? { keyType: "hash", keyConfig: "isHashKey" }
-        : { keyType: "range", keyConfig: "isRangeKey" };
+    // Ensure table hashKey exists
+    if (!tableHashKey) {
       throw new SchemaValidationError({
         schemaName,
-        problem: `the schema does not contain a ${keyType} key (must specify exactly one attribute with "${keyConfig}: true")`,
+        problem: `the schema does not contain a hash key (must specify exactly one attribute with "isHashKey: true")`,
       });
     }
 

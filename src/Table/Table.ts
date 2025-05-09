@@ -18,13 +18,7 @@ import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../ty
 
 /**
  * `Table` provides an easy-to-use API for managing your DynamoDB table and the
- * {@link Model | Models } that use it. It is the primary entry point for DDBST.
- *
- * @param tableName - The name of the DynamoDB table.
- * @param tableKeysSchema - The schema of the table's primary and sort keys.
- * @param ddbClient - Either an existing DynamoDBClient instance, or arguments for instantiating a new one.
- * @param marshallingConfigs - Marshalling configs for the DynamoDBDocumentClient instance.
- * @param logger - A custom function to use for logging (defaults to `console.info`).
+ * {@link Model|Models} that use it. It is the primary entry point for DDBST.
  */
 export class Table<const TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
   // INSTANCE PROPERTIES:

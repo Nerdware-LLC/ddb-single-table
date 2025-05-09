@@ -12,6 +12,7 @@ export default tsEslint.config(
   ///////////////////////////////////////////////////////////////////
   // ALL FILES
   {
+    name: "files:all/base",
     files: ["src/**/*.[tj]s", "__mocks__/**/*", "./*.[tj]s"],
     linterOptions: { reportUnusedDisableDirectives: true },
     languageOptions: {
@@ -157,8 +158,18 @@ export default tsEslint.config(
     },
   },
   ///////////////////////////////////////////////////////////////////
+  // TOOLING CONFIG FILES
+  {
+    name: "files:tooling-config-files",
+    files: ["./*.[jt]s"],
+    rules: {
+      "n/no-process-env": "off",
+    },
+  },
+  ///////////////////////////////////////////////////////////////////
   // TEST FILES
   {
+    name: "files:tests-and-mocks",
     files: ["src/**/*.test.ts", "**/tests/**/*", "**/__mocks__/**/*"],
     languageOptions: {
       globals: vitestPlugin.environments.env.globals,

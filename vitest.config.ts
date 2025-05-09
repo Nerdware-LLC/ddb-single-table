@@ -1,5 +1,6 @@
-import GithubActionsReporter from "vitest-github-actions-reporter";
 import { defineConfig, coverageConfigDefaults } from "vitest/config";
+import GithubActionsReporter from "vitest-github-actions-reporter";
+import type { EmptyObject } from "type-fest";
 
 export default defineConfig({
   test: {
@@ -13,9 +14,21 @@ export default defineConfig({
     globals: true,
     silent: true,
     hideSkippedTests: true,
+    watch: false,
+
+    bail: process.env.CI ? 1 : 0, // If in CI, bail on first test failure, else run all tests
+
     environment: "node",
+    setupFiles: "./vitest.setup.ts",
+
     include: ["**/?(*.){test,spec}.?(c|m)[tj]s?(x)"],
-    reporters: ["default", ...(process.env.GITHUB_ACTIONS ? [new GithubActionsReporter()] : [])],
+
+    reporters: [
+      "default",
+      // GithubActionsReporter is used to format test results for GitHub Actions
+      ...(process.env.GITHUB_ACTIONS ? [new GithubActionsReporter()] : []),
+    ],
+
     coverage: {
       include: ["src/**/*.{js,ts}"],
       exclude: [
@@ -25,8 +38,9 @@ export default defineConfig({
         "__mocks__/**/*",
       ],
       reporter: [
-        ...coverageConfigDefaults.reporter,
-        "json-summary", // <-- used by vitest-coverage-report GitHub Action
+        ...(coverageConfigDefaults.reporter as Array<[string, EmptyObject]>),
+        // "json-summary" is used by the vitest-coverage-report GitHub Action
+        ...(process.env.GITHUB_ACTIONS ? ["json-summary"] : []),
       ],
     },
   },

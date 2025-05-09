@@ -2,9 +2,6 @@ import { Model } from "../Model/index.js";
 import { SchemaValidationError } from "../utils/index.js";
 import { Table } from "./Table.js";
 
-vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
-vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
-
 describe("Table", () => {
   describe("new Table()", () => {
     test("returns a Table instance with expected properties when provided valid arguments", () => {
@@ -13,6 +10,16 @@ describe("Table", () => {
         tableKeysSchema: {
           partitionKey: { type: "string", isHashKey: true, required: true },
           sortKey: { type: "string", isRangeKey: true, required: true },
+        },
+      });
+      expect(table).toBeInstanceOf(Table);
+    });
+
+    test("returns a valid Table instance even if there's no tableRangeKey", () => {
+      const table = new Table({
+        tableName: "MockTable",
+        tableKeysSchema: {
+          partitionKey: { type: "string", isHashKey: true, required: true },
         },
       });
       expect(table).toBeInstanceOf(Table);

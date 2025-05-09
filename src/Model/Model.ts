@@ -83,9 +83,6 @@ import type { SetOptional } from "type-fest";
  * @template Schema - The Model's readonly schema.
  * @template ItemType - A type which reflects a complete instance of a Model item.
  * @template ItemCreationParams - The parameters used to create a new item instance.
- * @param {string} modelName - The name of the Model.
- * @param {Schema} modelSchema - The Model's schema.
- * @param {ModelSchemaOptions} [modelSchemaOptions] - Options for the Model's schema.
  */
 export class Model<
   const Schema extends ModelSchemaType,
@@ -108,7 +105,9 @@ export class Model<
   readonly ddbClient: DdbClientWrapper;
 
   constructor(
+    /** The name of the Model. */
     modelName: string,
+    /** The Model's {@link Schema}. */
     modelSchema: Schema,
     /** {@link ModelSchemaOptions} and table key/index properties. */
     {
@@ -121,8 +120,8 @@ export class Model<
       allowUnknownAttributes = ModelSchema.DEFAULT_OPTIONS.allowUnknownAttributes,
       transformItem,
       validateItem,
-    }: TableKeysAndIndexes &
-      ModelSchemaOptions & {
+    }: TableKeysAndIndexes
+      & ModelSchemaOptions & {
         tableName: string;
         ddbClient: DdbClientWrapper;
       }
@@ -631,14 +630,14 @@ export class Model<
       const [pkAttrName, skAttrName] = Object.keys(unaliasedWhere);
 
       if (
-        !IndexName && // skAttrName may be undefined if the `where` only contains the PK
-        (pkAttrName !== this.tableHashKey || (!!skAttrName && skAttrName !== this.tableRangeKey))
+        !IndexName // skAttrName may be undefined if the `where` only contains the PK
+        && (pkAttrName !== this.tableHashKey || (!!skAttrName && skAttrName !== this.tableRangeKey))
       ) {
         // Get IndexName by searching table's indexes for matching PK+SK
         for (const indexName in this.indexes) {
           if (
-            pkAttrName === this.indexes[indexName].indexPK &&
-            (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
+            pkAttrName === this.indexes[indexName].indexPK
+            && (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
           ) {
             IndexName = indexName;
             break;

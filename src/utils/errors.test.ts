@@ -85,8 +85,8 @@ describe("InvalidExpressionError", () => {
     };
     const error = new InvalidExpressionError(payload);
     expect(error.message).toBe(
-      `Invalid ${payload.invalidValueDescription} (generating ${payload.expressionName}): \n` +
-        `${payload.problem}: "${payload.invalidValue as string}"`
+      `Invalid ${payload.invalidValueDescription} (generating ${payload.expressionName}): \n`
+        + `${payload.problem}: "${payload.invalidValue as string}"`
     );
   });
 });

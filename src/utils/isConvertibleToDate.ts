@@ -34,8 +34,8 @@ const INVALID_TIMESTAMP_VALUE_TYPES = new Set([
 export const isConvertibleToDate = (value?: unknown): value is ValidTimestamp => {
   // `value` is cast to any, bc the first two checks ensure it won't throw
   return (
-    !!value &&
-    !INVALID_TIMESTAMP_VALUE_TYPES.has(typeof value) &&
-    dayjs(value as DayJsCtorParamType).isValid()
+    !!value
+    && !INVALID_TIMESTAMP_VALUE_TYPES.has(typeof value)
+    && dayjs(value as DayJsCtorParamType).isValid()
   );
 };

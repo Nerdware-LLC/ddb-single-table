@@ -12,16 +12,15 @@ import {
   DeleteCommand,
   QueryCommand,
   ScanCommand,
+  TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { DdbClientWrapper } from "./DdbClientWrapper.js";
 import type {
   DdbClientWrapperConstructorParams,
   CreateTableInput,
   UpdateItemInput,
+  TransactWriteItemsInput,
 } from "./types/index.js";
-
-vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
-vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
 
 describe("DdbClientWrapper", () => {
   // Mock DdbClientWrapper inputs:
@@ -341,6 +340,37 @@ describe("DdbClientWrapper", () => {
     });
     test(`does not throw when called with invalid arguments`, async () => {
       await expect(mockDdbClientWrapper.scan(null as any)).resolves.not.toThrow();
+    });
+  });
+
+  describe("DdbClientWrapper.transactWriteItems()", () => {
+    // Valid TransactWriteItem input:
+    const transactWriteItemValidInput: TransactWriteItemsInput = {
+      TransactItems: [
+        {
+          Put: {
+            TableName: mockTableName,
+            Item: mockItem,
+          },
+        },
+      ],
+    };
+
+    test(`creates a TransactWriteCommand and returns mocked "ConsumedCapacity" when called with valid arguments`, async () => {
+      // Arrange ddbDocClient to return mockItems
+      const ddbDocClientSpy = vi
+        .spyOn(ddbDocClientSpyTarget, "send")
+        .mockResolvedValueOnce({ ConsumedCapacity: mockItems });
+
+      const result = await mockDdbClientWrapper.transactWriteItems(transactWriteItemValidInput);
+
+      // Assert the result
+      expect(result.ConsumedCapacity).toStrictEqual(mockItems);
+      // Assert the arg provided to the client's `send` method
+      const sdkCommand = ddbDocClientSpy.mock.lastCall?.[0];
+      expect(sdkCommand).toBeInstanceOf(TransactWriteCommand);
+      // Assert the args provided to the SDK command
+      expect((sdkCommand as any)?.input).toStrictEqual(transactWriteItemValidInput);
     });
   });
 

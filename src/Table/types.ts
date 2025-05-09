@@ -18,8 +18,11 @@ import type { Simplify, Except } from "type-fest";
  */
 export type TableConstructorParams<TableKeysSchema extends TableKeysSchemaType> = Simplify<
   {
+    /** The name of the DynamoDB table. */
     tableName: string;
+    /** The schema of the table's primary and sort keys. */
     tableKeysSchema: TableKeysSchema;
+    /** A custom function to use for logging (defaults to `console.info`). */
     logger?: (str: string) => void;
   } & DdbClientWrapperConstructorParams
 >;

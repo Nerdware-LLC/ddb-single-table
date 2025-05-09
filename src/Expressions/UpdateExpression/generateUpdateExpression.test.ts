@@ -7,17 +7,37 @@ describe("generateUpdateExpression()", () => {
   });
 
   test("returns the expected values when called with truthy string/number/object attributes", () => {
-    const result = generateUpdateExpression({ attr1: "foo", attr2: 22, attr3: [{ nested: true }] });
-    expect(result.UpdateExpression).toBe("SET #attr1 = :attr1, #attr2 = :attr2, #attr3 = :attr3");
+    const result = generateUpdateExpression({
+      attr1: "foo",
+      attr2: 22,
+      attr3: {
+        bools: [true, false],
+        foo: {
+          bar: {
+            baz: "qux",
+          },
+        },
+      },
+    });
+
+    expect(result.UpdateExpression).toBe(
+      "SET #attr1 = :attr1, #attr2 = :attr2, #attr3.#bools[0] = :attr3_bools_i0, #attr3.#bools[1] = :attr3_bools_i1, #attr3.#foo.#bar.#baz = :attr3_foo_bar_baz"
+    );
     expect(result.ExpressionAttributeNames).toStrictEqual({
       "#attr1": "attr1",
       "#attr2": "attr2",
       "#attr3": "attr3",
+      "#bools": "bools",
+      "#foo": "foo",
+      "#bar": "bar",
+      "#baz": "baz",
     });
     expect(result.ExpressionAttributeValues).toStrictEqual({
       ":attr1": "foo",
       ":attr2": 22,
-      ":attr3": [{ nested: true }],
+      ":attr3_bools_i0": true,
+      ":attr3_bools_i1": false,
+      ":attr3_foo_bar_baz": "qux",
     });
   });
 

@@ -38,11 +38,11 @@ export const validateWhereQueryComparand = <Operator extends WhereQueryOperator>
   } else if (operator === "between") {
     // For "between", value must be `[string, string]` or `[number, number]`
     if (
-      !isType.array(value) ||
-      value.length !== 2 ||
-      !(
-        (isType.string(value[0]) && isType.string(value[1])) ||
-        (isType.number(value[0]) && isType.number(value[1]))
+      !isType.array(value)
+      || value.length !== 2
+      || !(
+        (isType.string(value[0]) && isType.string(value[1]))
+        || (isType.number(value[0]) && isType.number(value[1]))
       )
     ) {
       throw new InvalidExpressionError({

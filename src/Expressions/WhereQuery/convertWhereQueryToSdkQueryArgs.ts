@@ -1,5 +1,5 @@
-import { isType, InvalidExpressionError } from "../../utils/index.js";
-import { getExpressionAttrTokens } from "../helpers.js";
+import { isPlainObject } from "@nerdware/ts-type-safety-utils";
+import { InvalidExpressionError } from "../../utils/index.js";
 import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
 import { WHERE_QUERY_OPERATOR_TO_EXPRESSION } from "./whereQueryOperatorToExpression.js";
 import type { WhereQueryComparisonObject } from "./types.js";
@@ -18,7 +18,7 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = Ba
   where,
 }: WhereQueryParams<ItemParams>) => {
   // Ensure `where` is a plain Record-like object
-  if (!isType.map(where)) {
+  if (!isPlainObject(where)) {
     throw new InvalidExpressionError({
       expressionName: "KeyConditionExpression",
       invalidValue: where,
@@ -53,7 +53,9 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = Ba
     const { operator, comparand } = getValidatedComparisonValues(attrName, value);
 
     // Get the keys for ExpressionAttribute{Names,Values}
-    const { attrNamesToken, attrValuesToken } = getExpressionAttrTokens(attrName);
+    const attrNamesToken = `#${attrName}`;
+    const attrValuesToken = `:${attrName}`;
+
     // Update ExpressionAttributeNames
     ExpressionAttributeNames[attrNamesToken] = attrName;
     // Update ExpressionAttributeValues

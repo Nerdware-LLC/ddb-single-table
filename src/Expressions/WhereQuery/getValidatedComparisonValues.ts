@@ -40,8 +40,8 @@ export const getValidatedComparisonValues = (attrName: string, rawWhereQueryValu
         invalidValue: rawWhereQueryValue,
         invalidValueDescription: "WhereQuery comparison object",
         problem:
-          `KeyConditionExpressions can only include one logical operator per key, but the ` +
-          `WhereQuery object for attribute "${attrName}" contains more than one operator`,
+          `KeyConditionExpressions can only include one logical operator per key, but the `
+          + `WhereQuery object for attribute "${attrName}" contains more than one operator`,
       });
     }
 

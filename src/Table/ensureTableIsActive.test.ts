@@ -2,9 +2,6 @@ import { DdbSingleTableError } from "../utils/index.js";
 import { Table } from "./Table.js";
 import type { TableCreateTableParameters } from "./types.js";
 
-vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
-vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
-
 describe("table.ensureTableIsActive()", () => {
   // Since this fn uses timeouts, we need to use fake timers:
   beforeEach(() => {
