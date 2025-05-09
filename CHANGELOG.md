@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.10.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.9.0...v2.10.0-next.1) (2025-05-09)
+
+
+### Bug Fixes
+
+* correct the logic testing whether 'maxRetries' has been met ([ee57cb2](https://github.com/Nerdware-LLC/ddb-single-table/commit/ee57cb2bb49ddf967d5ad6ef4ead99785bff01ad))
+* rm duplicative `NestDepthMax32` definition (now it's imported) ([616751b](https://github.com/Nerdware-LLC/ddb-single-table/commit/616751bed05c6ff570e55b3dfa451133ed4bedd0))
+* rm erroneous requirement of a `tableRangeKey` ([30e741b](https://github.com/Nerdware-LLC/ddb-single-table/commit/30e741bcf41986eed6e474a65e32372c579af3ee))
+* update the logic in `generateUpdateExpression` to work as expected with nested partial objects/arrays ([da479f5](https://github.com/Nerdware-LLC/ddb-single-table/commit/da479f51af1572d5ed2fe70e0e765e0f339611aa))
+
+
+### Features
+
+* add type `ItemTypeToSchema` ([b7ceb03](https://github.com/Nerdware-LLC/ddb-single-table/commit/b7ceb0355ac940302324aec0dfdee29999eeaac3))
+
 # [2.9.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.8.0...v2.9.0) (2025-04-21)
 
 
