@@ -4,9 +4,7 @@ import { ModelSchema } from "../Schema/ModelSchema.js";
 import { Table } from "../Table/Table.js";
 import { Model } from "./Model.js";
 import type { ItemTypeFromSchema } from "../types/index.js";
-
-vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
-vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
+import type { Except } from "type-fest";
 
 describe("Model", () => {
   // Mock Table instance:
@@ -96,7 +94,7 @@ describe("Model", () => {
   ].reduce(
     (
       accum: {
-        mockItems: Array<Omit<MockItem, "createdAt" | "updatedAt">>;
+        mockItems: Array<Except<MockItem, "createdAt" | "updatedAt">>;
         mockItemsKeys: Array<Pick<MockItem, "id" | "handle">>;
         unaliasedMockItems: Array<{ pk: string; sk: string } & Pick<MockItem, "data" | "profile">>;
         unaliasedMockItemsKeys: Array<{ pk: string; sk: string }>;

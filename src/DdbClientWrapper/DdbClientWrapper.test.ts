@@ -20,9 +20,6 @@ import type {
   UpdateItemInput,
 } from "./types/index.js";
 
-vi.mock("@aws-sdk/client-dynamodb"); // <repo_root>/__mocks__/@aws-sdk/client-dynamodb.ts
-vi.mock("@aws-sdk/lib-dynamodb"); //    <repo_root>/__mocks__/@aws-sdk/lib-dynamodb.ts
-
 describe("DdbClientWrapper", () => {
   // Mock DdbClientWrapper inputs:
   const mockTableName = "MockTable";
