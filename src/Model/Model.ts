@@ -83,9 +83,6 @@ import type { SetOptional } from "type-fest";
  * @template Schema - The Model's readonly schema.
  * @template ItemType - A type which reflects a complete instance of a Model item.
  * @template ItemCreationParams - The parameters used to create a new item instance.
- * @param {string} modelName - The name of the Model.
- * @param {Schema} modelSchema - The Model's schema.
- * @param {ModelSchemaOptions} [modelSchemaOptions] - Options for the Model's schema.
  */
 export class Model<
   const Schema extends ModelSchemaType,
@@ -108,7 +105,9 @@ export class Model<
   readonly ddbClient: DdbClientWrapper;
 
   constructor(
+    /** The name of the Model. */
     modelName: string,
+    /** The Model's {@link Schema}. */
     modelSchema: Schema,
     /** {@link ModelSchemaOptions} and table key/index properties. */
     {
