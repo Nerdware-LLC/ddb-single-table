@@ -134,36 +134,37 @@ type PickRequiredAttrs<
 /**
  * This generic gets the type from an individual attribute config from a Model schema.
  */
+// prettier-ignore
 type AttrValue<
   T extends BaseAttributeConfig,
   Opts extends ItemTypeOpts,
   NestDepth extends NestDepthMax32,
 > =
-  IterateNestDepthMax32<NestDepth> extends 32
+  T["type"] extends "string"
+    ? CheckNullable<string, T>
+  : T["type"] extends "number"
+    ? CheckNullable<number, T>
+  : T["type"] extends "boolean"
+    ? CheckNullable<boolean, T>
+  : T["type"] extends "Buffer"
+    ? CheckNullable<Buffer, T>
+  : T["type"] extends "Date"
+    ? CheckNullable<Date, T>
+  : T extends { type: "enum"; oneOf: ReadonlyArray<string> }
+    ? CheckNullable<T["oneOf"][number], T>
+  : NestDepth extends 32 // <-- Only nested types remain, so ensure NestDepth is not already maxed out.
     ? never
-    : T["type"] extends "string"
-      ? CheckNullable<string, T>
-      : T["type"] extends "number"
-        ? CheckNullable<number, T>
-        : T["type"] extends "boolean"
-          ? CheckNullable<boolean, T>
-          : T["type"] extends "Buffer"
-            ? CheckNullable<Buffer, T>
-            : T["type"] extends "Date"
-              ? CheckNullable<Date, T>
-              : T extends { type: "map"; schema: ModelSchemaNestedMap }
-                ? CheckNullable<
-                    SchemaMapToItem<T["schema"], Opts, IterateNestDepthMax32<NestDepth>>,
-                    T
-                  >
-                : T extends { type: "array" | "tuple"; schema: ModelSchemaNestedArray }
-                  ? CheckNullable<
-                      Array<AttrValue<T["schema"][number], Opts, IterateNestDepthMax32<NestDepth>>>,
-                      T
-                    >
-                  : T extends { type: "enum"; oneOf: ReadonlyArray<string> }
-                    ? CheckNullable<T["oneOf"][number], T>
-                    : never;
+  : T extends { type: "map"; schema: ModelSchemaNestedMap }
+    ? CheckNullable<
+        SchemaMapToItem<T["schema"], Opts, IterateNestDepthMax32<NestDepth>>,
+        T
+      >
+  : T extends { type: "array" | "tuple"; schema: ModelSchemaNestedArray }
+    ? CheckNullable<
+        Array<AttrValue<T["schema"][number], Opts, IterateNestDepthMax32<NestDepth>>>,
+        T
+      >
+  : never; // <-- Indicates an invalid "type" in the schema.
 
 /**
  * This internal utility type checks if the `AttrConfig` specifies `nullable: true`,
