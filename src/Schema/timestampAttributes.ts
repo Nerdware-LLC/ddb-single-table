@@ -31,5 +31,5 @@ export const TIMESTAMP_ATTRIBUTES = {
       toDB: () => new Date(),
     },
   },
-} as const satisfies ModelSchemaNestedMap &
-  Record<keyof TimestampAttributes, ModelSchemaAttributeConfig>;
+} as const satisfies ModelSchemaNestedMap
+  & Record<keyof TimestampAttributes, ModelSchemaAttributeConfig>;

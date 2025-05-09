@@ -89,9 +89,9 @@ export class BaseSchema {
         }
         // NESTED TYPES: ensure "schema" is correct type
         if (
-          (type === "map" && !isType.map(nestedSchema)) ||
-          (type === "array" && !isType.array(nestedSchema)) ||
-          (type === "tuple" && !isType.array(nestedSchema))
+          (type === "map" && !isType.map(nestedSchema))
+          || (type === "array" && !isType.array(nestedSchema))
+          || (type === "tuple" && !isType.array(nestedSchema))
         ) {
           throw new SchemaValidationError({
             schemaName,

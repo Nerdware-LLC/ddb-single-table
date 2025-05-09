@@ -29,14 +29,14 @@ export const typeChecking: IOAction = function (
     if (!isType[attrConfig.type](item[attrName], attrConfig.oneOf ?? attrConfig.schema ?? [])) {
       // Throw error if there's a type mismatch
       throw new ItemInputError(
-        `Invalid type of value provided for ${getAttrErrID(modelName, attrName, attrConfig)}.` +
-          `\nExpected: ${attrConfig.type} ` +
-          (attrConfig.type === "enum"
+        `Invalid type of value provided for ${getAttrErrID(modelName, attrName, attrConfig)}.`
+          + `\nExpected: ${attrConfig.type} `
+          + (attrConfig.type === "enum"
             ? `(oneOf: ${safeJsonStringify(attrConfig.oneOf)})`
             : ["map", "array", "tuple"].includes(attrConfig.type)
               ? `(schema: ${stringifyNestedSchema(attrConfig.schema!)})`
-              : "") +
-          `\nReceived: ${safeJsonStringify(item[attrName])}`
+              : "")
+          + `\nReceived: ${safeJsonStringify(item[attrName])}`
       );
     }
 

@@ -78,8 +78,8 @@ export const ensureTableIsActive = async function <
       // If Table doesn't exist AND !createIfNotExists, throw error.
       if (!createIfNotExists) {
         throw new DdbSingleTableError(
-          `Table "${this.tableName}" not found. To have the table created automatically when ` +
-            `DynamoDB returns a "ResourceNotFoundException", set "createIfNotExists" to true.`
+          `Table "${this.tableName}" not found. To have the table created automatically when `
+            + `DynamoDB returns a "ResourceNotFoundException", set "createIfNotExists" to true.`
         );
       }
 

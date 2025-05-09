@@ -25,8 +25,8 @@ export const createTable = async function <const TableKeysSchema extends TableKe
 ) {
   // If createTableArgs were provided, provide some minor early validation:
   if (
-    createTableArgs.BillingMode === "PAY_PER_REQUEST" &&
-    !!createTableArgs.ProvisionedThroughput
+    createTableArgs.BillingMode === "PAY_PER_REQUEST"
+    && !!createTableArgs.ProvisionedThroughput
   ) {
     throw new DdbSingleTableError(
       `Invalid "createTable" args: "ProvisionedThroughput" should not be provided when "BillingMode" is "PAY_PER_REQUEST".`
