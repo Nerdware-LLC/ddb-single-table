@@ -44,7 +44,7 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
     maxDelay = 3500,
     useJitter = false,
   }: BatchRetryExponentialBackoffConfigs = {},
-  attemptNumber = 1
+  numPreviousRetries = 0
 ): Promise<void> => {
   // Init variable to hold UnprocessedItems/UnprocessedKeys
   let unprocessedRequestObjects: Array<Record<string, unknown>> | undefined;
@@ -61,17 +61,17 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
   }
 
   if (isArray(unprocessedRequestObjects) && unprocessedRequestObjects.length > 0) {
-    // Determine the next `attemptNumber` and the delay before the next attempt
-    const nextAttemptNumber = attemptNumber + 1;
-    // The delay is calculated as: initialDelay * timeMultiplier^attemptNumber milliseconds
-    let delay = initialDelay * timeMultiplier ** attemptNumber;
+    // Determine the next `numPreviousRetries` and the delay before the next attempt
+    const retryCount = numPreviousRetries + 1;
+    // The delay is calculated as: initialDelay * timeMultiplier^retryCount milliseconds
+    let delay = initialDelay * timeMultiplier ** retryCount;
 
     // If the next attempt would exceed maxRetries OR maxDelay, throw an error.
-    if (nextAttemptNumber > maxRetries || delay > maxDelay) {
+    if (retryCount > maxRetries || delay > maxDelay) {
       throw new DdbSingleTableError(
-        `After several attempts, ${unprocessedRequestObjects.length} batch requests were ` +
-          `still unable to be processed due to insufficient provisioned throughput: ` +
-          safeJsonStringify(unprocessedRequestObjects)
+        `After several attempts, ${unprocessedRequestObjects.length} batch requests were `
+          + `still unable to be processed due to insufficient provisioned throughput: `
+          + safeJsonStringify(unprocessedRequestObjects)
       );
     }
 
@@ -88,7 +88,7 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
       submitBatchRequest,
       unprocessedRequestObjects,
       { initialDelay, timeMultiplier, maxRetries, maxDelay, useJitter },
-      nextAttemptNumber
+      retryCount
     );
   }
 };
