@@ -14,6 +14,7 @@ export default defineConfig({
     silent: true,
     hideSkippedTests: true,
     environment: "node",
+    setupFiles: "./vitest.setup.ts",
     include: ["**/?(*.){test,spec}.?(c|m)[tj]s?(x)"],
     reporters: ["default", ...(process.env.GITHUB_ACTIONS ? [new GithubActionsReporter()] : [])],
     coverage: {
