@@ -15,6 +15,16 @@ describe("Table", () => {
       expect(table).toBeInstanceOf(Table);
     });
 
+    test("returns a valid Table instance even if there's no tableRangeKey", () => {
+      const table = new Table({
+        tableName: "MockTable",
+        tableKeysSchema: {
+          partitionKey: { type: "string", isHashKey: true, required: true },
+        },
+      });
+      expect(table).toBeInstanceOf(Table);
+    });
+
     test(`throws a SchemaValidationError when provided an invalid "tableKeysSchema" argument`, () => {
       expect(() => {
         new Table({
