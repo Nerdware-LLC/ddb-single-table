@@ -23,6 +23,36 @@ describe("TableKeysSchema", () => {
   const ERR_MSG_PREFIX = `TableKeysSchema is invalid:`;
 
   describe("TableKeysSchema.validate()", () => {
+    test(`returns an object with just "tableHashKey" when called with a schema that only contains a pk`, () => {
+      expect(TableKeysSchema.validate({ pk: VALID_TABLE_KEYS_SCHEMA.pk })).toStrictEqual({
+        tableHashKey: "pk",
+      });
+    });
+
+    test(`returns an object with the keys defined in a schema that only contains a pk and sk`, () => {
+      expect(
+        TableKeysSchema.validate({ pk: VALID_TABLE_KEYS_SCHEMA.pk, sk: VALID_TABLE_KEYS_SCHEMA.sk })
+      ).toStrictEqual({
+        tableHashKey: "pk",
+        tableRangeKey: "sk",
+      });
+    });
+
+    test(`returns an object with the keys+indexes defined in the provided schema`, () => {
+      expect(TableKeysSchema.validate(VALID_TABLE_KEYS_SCHEMA)).toStrictEqual({
+        tableHashKey: "pk",
+        tableRangeKey: "sk",
+        indexes: {
+          foo_index: {
+            name: "foo_index",
+            type: "GLOBAL",
+            indexPK: "fooIndexPK",
+            indexSK: "sk",
+          },
+        },
+      });
+    });
+
     test("validates a valid TableKeysSchemaType with all supported types and attributes", () => {
       expect(() => TableKeysSchema.validate(VALID_TABLE_KEYS_SCHEMA)).not.toThrowError();
     });
@@ -123,12 +153,6 @@ describe("TableKeysSchema", () => {
     test(`throws a SchemaValidationError when the schema does not specify table hash-key`, () => {
       expect(() => TableKeysSchema.validate({ sk: VALID_TABLE_KEYS_SCHEMA.sk })).toThrowError(
         `${ERR_MSG_PREFIX} the schema does not contain a hash key (must specify exactly one attribute with "isHashKey: true").`
-      );
-    });
-
-    test(`throws a SchemaValidationError when the schema does not specify a table range-key`, () => {
-      expect(() => TableKeysSchema.validate({ pk: VALID_TABLE_KEYS_SCHEMA.pk })).toThrowError(
-        `${ERR_MSG_PREFIX} the schema does not contain a range key (must specify exactly one attribute with "isRangeKey: true").`
       );
     });
   });
