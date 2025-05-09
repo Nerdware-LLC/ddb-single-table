@@ -157,6 +157,15 @@ export default tsEslint.config(
     },
   },
   ///////////////////////////////////////////////////////////////////
+  // TOOLING CONFIG FILES
+  {
+    name: "files:tooling-config-files",
+    files: ["./*.[jt]s"],
+    rules: {
+      "n/no-process-env": "off",
+    },
+  },
+  ///////////////////////////////////////////////////////////////////
   // TEST FILES
   {
     files: ["src/**/*.test.ts", "**/tests/**/*", "**/__mocks__/**/*"],
