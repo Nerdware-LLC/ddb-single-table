@@ -75,6 +75,11 @@ describe("DdbConnectionError", () => {
     const error = new DdbConnectionError({ message: customMessage });
     expect(error.message).toBe(DdbConnectionError.DEFAULT_MSG + ` (${customMessage})`);
   });
+  test(`returns a DdbConnectionError with the provided "code"`, () => {
+    const customCode = "CUSTOM_CODE";
+    const error = new DdbConnectionError({ code: customCode });
+    expect(error.code).toBe(customCode);
+  });
 });
 
 // This describe block is unique to the InvalidExpressionError class.
