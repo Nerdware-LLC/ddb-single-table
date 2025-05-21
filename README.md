@@ -865,4 +865,3 @@ Trevor Anderson — [Trevor@Nerdware.cloud](mailto:trevor@nerdware.cloud) — [@
 [**_Dare Mighty Things._**](https://www.youtube.com/watch?v=GO5FwsblpT8)
 
 </div>
-```
