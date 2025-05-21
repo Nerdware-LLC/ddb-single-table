@@ -11,12 +11,11 @@ export default defineConfig({
      * - restores the original implementation so fns don't return undefined like with mockReset
      */
     restoreMocks: true,
+    unstubGlobals: true,
     globals: true,
     silent: true,
     hideSkippedTests: true,
     watch: false,
-
-    bail: process.env.CI ? 1 : 0, // If in CI, bail on first test failure, else run all tests
 
     environment: "node",
     setupFiles: "./vitest.setup.ts",

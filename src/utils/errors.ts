@@ -1,8 +1,14 @@
+import { CONNREFUSED as ECONNREFUSED } from "node:dns";
 import { safeJsonStringify, isPlainObject, isString } from "@nerdware/ts-type-safety-utils";
 import type {
+  KeyAttributeConfig,
   ModelSchemaNestedAttributes,
   ModelSchemaAttributeConfig,
 } from "../Schema/types/index.js";
+import type { SetNonNullable } from "type-fest";
+
+/** Internal `errors` util */
+const isNonEmptyString = (value: unknown): value is string => isString(value) && !!value;
 
 /**
  * This is the base `error` class for custom errors defined in this package. If the
@@ -16,51 +22,46 @@ export class DdbSingleTableError extends Error {
 
   constructor(message?: unknown, fallbackMsg: string = DdbSingleTableError.DEFAULT_MSG) {
     // This ctor allows `message` to be any type, but it's only used if it's a truthy string.
-    super((isString(message) && message) || fallbackMsg);
+    super(isNonEmptyString(message) ? message : fallbackMsg);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, DdbSingleTableError);
   }
 }
 
 /**
- * This error wraps DDB-client [ECONNREFUSED errors]({@link DdbClientErrorECONNREFUSED})
- * for network/connection errors.
- * @param arg Either a string or DDB-client error.
+ * This error is used for network/connection errors.
  */
-export class DdbConnectionError extends DdbSingleTableError {
+export class DdbConnectionError
+  extends DdbSingleTableError
+  implements SetNonNullable<NodeJS.ErrnoException, "code">
+{
   static override readonly DEFAULT_MSG: string =
     "Failed to connect to the provided DynamoDB endpoint";
 
-  constructor(arg?: unknown) {
-    let message = (isString(arg) && arg) || DdbConnectionError.DEFAULT_MSG;
+  /** Dictionary of relevant, connection-related NodeJS `err.code` values. */
+  static readonly NODE_ERROR_CODES = {
+    ECONNREFUSED,
+  } as const satisfies { [errCode: string]: NonNullable<NodeJS.ErrnoException["code"]> };
 
-    if (isPlainObject(arg) && isString(arg.message)) {
-      message += ` (${arg.message})`;
+  /** The {@link NodeJS.ErrnoException|NodeJS error code}. */
+  readonly code: NonNullable<NodeJS.ErrnoException["code"]>;
+
+  constructor(arg?: unknown) {
+    // Set defaults:
+    let message: string = DdbConnectionError.DEFAULT_MSG,
+      code: string = DdbConnectionError.NODE_ERROR_CODES.ECONNREFUSED;
+
+    if (isNonEmptyString(arg)) {
+      message = arg;
+    } else if (isPlainObject(arg)) {
+      if (isNonEmptyString(arg.message)) message += ` (${arg.message})`;
+      if (isNonEmptyString(arg.code)) code = arg.code;
     }
 
     super(message);
+    this.code = code;
     Error.captureStackTrace(this, DdbConnectionError);
   }
-}
-
-/**
- * The shape of a DDB-client ECONNREFUSED error (this type is not exported by the SDK).
- */
-export interface DdbClientErrorECONNREFUSED {
-  message?: string;
-  /** The DDB-client error code (e.g., "ECONNREFUSED"). */
-  code?: string;
-  /** The DDB-client error number (e.g., -111). */
-  errno?: number;
-  /** The DDB-client syscall (e.g., "connect"). */
-  syscall?: string;
-  /** The DDB-client endpoint IP address (e.g., "127.0.0.1"). */
-  address?: number;
-  /** The DDB-client endpoint port number (e.g., 8000). */
-  port?: number;
-  /** DDB-client error metadata */
-  $metadata?: { attempts?: number; totalRetryDelay?: number };
-  [key: string]: unknown;
 }
 
 /**
@@ -120,16 +121,15 @@ export class InvalidExpressionError extends DdbSingleTableError {
   static override readonly DEFAULT_MSG: string = "Invalid expression";
 
   constructor(arg?: unknown) {
-    const message =
-      isString(arg) && arg
-        ? arg
-        : isPlainObject(arg)
-            && isString(arg.expressionName)
-            && isString(arg.invalidValueDescription)
-            && isString(arg.problem)
-          ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n`
-            + `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
-          : InvalidExpressionError.DEFAULT_MSG;
+    const message = isNonEmptyString(arg)
+      ? arg
+      : isPlainObject(arg)
+          && isString(arg.expressionName)
+          && isString(arg.invalidValueDescription)
+          && isString(arg.problem)
+        ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n`
+          + `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
+        : InvalidExpressionError.DEFAULT_MSG;
 
     super(message);
     Error.captureStackTrace(this, InvalidExpressionError);
@@ -171,22 +171,15 @@ export const getAttrErrID = (
  * Helper function which stringifies a nested schema for error messages.
  */
 export const stringifyNestedSchema = (nestedSchema: ModelSchemaNestedAttributes, spaces = 2) => {
+  // prettier-ignore
+  const strippedKeys: Array<string> = [
+    "isHashKey", "isRangeKey", "index", "required", "alias", "default", "validate", "transformValue",
+  ] satisfies Array<keyof KeyAttributeConfig>;
+
   return safeJsonStringify(
     nestedSchema,
     (key: unknown, value: unknown) => {
-      return typeof key === "string"
-        && [
-          "isHashKey",
-          "isRangeKey",
-          "index",
-          "required",
-          "alias",
-          "default",
-          "validate",
-          "transformValue",
-        ].includes(key)
-        ? undefined
-        : value;
+      return typeof key === "string" && strippedKeys.includes(key) ? undefined : value;
     },
     spaces
   );

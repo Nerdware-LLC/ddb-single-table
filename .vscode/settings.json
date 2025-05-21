@@ -1,7 +1,4 @@
 {
-  // debugger
-  "debug.toolBarLocation": "commandCenter",
-
   // prettier
   "editor.defaultFormatter": "esbenp.prettier-vscode",
 
@@ -11,6 +8,21 @@
   "eslint.codeActionsOnSave.rules": ["!prefer-const", "*"], // When I say `let`, I mean `let`!
   "eslint.format.enable": false,
 
+  // vscode search
+  "search.exclude": { "package-lock.yaml": true, "**/CHANGELOG.md": true },
+
   // typescript
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // vscode-icons
+  "vsicons.associations.files": [
+    // https://github.com/vscode-icons/vscode-icons/blob/master/src/iconsManifest/supportedExtensions.ts
+    {
+      "icon": "vitest",
+      /* The below configs get the vitest icon applied to the setup-file, but this does
+        not conform to documented usage, and frankly I don't know why it works. */
+      "extensions": ["vitest.setup.ts"],
+      "filename": ["vitest.setup.ts"]
+    }
+  ]
 }

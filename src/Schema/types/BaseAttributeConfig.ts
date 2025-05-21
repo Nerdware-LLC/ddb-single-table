@@ -1,7 +1,7 @@
 import type { SupportedAttributeValueType } from "../../types/index.js";
 
 /**
- * Union of {@link SupportedAttributeValueType|supported types} represented as string literals.
+ * Union of {@link SupportedAttributeValueType|attr value types} represented as string literals.
  */
 export type SchemaSupportedTypeStringLiteral =
   | "string"

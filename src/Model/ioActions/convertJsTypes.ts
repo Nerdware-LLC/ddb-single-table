@@ -5,12 +5,11 @@ import type { IOActions, IOAction, IODirection } from "./types.js";
 import type { SchemaSupportedTypeStringLiteral } from "../../Schema/types/index.js";
 import type { BaseItem } from "../../types/index.js";
 
-const DDB_TYPE_MAP: Partial<
-  Record<
-    SchemaSupportedTypeStringLiteral,
-    Record<IODirection, (value: NonNullable<unknown>) => NonNullable<unknown>>
-  >
-> = {
+const DDB_TYPE_MAP: {
+  readonly [TypeStringLiteral in SchemaSupportedTypeStringLiteral]?: {
+    readonly [Key in IODirection]: (value: NonNullable<unknown>) => NonNullable<unknown>;
+  };
+} = {
   Buffer: {
     toDB: (value) => (isBuffer(value) ? value.toString("binary") : value),
     fromDB: (value) => (isString(value) ? Buffer.from(value, "binary") : value),

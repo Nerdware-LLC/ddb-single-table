@@ -9,7 +9,7 @@ import type {
   TableKeysSchemaMetadata,
   MergeModelAndTableKeysSchema,
 } from "./types/index.js";
-import type { TableKeysAndIndexes } from "../Table/types.js";
+import type { TableKeysAndIndexes } from "../Table/types/index.js";
 
 /**
  * This class and its `BaseSchema` parent currently only serve to organize schema-related types,

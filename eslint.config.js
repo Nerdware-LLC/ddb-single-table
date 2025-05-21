@@ -13,7 +13,7 @@ export default tsEslint.config(
   // ALL FILES
   {
     name: "files:all/base",
-    files: ["src/**/*.[tj]s", "__mocks__/**/*", "./*.[tj]s"],
+    files: ["src/**/*.[tj]s", "./*.[tj]s"],
     linterOptions: { reportUnusedDisableDirectives: true },
     languageOptions: {
       ecmaVersion: "latest",
@@ -106,6 +106,14 @@ export default tsEslint.config(
       "@typescript-eslint/no-confusing-void-expression": [
         "error",
         { ignoreArrowShorthand: true }, // Allow 1-line arrow fns to return void for readability
+      ],
+      "@typescript-eslint/no-empty-interface": [
+        "error",
+        { allowSingleExtends: true },
+      ],
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        { allowInterfaces: "with-single-extends" },
       ],
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-extraneous-class": [

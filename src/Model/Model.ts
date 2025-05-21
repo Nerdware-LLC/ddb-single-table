@@ -1,5 +1,4 @@
 import { isArray } from "@nerdware/ts-type-safety-utils";
-import { handleBatchRequests, type BatchRequestFunction } from "../BatchRequests/index.js";
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions/index.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
@@ -7,6 +6,7 @@ import { ItemInputError } from "../utils/errors.js";
 import { ioActions } from "./ioActions/ioActions.js";
 import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions/types.js";
 import type {
+  ModelConstructorParams,
   AttributesAliasesMap,
   KeyParameters,
   GetItemOpts,
@@ -18,28 +18,29 @@ import type {
   BatchWriteItemsOpts,
   QueryOpts,
   ScanOpts,
-} from "./types.js";
+} from "./types/index.js";
 import type {
   ModelSchemaType,
   ModelSchemaAttributeConfig,
   ModelSchemaOptions,
   ModelSchemaEntries,
 } from "../Schema/types/index.js";
-import type { TableKeysAndIndexes } from "../Table/types.js";
+import type { TableKeysAndIndexes } from "../Table/types/index.js";
 import type {
   BaseItem,
   ItemKeys,
   ItemTypeFromSchema,
   ItemCreationParameters,
   ItemUpdateParameters,
+  NativeAttributeValue,
 } from "../types/index.js";
 import type { SetOptional } from "type-fest";
 
 /**
  * Each Model instance is provided with CRUD methods featuring parameter and return types which
- * reflect the Model's schema. Model methods wrap DynamoDBDocumentClient command operations with
- * sets of schema-aware middleware called {@link ioActions | "IO-Actions" } which provide rich
- * functionality for database-IO like alias mapping, value validation, user-defined transforms, etc.
+ * reflect the Model's schema. Model methods wrap `DynamoDBClient` command operations with sets
+ * of schema-aware middleware called {@link ioActions|"IO-Actions"} which provide rich functionality
+ * for database-IO like alias mapping, value validation, user-defined transforms, etc.
  *
  * IO-Actions are grouped into two sets based on the request-response cycle:
  * - **`toDB`**: IO-Actions performed on _request arguments_.
@@ -49,7 +50,7 @@ import type { SetOptional } from "type-fest";
  * IO-Actions are skipped by certain methods, depending on the method's purpose. For example, item
  * values provided to `Model.updateItem` are not subjected to `"required"` checks, since the method
  * is intended to update individual properties of existing items.
- * _See **{@link ioActions | IO-Actions}** for more info an any of the IO-Actions listed below._
+ * _See **{@link ioActions|IO-Actions}** for more info an any of the IO-Actions listed below._
  *
  * **`toDB`**:
  *   1. **`Alias Mapping`** — Replaces "alias" keys with attribute names.
@@ -102,7 +103,8 @@ export class Model<
   readonly tableHashKey: TableKeysAndIndexes["tableHashKey"];
   readonly tableRangeKey?: TableKeysAndIndexes["tableRangeKey"];
   readonly indexes?: TableKeysAndIndexes["indexes"];
-  readonly ddbClient: DdbClientWrapper;
+  /** A wrapper-class around the DynamoDB client instance which greatly simplifies DDB operations. */
+  readonly ddb: DdbClientWrapper;
 
   constructor(
     /** The name of the Model. */
@@ -115,16 +117,12 @@ export class Model<
       tableHashKey,
       tableRangeKey,
       indexes,
-      ddbClient,
+      ddb: ddbClientWrapper,
       autoAddTimestamps = ModelSchema.DEFAULT_OPTIONS.autoAddTimestamps,
       allowUnknownAttributes = ModelSchema.DEFAULT_OPTIONS.allowUnknownAttributes,
       transformItem,
       validateItem,
-    }: TableKeysAndIndexes
-      & ModelSchemaOptions & {
-        tableName: string;
-        ddbClient: DdbClientWrapper;
-      }
+    }: ModelConstructorParams
   ) {
     // Validate the Model schema and obtain the Model's alias maps
     const { attributesToAliasesMap, aliasesToAttributesMap } = ModelSchema.validate(modelSchema, {
@@ -153,7 +151,7 @@ export class Model<
     this.tableHashKey = tableHashKey;
     this.tableRangeKey = tableRangeKey;
     this.indexes = indexes;
-    this.ddbClient = ddbClient;
+    this.ddb = ddbClientWrapper;
 
     // Cache sorted schema entries for IO-Actions
     this.schemaEntries = ModelSchema.getSortedSchemaEntries(modelSchema, {
@@ -178,14 +176,12 @@ export class Model<
   ): Promise<ItemType | undefined> => {
     const unaliasedKeys = this.processKeyArgs(primaryKeys);
 
-    const response = await this.ddbClient.getItem({
+    const response = await this.ddb.getItem({
       ...getItemOpts,
-      TableName: this.tableName,
       Key: unaliasedKeys,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-    if (response?.Item) {
+    if (response.Item) {
       return this.processItemAttributes.fromDB<ItemType>(response.Item);
     }
   };
@@ -226,47 +222,26 @@ export class Model<
    */
   readonly batchGetItems = async (
     primaryKeys: Array<KeyParameters<Schema>>,
-    { exponentialBackoffConfigs, ...batchGetItemOpts }: BatchGetItemsOpts = {}
-  ): Promise<Array<ItemType>> => {
+    batchGetItemsOpts: BatchGetItemsOpts = {}
+  ): Promise<Array<ItemType> | undefined> => {
     // Safety-check: throw error if `primaryKeys` is not an array
-    if (!isArray(primaryKeys)) {
+    if (!isArray(primaryKeys))
       throw new ItemInputError(`[batchGetItems] The "primaryKeys" parameter must be an array.`);
-    }
 
     const unaliasedKeys: Array<ItemKeys> = primaryKeys.map((pks) => this.processKeyArgs(pks));
 
-    // Init array for successfully returned items:
-    const returnedItems: Array<BaseItem> = [];
-
-    // Define the fn for the batch-requests handler, ensure it updates `returnedItems`
-    const submitBatchGetItemRequest: BatchRequestFunction = async (batchGetItemReqObjects) => {
-      const response = await this.ddbClient.batchGetItems({
-        ...batchGetItemOpts,
-        RequestItems: {
-          [this.tableName]: {
-            Keys: batchGetItemReqObjects,
-          },
+    const response = await this.ddb.batchGetItems({
+      ...batchGetItemsOpts,
+      RequestItems: {
+        [this.tableName]: {
+          Keys: unaliasedKeys,
         },
-      });
-      // Get any successfully returned items from the response
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-      const items = response?.Responses?.[this.tableName];
-      // If the response returned items, add them to the `batchGetItems` array
-      if (isArray(items)) returnedItems.push(...items);
-      // Return any unprocessed keys
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-      return response?.UnprocessedKeys?.[this.tableName]?.Keys;
-    };
+      },
+    });
 
-    // Submit the function to the batch-requests handler
-    await handleBatchRequests(
-      submitBatchGetItemRequest,
-      unaliasedKeys,
-      100, // <-- chunk size
-      exponentialBackoffConfigs
+    return response.Responses?.[this.tableName]?.map((item) =>
+      this.processItemAttributes.fromDB(item)
     );
-
-    return returnedItems.map((item) => this.processItemAttributes.fromDB(item));
   };
 
   /**
@@ -300,9 +275,8 @@ export class Model<
 
     /* The `ReturnValues` param for PutItem can only be "NONE" or "ALL_OLD", so DDB
     will never return anything here where PutItem is used to create a new item.  */
-    await this.ddbClient.putItem({
+    await this.ddb.putItem({
       ...createItemOpts,
-      TableName: this.tableName,
       Item: toDBitem,
       ConditionExpression: `attribute_not_exists(${this.tableHashKey})`,
       /* Note that appending "AND attribute_not_exists(sk)" to the above ConditionExpression
@@ -340,9 +314,8 @@ export class Model<
       ...item,
     });
 
-    await this.ddbClient.putItem({
+    await this.ddb.putItem({
       ...upsertItemOpts,
-      TableName: this.tableName,
       Item: toDBitem,
     });
 
@@ -415,18 +388,16 @@ export class Model<
 
     const unaliasedKeys = this.processKeyArgs(primaryKeys);
 
-    const response = await this.ddbClient.updateItem({
+    const response = await this.ddb.updateItem({
       ...updateItemOpts,
-      TableName: this.tableName,
       Key: unaliasedKeys,
       UpdateExpression,
       ExpressionAttributeNames,
       ExpressionAttributeValues,
-      ReturnValues: "ALL_NEW",
+      ReturnValues: "ALL_NEW", // <-- ensures the response contains `Attributes`
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
+    return this.processItemAttributes.fromDB<ItemType>(response.Attributes!);
   };
 
   /**
@@ -444,15 +415,13 @@ export class Model<
   ): Promise<ItemType> => {
     const unaliasedKeys: ItemKeys = this.processKeyArgs(primaryKeys);
 
-    const response = await this.ddbClient.deleteItem({
+    const response = await this.ddb.deleteItem({
       ...deleteItemOpts,
-      TableName: this.tableName,
       Key: unaliasedKeys,
-      ReturnValues: "ALL_OLD",
+      ReturnValues: "ALL_OLD", // <-- ensures the response contains `Attributes`
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-    return this.processItemAttributes.fromDB<ItemType>(response?.Attributes ?? {});
+    return this.processItemAttributes.fromDB<ItemType>(response.Attributes!);
   };
 
   /**
@@ -524,18 +493,19 @@ export class Model<
       upsertItems?: Array<ItemCreationParams>;
       deleteItems?: Array<KeyParameters<Schema>>;
     },
-    { exponentialBackoffConfigs, ...batchUpsertAndDeleteItemsOpts }: BatchWriteItemsOpts = {}
+    batchWriteItemsOpts: BatchWriteItemsOpts = {}
   ): Promise<{
     upsertItems?: Array<ItemType>;
     deleteItems?: Array<KeyParameters<Schema>>;
   }> => {
     // Safety-check: throw error if neither `upsertItems` nor `deleteItems` are arrays
-    if (!isArray(upsertItems) && !isArray(deleteItems)) {
+    if (!isArray(upsertItems) && !isArray(deleteItems))
       throw new ItemInputError("batchUpsertAndDeleteItems was called without valid arguments.");
-    }
 
     // Process any `upsertItems`, and add timestamps if `autoAddTimestamps` is enabled
-    const toDBupsertItems: Array<BaseItem> = isArray(upsertItems)
+    const toDBupsertItems: Array<{ [attrName: string]: NativeAttributeValue }> = isArray(
+      upsertItems
+    )
       ? upsertItems.map((item) =>
           this.processItemAttributes.toDB({
             ...(this.schemaOptions.autoAddTimestamps && {
@@ -562,26 +532,12 @@ export class Model<
       })),
     ];
 
-    // Define the fn for the batch-requests handler
-    const submitBatchWriteItemRequest: BatchRequestFunction = async (batchWriteItemReqObjects) => {
-      const response = await this.ddbClient.batchWriteItems({
-        ...batchUpsertAndDeleteItemsOpts,
-        RequestItems: {
-          [this.tableName]: batchWriteItemReqObjects,
-        },
-      });
-      // Return any unprocessed items
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-      return response?.UnprocessedItems?.[this.tableName];
-    };
-
-    // Submit the function to the batch-requests handler
-    await handleBatchRequests(
-      submitBatchWriteItemRequest,
-      batchWriteItemRequestObjects,
-      25, // <-- chunk size
-      exponentialBackoffConfigs
-    );
+    await this.ddb.batchWriteItems({
+      ...batchWriteItemsOpts,
+      RequestItems: {
+        [this.tableName]: batchWriteItemRequestObjects,
+      },
+    });
 
     // BatchWrite does not return items, so the input params are formatted for return.
     return {
@@ -647,9 +603,8 @@ export class Model<
     }
 
     // Run the query
-    const response = await this.ddbClient.query({
+    const response = await this.ddb.query({
       ...queryOpts,
-      TableName: this.tableName,
       ...(KeyConditionExpression && { KeyConditionExpression }),
       ...(ExpressionAttributeNames && { ExpressionAttributeNames }),
       ...(ExpressionAttributeValues && { ExpressionAttributeValues }),
@@ -657,11 +612,8 @@ export class Model<
       ...(!!limit && { Limit: limit }),
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-    const items = response?.Items ?? [];
-
     // If `items` is undefined, return an empty array instead of undefined
-    return items.map((item) => this.processItemAttributes.fromDB(item));
+    return response.Items?.map((item) => this.processItemAttributes.fromDB(item)) ?? [];
   };
 
   /**
@@ -676,15 +628,9 @@ export class Model<
    * @returns The items, if found.
    */
   readonly scan = async (scanOpts: ScanOpts = {}): Promise<Array<ItemType>> => {
-    const response = await this.ddbClient.scan({
-      ...scanOpts,
-      TableName: this.tableName,
-    });
+    const response = await this.ddb.scan(scanOpts);
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Allow opt chain
-    const items = response?.Items ?? [];
-
-    return items.map((item) => this.processItemAttributes.fromDB(item));
+    return response.Items?.map((item) => this.processItemAttributes.fromDB(item)) ?? [];
   };
 
   // INSTANCE METHOD UTILS:
@@ -704,7 +650,11 @@ export class Model<
      * @param enabledIOActions Boolean flags for enabling/disabling IO-Actions.
      * @returns The item after being processed by the IO-Actions.
      */
-    toDB: <ProcessedItemAttributes extends BaseItem = BaseItem>(
+    toDB: <
+      ProcessedItemAttributes extends { [attrName: string]: NativeAttributeValue } = {
+        [attrName: string]: NativeAttributeValue;
+      },
+    >(
       itemAttrs: BaseItem,
       {
         aliasMapping = true,
