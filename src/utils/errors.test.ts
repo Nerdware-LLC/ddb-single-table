@@ -12,13 +12,16 @@ import type { ModelSchemaNestedAttributes } from "../Schema/types/index.js";
 
 // This describe block includes tests that are the same for all error classes.
 describe("errors", () => {
-  [
-    { name: "DdbSingleTableError", ErrorClass: DdbSingleTableError },
-    { name: "DdbConnectionError", ErrorClass: DdbConnectionError },
-    { name: "SchemaValidationError", ErrorClass: SchemaValidationError },
-    { name: "InvalidExpressionError", ErrorClass: InvalidExpressionError },
-    { name: "ItemInputError", ErrorClass: ItemInputError },
-  ].forEach(({ name, ErrorClass }) => {
+  // Run tests for each error class
+  describe.each([
+    { ErrorClass: DdbSingleTableError },
+    { ErrorClass: DdbConnectionError },
+    { ErrorClass: SchemaValidationError },
+    { ErrorClass: InvalidExpressionError },
+    { ErrorClass: ItemInputError },
+  ])(`$ErrorClass.name`, ({ ErrorClass }) => {
+    const name = ErrorClass.name;
+
     test(`returns a valid ${name} instance when called with a custom error "message"`, () => {
       const errorMessage = "Test error message";
       const errorWithCustomMsg = new ErrorClass(errorMessage);
