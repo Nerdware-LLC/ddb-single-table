@@ -107,6 +107,14 @@ export default tsEslint.config(
         "error",
         { ignoreArrowShorthand: true }, // Allow 1-line arrow fns to return void for readability
       ],
+      "@typescript-eslint/no-empty-interface": [
+        "error",
+        { allowSingleExtends: true },
+      ],
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        { allowInterfaces: "with-single-extends" },
+      ],
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-extraneous-class": [
         "error",
