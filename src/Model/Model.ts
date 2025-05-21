@@ -7,6 +7,7 @@ import { ItemInputError } from "../utils/errors.js";
 import { ioActions } from "./ioActions/ioActions.js";
 import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions/types.js";
 import type {
+  ModelConstructorParams,
   AttributesAliasesMap,
   KeyParameters,
   GetItemOpts,
@@ -18,7 +19,7 @@ import type {
   BatchWriteItemsOpts,
   QueryOpts,
   ScanOpts,
-} from "./types.js";
+} from "./types/index.js";
 import type {
   ModelSchemaType,
   ModelSchemaAttributeConfig,

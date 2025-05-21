@@ -5,7 +5,7 @@ import type {
   ModelSchemaEntries,
 } from "../../Schema/types/index.js";
 import type { BaseItem } from "../../types/index.js";
-import type { AttributesAliasesMap } from "../types.js";
+import type { AttributesAliasesMap } from "../types/index.js";
 
 /**
  * Labels corresponding to the request-response cycle which indicate the

@@ -1,4 +1,3 @@
-import type { BatchOperationParams } from "../BatchRequests/types/index.js";
 import type {
   GetItemInput,
   BatchGetItemsInput,
@@ -8,40 +7,13 @@ import type {
   BatchWriteItemsInput,
   QueryInput,
   ScanInput,
-} from "../DdbClientWrapper/types/index.js";
+} from "../../DdbClientWrapper/types/index.js";
 import type {
   WhereQueryParams,
   UpdateItemAutoGenUpdateExpressionParams,
-} from "../Expressions/index.js";
-import type { TableKeysSchemaType, ModelSchemaType } from "../Schema/types/index.js";
-import type { BaseItem, AttrAliasOrName, SupportedAttributeValueType } from "../types/index.js";
+} from "../../Expressions/index.js";
+import type { BaseItem } from "../../types/index.js";
 import type { Simplify, Except } from "type-fest";
-
-/**
- * A map of attribute names to corresponding aliases, or vice versa.
- */
-export type AttributesAliasesMap = Record<string, string>;
-
-/**
- * This generic is used by the Model class to provide intellisense for the aliased key params
- * that methods like `getItem()` and `deleteItem()` accept as input.
- */
-export type KeyParameters<Schema extends TableKeysSchemaType | ModelSchemaType> = {
-  // Required — filter out RangeKey if configured with a functional default
-  -readonly [Key in keyof Schema as Schema[Key] extends
-    | { isHashKey: true }
-    | { isRangeKey: true; default?: undefined }
-    ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
-    : never]-?: string | number;
-} & {
-  // This map will set RangeKey to optional if configured with a functional default
-  -readonly [Key in keyof Schema as Schema[Key] extends {
-    isRangeKey: true;
-    default: (item: any) => SupportedAttributeValueType;
-  }
-    ? AttrAliasOrName<Schema, Key, { aliasKeys: true }>
-    : never]+?: string | number;
-};
 
 /**
  * A union of SDK command parameter names which are handled by Model methods and are therefore
@@ -89,15 +61,11 @@ type ModifyClientParamsForModel<
 export type GetItemOpts = ModifyClientParamsForModel<GetItemInput>;
 
 /**
- * `model.batchGetItems()` parameters which are passed to the underlying `BatchGetItem` SDK command.
- *
- * The `model.batchGetItems()` method also supports {@link BatchOperationParams | batch-request parameters },
- * which can optionally be used to customize the retry-behavior of the batch-requests handler.
+ * `model.batchGetItems()` parameters which are passed to the underlying `BatchGetItem` SDK
+ * command. The `model.batchGetItems()` method also supports batch-request parameters, which
+ * can optionally be used to customize the retry-behavior of the batch-requests handler.
  */
-export type BatchGetItemsOpts = ModifyClientParamsForModel<
-  BatchGetItemsInput,
-  BatchOperationParams
->;
+export type BatchGetItemsOpts = ModifyClientParamsForModel<BatchGetItemsInput>;
 
 /**
  * `model.createItem()` parameters which are passed to the underlying `PutItem` SDK command.
@@ -128,10 +96,10 @@ export type UpsertItemOpts = ModifyClientParamsForModel<PutItemInput>;
  * and `ExpressionAttributeValues`.
  *
  * - `update` — The item attributes to be updated.
- * - `updateOptions` — {@link UpdateItemAutoGenUpdateExpressionParams | Optional params for the `generateUpdateExpression` function }.
+ * - `updateOptions` — {@link UpdateItemAutoGenUpdateExpressionParams|Optional params for the `generateUpdateExpression` function}.
  */
 export type UpdateItemOpts<ItemParams extends BaseItem> = ModifyClientParamsForModel<
-  Omit<
+  Except<
     UpdateItemInput,
     "UpdateExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
   >,
@@ -146,17 +114,14 @@ export type DeleteItemOpts = ModifyClientParamsForModel<DeleteItemInput>;
 /**
  * Model method parameters which are passed to the underlying `BatchWriteItem` SDK command.
  */
-export type BatchWriteItemsOpts = ModifyClientParamsForModel<
-  BatchWriteItemsInput,
-  BatchOperationParams
->;
+export type BatchWriteItemsOpts = ModifyClientParamsForModel<BatchWriteItemsInput>;
 
 /**
  * `model.query()` parameters which are passed to the underlying `Query` SDK command.
  *
  * ### Auto-Generation of KeyConditionExpression
  *
- * The `model.query()` method also supports {@link WhereQueryParams | `WhereQuery` syntax } which
+ * The `model.query()` method also supports {@link WhereQueryParams|`WhereQuery` syntax} which
  * can be used to auto-generate the `KeyConditionExpression`.
  *
  * @example
