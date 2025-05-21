@@ -171,4 +171,26 @@ describe("IOAction: convertJsTypes", () => {
       CONVERSION_VALUES.JS.BUFFER
     );
   });
+
+  test.each([
+    { ioDirection: "toDB", convertableValueType: "Buffer" },
+    { ioDirection: "toDB", convertableValueType: "Date" },
+    { ioDirection: "fromDB", convertableValueType: "Buffer" },
+    { ioDirection: "fromDB", convertableValueType: "Date" },
+  ])(
+    `leaves unexpected $convertableValueType values unchanged when "ioDirection" is "$ioDirection"`,
+    ({ ioDirection, convertableValueType }) => {
+      // Arrange mock item with unexpected value:
+      const UNEXPECTED_VALUE = Symbol("unexpected");
+      const fieldName = convertableValueType.toUpperCase();
+
+      const result = convertJsTypes.call(
+        mockThis,
+        { ...mockToDbItem, [fieldName]: UNEXPECTED_VALUE },
+        { ...mockCtx, ioDirection } as any
+      );
+
+      expect(result[fieldName]).toStrictEqual(UNEXPECTED_VALUE);
+    }
+  );
 });
