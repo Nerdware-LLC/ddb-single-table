@@ -96,14 +96,20 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 
    ```bash
    npm install @nerdware/ddb-single-table
+
+   # If you don't already have the AWS SDK v3 installed, you will need to install it as well:
+   npm install @aws-sdk/client-dynamodb
    ```
 
 2. Create your table:
 
    ```ts
+   import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
    import { Table } from "@nerdware/ddb-single-table";
 
-   // OR const { Table } = require("@nerdware/ddb-single-table");
+   // OR, using require/CommonJS:
+   //    const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+   //    const { Table } = require("@nerdware/ddb-single-table");
 
    export const myTable = new Table({
      tableName: "my-table-name",
@@ -140,8 +146,8 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
          },
        },
      },
-     // You can provide your own DDB client instance or configs for a new one:
-     ddbClient: {
+     // You can provide your own DDB client instance:
+     ddbClient: new DynamoDBClient({
        // This example shows how to connect to dynamodb-local:
        region: "local",
        endpoint: "http://localhost:8000",
@@ -153,7 +159,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
          accessKeyId: "local",
          secretAccessKey: "local",
        },
-     },
+     }),
    });
    ```
 
