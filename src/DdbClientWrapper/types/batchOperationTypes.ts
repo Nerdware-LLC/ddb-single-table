@@ -1,9 +1,14 @@
 /**
  * When it's necessary to retry a batch operation (`BatchGetItem` or `BatchWriteItem`), it is
  * retried using an exponential backoff strategy which is configurable via these parameters.
+ *
+ * > To disable the delay between retries, set `initialDelay` to `0`.
  */
 export type BatchRetryExponentialBackoffConfigs = {
-  /** The initial delay in milliseconds to wait before retrying a batch operation (default: 100). */
+  /**
+   * The initial delay in milliseconds to wait before retrying a batch operation (default: `100`).
+   * > **Set this to `0` to disable the delay between retries (useful for testing purposes).**
+   */
   initialDelay?: number;
   /** The multiplier to apply to the previous delay to determine the next delay (default: 2). */
   timeMultiplier?: number;
