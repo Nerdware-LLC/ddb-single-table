@@ -1,5 +1,6 @@
+import { BillingMode } from "@aws-sdk/client-dynamodb";
 import { DdbSingleTableError } from "../utils/errors.js";
-import type { TableInstance, TableCreateTableParameters } from "./types.js";
+import type { TableInstance, TableCreateTableParameters } from "./types/index.js";
 import type { CreateTableInput } from "../DdbClientWrapper/types/index.js";
 import type { TableKeysSchemaType } from "../Schema/types/index.js";
 
@@ -25,11 +26,12 @@ export const createTable = async function <const TableKeysSchema extends TableKe
 ) {
   // If createTableArgs were provided, provide some minor early validation:
   if (
-    createTableArgs.BillingMode === "PAY_PER_REQUEST"
+    createTableArgs.BillingMode === BillingMode.PAY_PER_REQUEST
     && !!createTableArgs.ProvisionedThroughput
   ) {
     throw new DdbSingleTableError(
-      `Invalid "createTable" args: "ProvisionedThroughput" should not be provided when "BillingMode" is "PAY_PER_REQUEST".`
+      `Invalid "createTable" args: "ProvisionedThroughput" should not be `
+        + `provided when "BillingMode" is "${BillingMode.PAY_PER_REQUEST}".`
     );
   }
 
@@ -96,8 +98,7 @@ export const createTable = async function <const TableKeysSchema extends TableKe
   }
 
   // Create the table
-  return await this.ddbClient.createTable({
-    TableName: this.tableName,
+  return await this.ddb.createTable({
     ...createTableArgs,
     AttributeDefinitions,
     KeySchema,

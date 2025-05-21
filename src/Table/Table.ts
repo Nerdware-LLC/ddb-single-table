@@ -1,13 +1,10 @@
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { Model } from "../Model/Model.js";
 import { TableKeysSchema } from "../Schema/TableKeysSchema.js";
+import { DEFAULT_MARSHALLING_CONFIGS } from "../utils/index.js";
 import { createTable } from "./createTable.js";
 import { ensureTableIsActive } from "./ensureTableIsActive.js";
-import type {
-  TableConstructorParams,
-  TableKeysAndIndexes,
-  TableCreateModelMethod,
-} from "./types.js";
+import type { TableConstructorParams, TableKeysAndIndexes, TableLogFn } from "./types/index.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
@@ -21,21 +18,25 @@ import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../ty
  * {@link Model|Models} that use it. It is the primary entry point for DDBST.
  */
 export class Table<const TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
+  // STATIC PROPERTIES:
+  static readonly DEFAULT_MARSHALLING_CONFIGS = DEFAULT_MARSHALLING_CONFIGS;
+
   // INSTANCE PROPERTIES:
-  readonly tableName: string;
+  readonly tableName: TableConstructorParams<TKSchema>["tableName"];
   readonly tableKeysSchema: TKSchema;
   readonly tableHashKey: TableKeysAndIndexes["tableHashKey"];
   readonly tableRangeKey?: TableKeysAndIndexes["tableRangeKey"];
   readonly indexes?: TableKeysAndIndexes["indexes"];
-  readonly ddbClient: DdbClientWrapper;
-  readonly logger: (str: string) => void;
+  /** A wrapper-class around the DynamoDB client instance which greatly simplifies DDB operations. */
+  readonly ddb: DdbClientWrapper;
+  readonly logger: TableLogFn;
   isTableActive: boolean;
 
   constructor({
     tableName,
     tableKeysSchema,
-    ddbClient = {},
-    marshallingConfigs = {},
+    ddbClient,
+    marshallingConfigs,
     logger = console.info,
   }: TableConstructorParams<TKSchema>) {
     // Validate the TableKeysSchema and obtain the table's keys+indexes
@@ -48,18 +49,23 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
     this.tableHashKey = tableHashKey;
     this.tableRangeKey = tableRangeKey;
     this.indexes = indexes;
-    this.ddbClient = new DdbClientWrapper({ ddbClient, marshallingConfigs });
+
+    // Attach proc exit handler which calls destroy method
+    process.on("exit", () => ddbClient.destroy());
+
+    // DDB client wrapper
+    this.ddb = new DdbClientWrapper({ ddbClient, tableName, marshallingConfigs });
   }
 
   // INSTANCE METHODS:
 
-  /** A `DescribeTable` wrapper for Table instances which call the method with their `tableName`. */
-  readonly describeTable = async () => {
-    return await this.ddbClient.describeTable({ TableName: this.tableName });
-  };
-
   readonly createTable = createTable;
   readonly ensureTableIsActive = ensureTableIsActive;
+
+  /** A `DescribeTable` wrapper for Table instances which call the method with their `tableName`. */
+  readonly describeTable = async () => {
+    return await this.ddb.describeTable({ TableName: this.tableName });
+  };
 
   /**
    * Returns a validated ModelSchema with the TableKeysSchema merged in. Use this method to create a
@@ -111,7 +117,7 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
    * );
    * ```
    */
-  readonly createModel: TableCreateModelMethod<TKSchema> = <
+  readonly createModel = <
     const ModelSchema extends ModelSchemaType<TKSchema>,
     const ItemType extends BaseItem = ItemTypeFromSchema<
       MergeModelAndTableKeysSchema<TKSchema, ModelSchema>
@@ -130,7 +136,7 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
       ItemCreationParams
     >(modelName, this.getModelSchema(modelSchema), {
       ...modelSchemaOptions,
-      ddbClient: this.ddbClient,
+      ddb: this.ddb,
       tableName: this.tableName,
       tableHashKey: this.tableHashKey,
       ...(this.tableRangeKey && { tableRangeKey: this.tableRangeKey }),
