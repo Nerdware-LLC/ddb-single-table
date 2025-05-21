@@ -1,6 +1,7 @@
+import { TableStatus, ResourceNotFoundException } from "@aws-sdk/client-dynamodb";
 import { isError, isPlainObject } from "@nerdware/ts-type-safety-utils";
 import { DdbSingleTableError, DdbConnectionError } from "../utils/errors.js";
-import type { TableInstance, EnsureTableIsActiveParams } from "./types.js";
+import type { TableInstance, EnsureTableIsActiveParams } from "./types/index.js";
 import type { TableKeysSchemaType } from "../Schema/types/index.js";
 
 /**
@@ -51,7 +52,7 @@ export const ensureTableIsActive = async function <
 
       const tableStatus = response.Table?.TableStatus;
 
-      if (tableStatus === "ACTIVE") {
+      if (tableStatus === TableStatus.ACTIVE) {
         clearTimeout(timeoutTimerID);
         this.isTableActive = true;
         break;
@@ -69,11 +70,12 @@ export const ensureTableIsActive = async function <
       // Sanity type-check: ensure `err` is an object.
       if (!isError(err) && !isPlainObject(err)) throw err;
 
-      // If `err.code` is "ECONNREFUSED", a connection could not be made to the provided endpoint.
-      if ((err as { code?: unknown }).code === "ECONNREFUSED") throw new DdbConnectionError(err);
+      // If err.code is "ECONNREFUSED", a connection could not be made to the provided endpoint.
+      if ((err as NodeJS.ErrnoException).code === DdbConnectionError.NODE_ERROR_CODES.ECONNREFUSED)
+        throw new DdbConnectionError(err);
 
       // If `err` is a "ResourceNotFoundException", Table doesn't exist — see if it should be created.
-      if (err.name !== "ResourceNotFoundException") throw err;
+      if (err.name !== ResourceNotFoundException.name) throw err;
 
       // If Table doesn't exist AND !createIfNotExists, throw error.
       if (!createIfNotExists) {
@@ -108,7 +110,7 @@ export const ensureTableIsActive = async function <
       );
 
       // TableStatus is possibly already ACTIVE if using ddb-local.
-      if (tableStatus === "ACTIVE") {
+      if (tableStatus === TableStatus.ACTIVE) {
         clearTimeout(timeoutTimerID);
         this.isTableActive = true;
         break;
