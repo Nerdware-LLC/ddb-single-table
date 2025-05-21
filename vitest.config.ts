@@ -11,6 +11,7 @@ export default defineConfig({
      * - restores the original implementation so fns don't return undefined like with mockReset
      */
     restoreMocks: true,
+    unstubGlobals: true,
     globals: true,
     silent: true,
     hideSkippedTests: true,
