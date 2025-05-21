@@ -151,22 +151,15 @@ export const getAttrErrID = (
  * Helper function which stringifies a nested schema for error messages.
  */
 export const stringifyNestedSchema = (nestedSchema: ModelSchemaNestedAttributes, spaces = 2) => {
+  // prettier-ignore
+  const strippedKeys: Array<string> = [
+    "isHashKey", "isRangeKey", "index", "required", "alias", "default", "validate", "transformValue",
+  ] satisfies Array<keyof KeyAttributeConfig>;
+
   return safeJsonStringify(
     nestedSchema,
     (key: unknown, value: unknown) => {
-      return typeof key === "string"
-        && [
-          "isHashKey",
-          "isRangeKey",
-          "index",
-          "required",
-          "alias",
-          "default",
-          "validate",
-          "transformValue",
-        ].includes(key)
-        ? undefined
-        : value;
+      return typeof key === "string" && strippedKeys.includes(key) ? undefined : value;
     },
     spaces
   );
