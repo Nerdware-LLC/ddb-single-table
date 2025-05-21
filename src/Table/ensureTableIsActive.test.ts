@@ -1,18 +1,61 @@
-import { DdbSingleTableError } from "../utils/index.js";
+import {
+  DynamoDBClient,
+  DescribeTableCommand,
+  CreateTableCommand,
+  ResourceNotFoundException,
+  TableStatus,
+  BillingMode,
+} from "@aws-sdk/client-dynamodb";
+import { mockClient } from "aws-sdk-client-mock";
+import { DdbSingleTableError, DdbConnectionError } from "../utils/index.js";
 import { Table } from "./Table.js";
-import type { TableCreateTableParameters } from "./types.js";
+import type { TableCreateTableParameters } from "./types/index.js";
 
 describe("table.ensureTableIsActive()", () => {
-  // Since this fn uses timeouts, we need to use fake timers:
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers(); // reset timers after each test
+  // Setup mock ddb client:
+  const ddbClient = new DynamoDBClient({
+    region: "local",
+    endpoint: "http://localhost:8000",
+    credentials: {
+      accessKeyId: "local",
+      secretAccessKey: "local",
+    },
   });
 
+  const mockDdbClient = mockClient(ddbClient);
+
+  beforeEach(() => {
+    // Setup the mock ddb client with a default response for all commands
+    mockDdbClient.reset();
+    mockDdbClient.onAnyCommand().resolves({});
+  });
+
+  /**
+   * This fn is used by several tests below to stub setTimeout for testing timeout+retry behavior.
+   */
+  const setupTimerStubs = () => {
+    // The mock behavior for the *first* setTimeout call varies from all subsequent calls.
+    let isTestExecutionPastTheFirstSetTimeoutCall = false;
+
+    vi.stubGlobal("setTimeout", (callback: () => void) => {
+      // The first setTimeout call sets up the timeout timer, so we need to return a mock timer ID:
+      if (isTestExecutionPastTheFirstSetTimeoutCall === false) {
+        isTestExecutionPastTheFirstSetTimeoutCall = true;
+        return 1; // Return 1 to simulate a mock timeoutTimerID (NodeJS.Timeout)
+      }
+      // For all subsequent calls, the callback is immediately invoked:
+      return callback();
+    });
+
+    vi.stubGlobal("clearTimeout", () => undefined);
+  };
+
   test(`throws a timeout-related error when "waitForActive.timeout" has been exceeded`, async () => {
+    // Since this test involves timeout-behavior, we need to use fake timers:
+    vi.useFakeTimers();
+
     const mockTable = new Table({
+      ddbClient,
       tableName: "MockTable",
       tableKeysSchema: {
         partitionKey: { type: "string", isHashKey: true, required: true },
@@ -20,22 +63,29 @@ describe("table.ensureTableIsActive()", () => {
       },
     });
 
-    // This spy just advances the mock-timer to trigger the timeout.
-    vi.spyOn(mockTable.ddbClient, "describeTable").mockImplementation(() => {
-      vi.advanceTimersByTime(2000);
-      return Promise.resolve({ Table: { TableStatus: "ACTIVE" as const } });
+    const timeoutSeconds = 2;
+    const timeoutMs = timeoutSeconds * 1000; // Convert to milliseconds
+
+    // This mocked call just advances the mock-timer to trigger the timeout.
+    mockDdbClient.on(DescribeTableCommand).callsFakeOnce(() => {
+      vi.advanceTimersByTime(timeoutMs + 500);
+      return Promise.resolve({ Table: { TableStatus: TableStatus.ACTIVE } });
     });
 
-    await expect(() => mockTable.ensureTableIsActive({ timeout: 1 })).rejects.toThrowError(
-      /ensureTableIsActive has timed out/
+    await expect(mockTable.ensureTableIsActive({ timeout: timeoutSeconds })).rejects.toThrowError(
+      new DdbSingleTableError(`ensureTableIsActive has timed out after ${timeoutSeconds} seconds.`)
     );
 
     // Assert that the table is still not active after the timeout:
     expect(mockTable.isTableActive).toBe(false);
+
+    // Reset the timers to avoid affecting other tests:
+    vi.useRealTimers();
   });
 
   test(`sets "isTableActive" to true if "describeTable" returns a "TableStatus" of "ACTIVE"`, async () => {
     const mockTable = new Table({
+      ddbClient,
       tableName: "MockTable",
       tableKeysSchema: {
         partitionKey: { type: "string", isHashKey: true, required: true },
@@ -43,19 +93,81 @@ describe("table.ensureTableIsActive()", () => {
       },
     });
 
-    const describeTableSpy = vi.spyOn(mockTable.ddbClient, "describeTable").mockResolvedValueOnce({
-      Table: { TableStatus: "ACTIVE" },
-    });
+    mockDdbClient
+      .on(DescribeTableCommand)
+      .resolvesOnce({ Table: { TableStatus: TableStatus.ACTIVE } });
 
     const result = await mockTable.ensureTableIsActive();
 
     expect(result).toBeUndefined();
     expect(mockTable.isTableActive).toBe(true);
-    expect(describeTableSpy).toHaveBeenCalled();
+    expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
+  });
+
+  test(`logs a status message using the "logger" method if "TableStatus" is not "ACTIVE"`, async () => {
+    // Since this test involves retries/timeouts, we need to stub the timers:
+    setupTimerStubs();
+
+    const mockTable = new Table({
+      ddbClient,
+      tableName: "MockTable",
+      tableKeysSchema: {
+        partitionKey: { type: "string", isHashKey: true, required: true },
+        sortKey: { type: "string", isRangeKey: true, required: true },
+      },
+    });
+
+    mockDdbClient
+      .on(DescribeTableCommand)
+      .resolvesOnce({ Table: { TableStatus: null as any } }) // null simulates an UNKNOWN status
+      .resolvesOnce({ Table: { TableStatus: TableStatus.UPDATING } })
+      .resolvesOnce({ Table: { TableStatus: TableStatus.ACTIVE } }); // stops execution
+
+    const loggerSpy = vi.spyOn(mockTable, "logger");
+
+    await mockTable.ensureTableIsActive();
+
+    const logMsgPrefix = `Table "${mockTable.tableName}" is not ACTIVE. Current table status: `;
+    expect(loggerSpy).toHaveBeenCalledTimes(2);
+    expect(loggerSpy).toHaveBeenNthCalledWith(1, logMsgPrefix + "UNKNOWN");
+    expect(loggerSpy).toHaveBeenNthCalledWith(2, logMsgPrefix + "UPDATING");
+  });
+
+  test(`throws an error if ProvisionedThroughput configs are provided and BillingMode is PAY_PER_REQUEST`, async () => {
+    const mockTable = new Table({
+      ddbClient,
+      tableName: "MockTable",
+      tableKeysSchema: {
+        partitionKey: { type: "string", isHashKey: true, required: true },
+        sortKey: { type: "string", isRangeKey: true, required: true },
+      },
+    });
+
+    mockDdbClient
+      .on(DescribeTableCommand)
+      .rejectsOnce(new ResourceNotFoundException({ message: "", $metadata: {} }));
+
+    await expect(
+      mockTable.ensureTableIsActive({
+        createIfNotExists: {
+          BillingMode: BillingMode.PAY_PER_REQUEST,
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 5,
+            WriteCapacityUnits: 5,
+          },
+        },
+      })
+    ).rejects.toThrowError(
+      new DdbSingleTableError(
+        `Invalid "createTable" args: "ProvisionedThroughput" should not be `
+          + `provided when "BillingMode" is "${BillingMode.PAY_PER_REQUEST}".`
+      )
+    );
   });
 
   test(`throws a DdbConnectionError if "describeTable" throws an ECONNREFUSED error`, async () => {
     const mockTable = new Table({
+      ddbClient,
       tableName: "MockTable",
       tableKeysSchema: {
         partitionKey: { type: "string", isHashKey: true, required: true },
@@ -63,20 +175,20 @@ describe("table.ensureTableIsActive()", () => {
       },
     });
 
-    const describeTableSpy = vi
-      .spyOn(mockTable.ddbClient, "describeTable")
-      .mockRejectedValueOnce({ code: "ECONNREFUSED" });
+    // Reject the DescribeTableCommand with a NodeJS ECONNREFUSED error:
+    mockDdbClient.on(DescribeTableCommand).rejectsOnce({
+      code: DdbConnectionError.NODE_ERROR_CODES.ECONNREFUSED,
+    } satisfies Partial<NodeJS.ErrnoException> as any);
 
-    await expect(() => mockTable.ensureTableIsActive()).rejects.toThrowError(
-      /Failed to connect to the provided DynamoDB endpoint/
-    );
+    await expect(mockTable.ensureTableIsActive()).rejects.toThrowError(DdbConnectionError);
 
     expect(mockTable.isTableActive).toBe(false);
-    expect(describeTableSpy).toHaveBeenCalled();
+    expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
   });
 
   test(`re-throws any unknown/unexpected error that arises from the "describeTable" call`, async () => {
     const mockTable = new Table({
+      ddbClient,
       tableName: "MockTable",
       tableKeysSchema: {
         partitionKey: { type: "string", isHashKey: true, required: true },
@@ -84,18 +196,17 @@ describe("table.ensureTableIsActive()", () => {
       },
     });
 
-    const describeTableSpy = vi
-      .spyOn(mockTable.ddbClient, "describeTable")
-      .mockRejectedValueOnce("FOO_ERROR");
+    mockDdbClient.on(DescribeTableCommand).rejectsOnce("FOO_ERROR");
 
-    await expect(() => mockTable.ensureTableIsActive()).rejects.toThrowError("FOO_ERROR");
+    await expect(mockTable.ensureTableIsActive()).rejects.toThrowError("FOO_ERROR");
 
     expect(mockTable.isTableActive).toBe(false);
-    expect(describeTableSpy).toHaveBeenCalled();
+    expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
   });
 
   test(`throws a DdbSingleTableError if "describeTable" throws a ResourceNotFoundException and "createIfNotExists" is false`, async () => {
     const mockTable = new Table({
+      ddbClient,
       tableName: "MockTable",
       tableKeysSchema: {
         partitionKey: { type: "string", isHashKey: true, required: true },
@@ -103,18 +214,25 @@ describe("table.ensureTableIsActive()", () => {
       },
     });
 
-    const describeTableSpy = vi.spyOn(mockTable.ddbClient, "describeTable").mockRejectedValueOnce({
-      name: "ResourceNotFoundException",
-    });
+    mockDdbClient
+      .on(DescribeTableCommand)
+      .rejectsOnce(new ResourceNotFoundException({ message: "", $metadata: {} }));
 
-    await expect(() => mockTable.ensureTableIsActive()).rejects.toThrowError(DdbSingleTableError);
+    await expect(mockTable.ensureTableIsActive()).rejects.toThrowError(
+      `Table "MockTable" not found. To have the table created automatically when `
+        + `DynamoDB returns a "ResourceNotFoundException", set "createIfNotExists" to true.`
+    );
 
     expect(mockTable.isTableActive).toBe(false);
-    expect(describeTableSpy).toHaveBeenCalled();
+    expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
   });
 
   test(`creates a table and sets "isTableActive" to true even if "describeTable" must be called multiple times`, async () => {
+    // Since this test involves retries/timeouts, we need to stub the timers:
+    setupTimerStubs();
+
     const mockTable = new Table({
+      ddbClient,
       tableName: "MockTable",
       tableKeysSchema: {
         partitionKey: { type: "string", isHashKey: true, required: true },
@@ -122,33 +240,29 @@ describe("table.ensureTableIsActive()", () => {
       },
     });
 
-    let mockConnectionAttempts = 0;
+    // 3 DescribeTable calls: throw ResourceNotFoundException twice, then return ACTIVE:
+    mockDdbClient
+      .on(DescribeTableCommand)
+      .rejectsOnce(new ResourceNotFoundException({ message: "", $metadata: {} }))
+      .rejectsOnce(new ResourceNotFoundException({ message: "", $metadata: {} }))
+      .resolvesOnce({ Table: { TableStatus: TableStatus.ACTIVE } });
 
-    const spies = {
-      describeTable: vi.spyOn(mockTable.ddbClient, "describeTable").mockImplementation(() => {
-        mockConnectionAttempts++;
-        vi.advanceTimersByTime(100);
-        // Until the 3rd attempt, throw ResourceNotFoundException:
-        if (mockConnectionAttempts < 3) throw { name: "ResourceNotFoundException" };
-        // return "ACTIVE" on the 3rd attempt:
-        return Promise.resolve({ Table: { TableStatus: "ACTIVE" as const } });
-      }),
-      createTable: vi.spyOn(mockTable.ddbClient, "createTable").mockResolvedValue({
-        TableDescription: { TableStatus: "CREATING" },
-      }),
-    };
+    mockDdbClient
+      .on(CreateTableCommand)
+      .resolvesOnce({ TableDescription: { TableStatus: TableStatus.CREATING } });
 
     await expect(
       mockTable.ensureTableIsActive({ createIfNotExists: true, frequency: 1 })
     ).resolves.toBeUndefined();
 
     expect(mockTable.isTableActive).toBe(true);
-    expect(spies.describeTable).toHaveBeenCalledTimes(3); // <-- looped 3 times to call describeTable
-    expect(spies.createTable).toHaveBeenCalledTimes(1);
+    expect(mockDdbClient).toHaveReceivedCommandTimes(DescribeTableCommand, 3);
+    expect(mockDdbClient).toHaveReceivedCommandTimes(CreateTableCommand, 1);
   });
 
   test(`calls "createTable" with expected args and sets "isTableActive" to true when it returns a "TableStatus" of "ACTIVE"`, async () => {
     const mockTable = new Table({
+      ddbClient,
       tableName: "MockTable",
       // Yes this is a weird schema — it's just for testing to ensure all
       // the createTableArgsFromSchema reducer logic works as expected.
@@ -187,18 +301,16 @@ describe("table.ensureTableIsActive()", () => {
       },
     });
 
-    const spies = {
-      describeTable: vi.spyOn(mockTable.ddbClient, "describeTable").mockImplementation(() => {
-        vi.advanceTimersByTime(100);
-        throw { name: "ResourceNotFoundException" };
-      }),
-      createTable: vi.spyOn(mockTable.ddbClient, "createTable").mockResolvedValue({
-        TableDescription: { TableStatus: "ACTIVE" },
-      }),
-    };
+    mockDdbClient
+      .on(DescribeTableCommand)
+      .rejectsOnce(new ResourceNotFoundException({ message: "", $metadata: {} }));
+
+    mockDdbClient
+      .on(CreateTableCommand)
+      .resolvesOnce({ TableDescription: { TableStatus: TableStatus.ACTIVE } });
 
     const createTableInputs: TableCreateTableParameters = {
-      BillingMode: "PROVISIONED",
+      BillingMode: BillingMode.PROVISIONED,
       ProvisionedThroughput: {
         ReadCapacityUnits: 20,
         WriteCapacityUnits: 20,
@@ -210,10 +322,8 @@ describe("table.ensureTableIsActive()", () => {
     ).resolves.toBeUndefined();
 
     expect(mockTable.isTableActive).toBe(true);
-    expect(spies.describeTable).toHaveBeenCalledTimes(1);
-    expect(spies.createTable).toHaveBeenCalledTimes(1);
-    expect(spies.createTable).toHaveBeenCalledWith({
-      TableName: "MockTable",
+    expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
+    expect(mockDdbClient).toHaveReceivedCommandExactlyOnceWith(CreateTableCommand, {
       ...createTableInputs,
       AttributeDefinitions: [
         { AttributeName: "partitionKey", AttributeType: "N" },
