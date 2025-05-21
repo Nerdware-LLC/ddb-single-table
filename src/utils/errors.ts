@@ -44,26 +44,6 @@ export class DdbConnectionError extends DdbSingleTableError {
 }
 
 /**
- * The shape of a DDB-client ECONNREFUSED error (this type is not exported by the SDK).
- */
-export interface DdbClientErrorECONNREFUSED {
-  message?: string;
-  /** The DDB-client error code (e.g., "ECONNREFUSED"). */
-  code?: string;
-  /** The DDB-client error number (e.g., -111). */
-  errno?: number;
-  /** The DDB-client syscall (e.g., "connect"). */
-  syscall?: string;
-  /** The DDB-client endpoint IP address (e.g., "127.0.0.1"). */
-  address?: number;
-  /** The DDB-client endpoint port number (e.g., 8000). */
-  port?: number;
-  /** DDB-client error metadata */
-  $metadata?: { attempts?: number; totalRetryDelay?: number };
-  [key: string]: unknown;
-}
-
-/**
  * This error is thrown by schema-validation functions when a `TableKeysSchema`
  * or `ModelSchema` is invalid.
  *
