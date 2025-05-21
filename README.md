@@ -64,6 +64,9 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
   - [`allowUnknownAttributes`](#allowunknownattributes)
   - [`transformItem`](#transformitem)
   - [`validateItem`](#validateitem)
+- [🧪 Testing / Mocking](#-testing--mocking)
+  - [Local `DynamoDBClient` Mock](#local-dynamodbclient-mock)
+  - [Global `DynamoDBClient` Mock via `setupFiles`](#global-dynamodbclient-mock-via-setupfiles)
 - [📦 Batch Requests](#-batch-requests)
   - [Batch Retries with Exponential Backoff](#batch-retries-with-exponential-backoff)
 - [❓ FAQ](#-faq)
@@ -655,6 +658,137 @@ Like its [`transformValue`](#transformvalue) counterpart, the `transformItem` co
 ### `validateItem`
 
 Like its [`validate`](#validate) counterpart, the `validateItem` config is used for validation, but it is called with an entire item-object rather than an individual attribute. The `validateItem` function should return `true` if the item is valid, or `false` if it is not.
+
+## 🧪 Testing / Mocking
+
+For tests involving your Models, the recommended approach is to mock the underlying DynamoDB client from the SDK using a library like [aws-sdk-client-mock](https://www.npmjs.com/package/aws-sdk-client-mock).
+
+> [!NOTE]
+> Installation of `aws-sdk-client-mock` is **not** required for DDB-ST to work, but it is recommended for testing purposes. To install the package, run the following command:
+>
+> ```bash
+> npm install -D aws-sdk-client-mock
+> ```
+
+There are two approaches to mocking the DynamoDB client — these can be used in combination, or independently of each other:
+
+1. [**Local `DynamoDBClient` Mock**](#local-dynamodbclient-mock) — This approach mocks the client at the _test_ level, which allows for far greater control over the behavior of the mock-client for a given test.
+2. [**Global `DynamoDBClient` Mock via `setupFiles`**](#global-dynamodbclient-mock-via-setupfiles) — This approach mocks the client at the _package_ level, so every file that imports the `DynamoDBClient` from `@aws-sdk/client-dynamodb` will import the _mocked_ implementation without any additional setup.
+
+### Local `DynamoDBClient` Mock
+
+To achieve fine-grained control over the behavior of the mock-client, mock the `DynamoDBClient` in individual test files. This allows you to customize the mock behavior for each test, and is particularly useful for unit tests.
+
+Here's an example using [Vitest](https://vitest.dev/):
+
+```ts
+import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { mockClient } from "aws-sdk-client-mock";
+
+// An "actual" DynamoDB client instance is created here with params for dynamodb-local:
+const actualDdbClient = new DynamoDBClient({
+  region: "local",
+  endpoint: "http://localhost:8000",
+  credentials: { accessKeyId: "local", secretAccessKey: "local" },
+});
+
+const mockDdbClient = mockClient(actualDdbClient);
+
+const mockTable = new Table({
+  ddbClient: actualDdbClient, // <-- Provide Table the "actual" client instance
+  tableName: "MockTable",
+  tableKeysSchema: {
+    pk: { type: "string", required: true, isHashKey: true },
+    sk: { type: "string", required: true, isRangeKey: true },
+  },
+});
+
+// The model used in this test:
+const MyModel = mockTable.createModel("MyModel", {
+  pk: { alias: "id", type: "string", required: true },
+  sk: { alias: "foo", type: "string", required: true },
+});
+
+describe("Tests that involve MyModel", () => {
+  // Arrange mockDdbClient to return an empty object by default:
+  beforeEach(() => {
+    mockDdbClient.reset();
+    mockDdbClient.onAnyCommand().resolves({}); // Default response for all commands
+  });
+
+  test("returns a single item", async () => {
+    // Arrange
+    const expectedItem = { id: "123", foo: "bar" };
+
+    // Here, you have all the flexibility of the `aws-sdk-client-mock` library:
+    mockDdbClient.on(GetItemCommand).resolvesOnce({
+      Item: {
+        pk: { S: expectedItem.id },
+        sk: { S: expectedItem.foo },
+      },
+      /* For more complex objects, Model methods are your friend!
+
+      The above marshalled `Item` object could be created from `expectedItem` like so:
+        {
+          Item: MyModel.ddb.marshall(
+            MyModel.processItemAttributes.toDB(expectedItem, { aliasMapping: true })
+          ),
+        }
+      */
+    });
+
+    // Act
+    const result = await MyModel.getItem({ id: expectedItem.id });
+
+    // Assert
+    expect(result).toEqual(expectedItem);
+  });
+});
+```
+
+### Global `DynamoDBClient` Mock via `setupFiles`
+
+To ensure that the DynamoDB client is mocked for every test across multiple test suites, you can configure your testing framework to use a global setup-file that mocks the `@aws-sdk/client-dynamodb` package. This approach can be particularly useful in large/monorepo projects with multiple test suites and/or configurations, as it allows you to apply some baseline behavior without duplicating the mock setup in each test file.
+
+Here's an example using [Vitest](https://vitest.dev/):
+
+```ts
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    // The file `vitest.setup.ts` will be run before each test file.
+    setupFiles: ["./vitest.setup.ts"],
+    // The following configs are recommended, but not required:
+    environment: "node",
+    globals: true,
+    restoreMocks: true,
+    // ... other configs ...
+  },
+});
+```
+
+Then in the `vitest.setup.ts` file, mock the package's exports like so:
+
+```ts
+// vitest.setup.ts
+import { mockClient } from "aws-sdk-client-mock";
+
+vi.mock("@aws-sdk/client-dynamodb", async (importOriginal) => {
+  const {
+    DynamoDBClient: ActualDynamoDBClient, // The mocked client class
+    ...otherExports
+  } = await importOriginal<typeof import("@aws-sdk/client-dynamodb")>();
+
+  const DynamoDBClient = vi.fn(() => mockClient(ActualDynamoDBClient));
+
+  return {
+    DynamoDBClient,
+    ...otherExports,
+  };
+});
+```
 
 ## 📦 Batch Requests
 
