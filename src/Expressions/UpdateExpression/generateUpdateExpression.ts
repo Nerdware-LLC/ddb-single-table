@@ -1,6 +1,7 @@
 import { buildAttrPathTokens } from "./buildAttrPathTokens.js";
 import type { GenerateUpdateExpressionOpts } from "./types.js";
 import type { UpdateItemInput } from "../../DdbClientWrapper/types/index.js";
+import type { NativeAttributeValue } from "../../types/index.js";
 
 /**
  * This function uses the provided `itemAttributes` to generate the following `updateItem` args:
@@ -17,7 +18,7 @@ import type { UpdateItemInput } from "../../DdbClientWrapper/types/index.js";
  *   added to the `"SET"` clause.
  */
 export const generateUpdateExpression = (
-  itemAttributes: { [attrName: string]: unknown },
+  itemAttributes: { [attrName: string]: NativeAttributeValue },
   { nullHandling }: GenerateUpdateExpressionOpts = {}
 ): {
   [Key in
@@ -32,16 +33,21 @@ export const generateUpdateExpression = (
 
   const updateExpressionClauses: Record<"SET" | "REMOVE", Array<string>> = { SET: [], REMOVE: [] };
   const ExpressionAttributeNames: Record<string, string> = {};
-  const ExpressionAttributeValues: Record<string, unknown> = {};
+  const ExpressionAttributeValues: Record<string, NativeAttributeValue> = {};
 
-  const recurse = (value: unknown, path: Array<string | number>) => {
-    if (typeof value === "object" && value !== null) {
+  const recurse = (value: NativeAttributeValue, path: Array<string | number>) => {
+    if (
+      typeof value === "object"
+      && value !== null
+      && !(value instanceof Set)
+      && !Buffer.isBuffer(value)
+    ) {
       if (Array.isArray(value)) {
         value.forEach((arrayElement, index) => {
           recurse(arrayElement, [...path, index]);
         });
       } else {
-        for (const key in value) {
+        for (const key of Object.keys(value)) {
           const keyValue = value[key as keyof typeof value];
           recurse(keyValue, [...path, key]);
         }
