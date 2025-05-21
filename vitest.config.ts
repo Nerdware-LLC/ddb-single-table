@@ -16,8 +16,6 @@ export default defineConfig({
     hideSkippedTests: true,
     watch: false,
 
-    bail: process.env.CI ? 1 : 0, // If in CI, bail on first test failure, else run all tests
-
     environment: "node",
     setupFiles: "./vitest.setup.ts",
 
