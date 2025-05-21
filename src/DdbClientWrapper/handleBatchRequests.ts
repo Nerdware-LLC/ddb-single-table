@@ -3,8 +3,8 @@ import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "
 
 /**
  * This DynamoDB batch-requests handler invokes the provided `submitBatchRequest` function with
- * chunks of `batchRequestObjects` of size `chunkSize`. If the `submitBatchRequest` function returns
- * any `UnprocessedItems`/`UnprocessedKeys`, or if it results in a [retryable error][retry-errors],
+ * chunks of `batchRequestObjects` of size `chunkSize`. If the `submitBatchRequest` function
+ * returns any `UnprocessedItems`/`UnprocessedKeys`, or if it results in a retryable error,
  * the batch request will be retried with any remaining unprocessed request objects using the
  * exponential-backoff strategy described below, the behavior of which can be customized via the
  * [`exponentialBackoffConfigs`][backoff-configs] parameter.
@@ -25,7 +25,6 @@ import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "
  *      to the base `delay`: `Math.round(Math.random() * delay)`. Note that the determination as to
  *      whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
  *
- * [retry-errors]: {@link ERR_CODE_SHOULD_RETRY}
  * [backoff-configs]: {@link BatchRetryExponentialBackoffConfigs}
  *
  * @param submitBatchRequest A function which submits a DDB batch operation, and returns any `UnprocessedItems`/`UnprocessedKeys`.
@@ -33,7 +32,11 @@ import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "
  * @param chunkSize The maximum limit set by AWS for the batch operation used in the `submitBatchRequest` function (e.g., `100` for `BatchGetItem`, `25` for `BatchWriteItem`).
  * @param exponentialBackoffConfigs Configs for the exponential-backoff retry strategy.
  */
-export const handleBatchRequests = async <BatchFn extends BatchRequestFunction>(
+export const handleBatchRequests = async <
+  BatchRequestObjectType extends object = Record<string, unknown>,
+  BatchFn extends
+    BatchRequestFunction<BatchRequestObjectType> = BatchRequestFunction<BatchRequestObjectType>,
+>(
   submitBatchRequest: BatchFn,
   batchRequestObjects: Parameters<BatchFn>[0],
   chunkSize: number,

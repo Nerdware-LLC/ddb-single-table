@@ -1,150 +1,98 @@
+import type { MarshallingConfigsParam } from "./MarshallingConfigsParam.js";
+import type { ModifyDdbClientType } from "./ModifyDdbClientType.js";
+import type { BatchOperationParams } from "./batchOperationTypes.js";
 import type {
-  CreateTableInput as SDK_CreateTableInput,
-  CreateTableOutput as SDK_CreateTableOutput,
-  DescribeTableInput as SDK_DescribeTableInput,
-  DescribeTableOutput as SDK_DescribeTableOutput,
-  ListTablesInput as SDK_ListTablesInput,
-  ListTablesOutput as SDK_ListTablesOutput,
+  // MODEL-METHOD IO TYPES
+  GetItemCommandInput as SDKGetItemInput,
+  GetItemCommandOutput as SDKGetItemOutput,
+  BatchGetItemCommandInput as SDKBatchGetItemInput,
+  BatchGetItemCommandOutput as SDKBatchGetItemOutput,
+  PutItemCommandInput as SDKPutItemInput,
+  PutItemCommandOutput as SDKPutItemOutput,
+  UpdateItemCommandInput as SDKUpdateItemInput,
+  UpdateItemCommandOutput as SDKUpdateItemOutput,
+  DeleteItemCommandInput as SDKDeleteItemInput,
+  DeleteItemCommandOutput as SDKDeleteItemOutput,
+  BatchWriteItemCommandInput as SDKBatchWriteItemInput,
+  BatchWriteItemCommandOutput as SDKBatchWriteItemOutput,
+  QueryCommandInput as SDKQueryInput,
+  QueryCommandOutput as SDKQueryOutput,
+  ScanCommandInput as SDKScanInput,
+  ScanCommandOutput as SDKScanOutput,
+  TransactWriteItemsCommandInput as SDKTransactWriteItemsInput,
+  TransactWriteItemsCommandOutput as SDKTransactWriteItemsOutput,
+  // TABLE-METHOD IO TYPES
+  CreateTableInput as SDKCreateTableInput,
+  CreateTableOutput as SDKCreateTableOutput,
+  DescribeTableInput as SDKDescribeTableInput,
+  DescribeTableOutput as SDKDescribeTableOutput,
+  ListTablesInput as SDKListTablesInput,
+  ListTablesOutput as SDKListTablesOutput,
 } from "@aws-sdk/client-dynamodb";
-import type {
-  GetCommandInput as SDK_GetCommandInput,
-  GetCommandOutput as SDK_GetCommandOutput,
-  BatchGetCommandInput as SDK_BatchGetCommandInput,
-  BatchGetCommandOutput as SDK_BatchGetCommandOutput,
-  PutCommandInput as SDK_PutCommandInput,
-  PutCommandOutput as SDK_PutCommandOutput,
-  BatchWriteCommandInput as SDK_BatchWriteCommandInput,
-  BatchWriteCommandOutput as SDK_BatchWriteCommandOutput,
-  UpdateCommandInput as SDK_UpdateCommandInput,
-  UpdateCommandOutput as SDK_UpdateCommandOutput,
-  DeleteCommandInput as SDK_DeleteCommandInput,
-  DeleteCommandOutput as SDK_DeleteCommandOutput,
-  QueryCommandInput as SDK_QueryCommandInput,
-  QueryCommandOutput as SDK_QueryCommandOutput,
-  ScanCommandInput as SDK_ScanCommandInput,
-  ScanCommandOutput as SDK_ScanCommandOutput,
-  TransactWriteCommandInput as SDK_TransactWriteCommandInput,
-  TransactWriteCommandOutput as SDK_TransactWriteCommandOutput,
-} from "@aws-sdk/lib-dynamodb";
-import type { Simplify, OmitIndexSignature, IsAny } from "type-fest";
-
-/**
- * A union of deprecated/legacy SDK command parameter names. To prevent their use, this
- * package omits them from all ddb client parameter typings — those used internally, as
- * well as the typings exposed to end users.
- */
-type LegacyDdbSdkParameters =
-  | "AttributesToGet" //      Legacy param: instead use ProjectionExpression
-  | "AttributeUpdates" //     Legacy param: instead use UpdateExpression
-  | "ConditionalOperator" //  Legacy param: instead use ConditionExpression (for Query/Scan, instead use FilterExpression)
-  | "Expected" //             Legacy param: instead use ConditionExpression
-  | "KeyConditions" //        Legacy param: instead use KeyConditionExpression
-  | "QueryFilter" //          Legacy param: instead use FilterExpression
-  | "ScanFilter"; //          Legacy param: instead use FilterExpression
-
-/**
- * This internal generic util-type is used by {@link FixDocClientType} to handle mapped values.
- */
-type FixDocClientValueType<T, NestDepth extends NestDepthMax10> =
-  IterateNestDepthMax10<NestDepth> extends 10
-    ? T
-    : T extends Record<PropertyKey, unknown>
-      ? keyof OmitIndexSignature<T> extends never // <-- If it only contains an index signature, don't map it.
-        ? Record<keyof T, FixDocClientValueType<T[keyof T], IterateNestDepthMax10<NestDepth>>>
-        : FixDocClientType<T, IterateNestDepthMax10<NestDepth>>
-      : T extends Array<infer El>
-        ? Array<FixDocClientValueType<El, IterateNestDepthMax10<NestDepth>>>
-        : IsAny<T> extends true
-          ? unknown
-          : T;
-
-/**
- * This internal generic util type takes a DynamoDBDocumentClient command input/output type `<T>`
- * and applies the following modifications to it:
- *
- * - Removes all {@link LegacyDdbSdkParameters | deprecated legacy parameters }
- * - Removes `undefined` from required properties (e.g., `string | undefined` becomes `string`)
- * - Replaces explicit `any` types with `unknown`
- * - Recursively applies type-fest's `Simplify` to the result for easier-to-read intellisense
- *
- * Note that the `NestDepth` type param is necessary to prevent a ts2589 error ("Type instantiation
- * is excessively deep and possibly infinite"), which occurs when recursively mapping object types.
- */
-type FixDocClientType<
-  Input extends object,
-  NestDepth extends NestDepthMax10 = 0,
-  T extends Omit<Input, LegacyDdbSdkParameters> = Omit<Input, LegacyDdbSdkParameters>,
-> = Simplify<
-  IterateNestDepthMax10<NestDepth> extends 10
-    ? T
-    : { [Key in keyof T]: FixDocClientValueType<T[Key], NestDepth> }
->;
+import type { Simplify } from "type-fest";
 
 /** Input params for `DdbClientWrapper` methods which implement the `GetItem` command. */
-export type GetItemInput = FixDocClientType<SDK_GetCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `BatchGetItem` command. */
-export type BatchGetItemsInput = FixDocClientType<SDK_BatchGetCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `PutItem` command. */
-export type PutItemInput = FixDocClientType<SDK_PutCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `UpdateItem` command. */
-export type UpdateItemInput = FixDocClientType<SDK_UpdateCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `DeleteItem` command. */
-export type DeleteItemInput = FixDocClientType<SDK_DeleteCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `BatchWriteItem` command. */
-export type BatchWriteItemsInput = FixDocClientType<SDK_BatchWriteCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `Query` command. */
-export type QueryInput = FixDocClientType<SDK_QueryCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `Scan` command. */
-export type ScanInput = FixDocClientType<SDK_ScanCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `TransactWriteItems` command. */
-export type TransactWriteItemsInput = FixDocClientType<SDK_TransactWriteCommandInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `DescribeTable` command. */
-export type DescribeTableInput = FixDocClientType<SDK_DescribeTableInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `CreateTable` command. */
-export type CreateTableInput = FixDocClientType<SDK_CreateTableInput>;
-/** Input params for `DdbClientWrapper` methods which implement the `ListTables` command. */
-export type ListTablesInput = FixDocClientType<SDK_ListTablesInput>;
-
+export type GetItemInput = ModifyDdbClientType<SDKGetItemInput & MarshallingConfigsParam>;
 /** Output from `DdbClientWrapper` methods which implement the `GetItem` command. */
-export type GetItemOutput = FixDocClientType<SDK_GetCommandOutput>;
+export type GetItemOutput = ModifyDdbClientType<SDKGetItemOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `BatchGetItem` command. */
+export type BatchGetItemsInput = ModifyDdbClientType<
+  SDKBatchGetItemInput & MarshallingConfigsParam & BatchOperationParams
+>;
 /** Output from `DdbClientWrapper` methods which implement the `BatchGetItem` command. */
-export type BatchGetItemsOutput = FixDocClientType<SDK_BatchGetCommandOutput>;
+export type BatchGetItemsOutput = ModifyDdbClientType<SDKBatchGetItemOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `PutItem` command. */
+export type PutItemInput = ModifyDdbClientType<SDKPutItemInput & MarshallingConfigsParam>;
 /** Output from `DdbClientWrapper` methods which implement the `PutItem` command. */
-export type PutItemOutput = FixDocClientType<SDK_PutCommandOutput>;
+export type PutItemOutput = ModifyDdbClientType<SDKPutItemOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `UpdateItem` command. */
+export type UpdateItemInput = ModifyDdbClientType<SDKUpdateItemInput & MarshallingConfigsParam>;
 /** Output from `DdbClientWrapper` methods which implement the `UpdateItem` command. */
-export type UpdateItemOutput = FixDocClientType<SDK_UpdateCommandOutput>;
+export type UpdateItemOutput = ModifyDdbClientType<SDKUpdateItemOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `DeleteItem` command. */
+export type DeleteItemInput = ModifyDdbClientType<SDKDeleteItemInput & MarshallingConfigsParam>;
 /** Output from `DdbClientWrapper` methods which implement the `DeleteItem` command. */
-export type DeleteItemOutput = FixDocClientType<SDK_DeleteCommandOutput>;
+export type DeleteItemOutput = ModifyDdbClientType<SDKDeleteItemOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `BatchWriteItem` command. */
+export type BatchWriteItemsInput = ModifyDdbClientType<
+  SDKBatchWriteItemInput & MarshallingConfigsParam & BatchOperationParams
+>;
 /** Output from `DdbClientWrapper` methods which implement the `BatchWriteItem` command. */
-export type BatchWriteItemsOutput = FixDocClientType<SDK_BatchWriteCommandOutput>;
+export type BatchWriteItemsOutput = ModifyDdbClientType<SDKBatchWriteItemOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `Query` command. */
+export type QueryInput = ModifyDdbClientType<SDKQueryInput & MarshallingConfigsParam>;
 /** Output from `DdbClientWrapper` methods which implement the `Query` command. */
-export type QueryOutput = FixDocClientType<SDK_QueryCommandOutput>;
+export type QueryOutput = ModifyDdbClientType<SDKQueryOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `Scan` command. */
+export type ScanInput = ModifyDdbClientType<SDKScanInput & MarshallingConfigsParam>;
 /** Output from `DdbClientWrapper` methods which implement the `Scan` command. */
-export type ScanOutput = FixDocClientType<SDK_ScanCommandOutput>;
+export type ScanOutput = ModifyDdbClientType<SDKScanOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `TransactWriteItems` command. */
+export type TransactWriteItemsInput = ModifyDdbClientType<
+  SDKTransactWriteItemsInput & MarshallingConfigsParam
+>;
 /** Output from `DdbClientWrapper` methods which implement the `TransactWriteItems` command. */
-export type TransactWriteItemsOutput = FixDocClientType<SDK_TransactWriteCommandOutput>;
+export type TransactWriteItemsOutput = ModifyDdbClientType<SDKTransactWriteItemsOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `DescribeTable` command. */
+export type DescribeTableInput = Simplify<ModifyDdbClientType<SDKDescribeTableInput>>;
 /** Output from `DdbClientWrapper` methods which implement the `DescribeTable` command. */
-export type DescribeTableOutput = FixDocClientType<SDK_DescribeTableOutput>;
+export type DescribeTableOutput = ModifyDdbClientType<SDKDescribeTableOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `CreateTable` command. */
+export type CreateTableInput = ModifyDdbClientType<SDKCreateTableInput>;
 /** Output from `DdbClientWrapper` methods which implement the `CreateTable` command. */
-export type CreateTableOutput = FixDocClientType<SDK_CreateTableOutput>;
+export type CreateTableOutput = ModifyDdbClientType<SDKCreateTableOutput>;
+
+/** Input params for `DdbClientWrapper` methods which implement the `ListTables` command. */
+export type ListTablesInput = ModifyDdbClientType<SDKListTablesInput>;
 /** Output from `DdbClientWrapper` methods which implement the `ListTables` command. */
-export type ListTablesOutput = FixDocClientType<SDK_ListTablesOutput>;
-
-/**
- * This generic is used to fix "type instantiation is excessively deep and possibly infinite" errors.
- */
-// prettier-ignore
-type IterateNestDepthMax10<NestDepth extends NestDepthMax10 = 0> =
-  NestDepth extends 0 ? 1
-  : NestDepth extends 1 ? 2
-  : NestDepth extends 2 ? 3
-  : NestDepth extends 3 ? 4
-  : NestDepth extends 4 ? 5
-  : NestDepth extends 5 ? 6
-  : NestDepth extends 6 ? 7
-  : NestDepth extends 7 ? 8
-  : NestDepth extends 8 ? 9
-  : NestDepth extends 9 ? 10
-  : 10;
-
-type NestDepthMax10 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type ListTablesOutput = ModifyDdbClientType<SDKListTablesOutput>;

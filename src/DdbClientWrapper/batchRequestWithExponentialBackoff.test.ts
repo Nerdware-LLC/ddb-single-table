@@ -1,8 +1,16 @@
+import {
+  BatchStatementErrorCodeEnum as BatchErrorCode,
+  type BatchStatementError,
+} from "@aws-sdk/client-dynamodb";
 import { DdbSingleTableError } from "../utils/errors.js";
 import { batchRequestWithExponentialBackoff } from "./batchRequestWithExponentialBackoff.js";
 
-describe("batchRequestWithExponentialBackoff()", { timeout: 5_000 }, () => {
+describe("batchRequestWithExponentialBackoff()", () => {
   const mockSubmitBatchRequest = vi.fn();
+
+  const getDdbBatchError = (errCode: keyof typeof BatchErrorCode): Error & BatchStatementError => {
+    return Object.defineProperty(new Error(errCode), "Code", { value: errCode });
+  };
 
   test("successfully processes all batch requests without retries", async () => {
     mockSubmitBatchRequest.mockResolvedValueOnce([]);
@@ -12,13 +20,15 @@ describe("batchRequestWithExponentialBackoff()", { timeout: 5_000 }, () => {
       batchRequestWithExponentialBackoff(mockSubmitBatchRequest, batchRequestObjects)
     ).resolves.not.toThrow();
 
-    expect(mockSubmitBatchRequest).toHaveBeenCalledTimes(1);
-    expect(mockSubmitBatchRequest).toHaveBeenCalledWith(batchRequestObjects);
+    expect(mockSubmitBatchRequest).toHaveBeenCalledExactlyOnceWith(batchRequestObjects);
   });
 
   test("retries unprocessed items and eventually succeeds", async () => {
     const unprocessedItems = [{ id: 2 }];
-    mockSubmitBatchRequest.mockResolvedValueOnce(unprocessedItems).mockResolvedValueOnce([]);
+
+    mockSubmitBatchRequest
+      .mockResolvedValueOnce(unprocessedItems) // 1st call returns unprocessed items
+      .mockResolvedValueOnce([]); //              2nd call returns no unprocessed items
 
     const batchRequestObjects = [{ id: 1 }, { id: 2 }];
 
@@ -31,9 +41,9 @@ describe("batchRequestWithExponentialBackoff()", { timeout: 5_000 }, () => {
     expect(mockSubmitBatchRequest).toHaveBeenNthCalledWith(2, unprocessedItems);
   });
 
-  test("throws an error after exceeding maxRetries", { timeout: 5_000 }, async () => {
-    mockSubmitBatchRequest.mockResolvedValue([{ id: 1 }]);
+  test("throws an error after exceeding maxRetries", async () => {
     const batchRequestObjects = [{ id: 1 }];
+    mockSubmitBatchRequest.mockResolvedValue([{ id: 1 }]);
 
     await expect(
       batchRequestWithExponentialBackoff(mockSubmitBatchRequest, batchRequestObjects, {
@@ -61,23 +71,22 @@ describe("batchRequestWithExponentialBackoff()", { timeout: 5_000 }, () => {
   });
 
   test("throws an error if a non-retryable error occurs", async () => {
-    const error = new Error("AccessDeniedException");
-    (error as any).code = "AccessDeniedException";
-    mockSubmitBatchRequest.mockRejectedValueOnce(error);
+    const batchError = getDdbBatchError("AccessDenied");
+    mockSubmitBatchRequest.mockRejectedValueOnce(batchError);
 
     const batchRequestObjects = [{ id: 1 }];
 
     await expect(
       batchRequestWithExponentialBackoff(mockSubmitBatchRequest, batchRequestObjects)
-    ).rejects.toThrow(error);
+    ).rejects.toThrow(batchError);
 
     expect(mockSubmitBatchRequest).toHaveBeenCalledTimes(1);
   });
 
   test("retries if a retryable error occurs", async () => {
-    const error = new Error("ProvisionedThroughputExceeded");
-    (error as any).code = "ProvisionedThroughputExceeded";
-    mockSubmitBatchRequest.mockRejectedValueOnce(error).mockResolvedValueOnce([]);
+    const batchError = getDdbBatchError("ProvisionedThroughputExceeded");
+
+    mockSubmitBatchRequest.mockRejectedValueOnce(batchError).mockResolvedValueOnce([]);
 
     const batchRequestObjects = [{ id: 1 }];
 

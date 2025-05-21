@@ -1,6 +1,7 @@
 import { isString, isArray, safeJsonStringify } from "@nerdware/ts-type-safety-utils";
 import { DdbSingleTableError } from "../utils/errors.js";
 import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types/index.js";
+import type { BatchStatementError, BatchStatementErrorCodeEnum } from "@aws-sdk/client-dynamodb";
 
 /**
  * This DynamoDB batch-requests helper handles submission and retry logic for batch operations like
@@ -34,9 +35,13 @@ import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "
  * @param exponentialBackoffConfigs Configs for the exponential backoff retry strategy.
  * @param attemptNumber The current attempt number.
  */
-export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRequestFunction>(
+export const batchRequestWithExponentialBackoff = async <
+  BatchRequestObjectType extends object = Record<string, unknown>,
+  BatchFn extends
+    BatchRequestFunction<BatchRequestObjectType> = BatchRequestFunction<BatchRequestObjectType>,
+>(
   submitBatchRequest: BatchFn,
-  batchRequestObjects: Array<Record<string, unknown>>,
+  batchRequestObjects: Array<BatchRequestObjectType>,
   {
     initialDelay = 100,
     timeMultiplier = 2, // By default, double the delay each time
@@ -47,16 +52,16 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
   numPreviousRetries = 0
 ): Promise<void> => {
   // Init variable to hold UnprocessedItems/UnprocessedKeys
-  let unprocessedRequestObjects: Array<Record<string, unknown>> | undefined;
+  let unprocessedRequestObjects: Array<BatchRequestObjectType> | undefined;
 
   try {
     // Submit the batch request
     unprocessedRequestObjects = await submitBatchRequest(batchRequestObjects);
   } catch (err) {
-    // If a batch op throws, NONE of the requests were successful, check if `err.code` is retryable.
-    const maybeErrCode = (err as any)?.code as unknown;
-    if (!isString(maybeErrCode) || !ERR_CODE_SHOULD_RETRY[maybeErrCode]) throw err;
-    // If `err.code` indicates the op should be retried, run again with all batchRequestObjects.
+    // If a batch op throws, NONE of the requests were successful, check if `err.Code` is retryable.
+    const maybeErrCode = (err as BatchStatementError | undefined)?.Code;
+    if (!isString(maybeErrCode) || !RETRYABLE_BATCH_ERROR_CODES[maybeErrCode]) throw err;
+    // If `err.Code` indicates the op should be retried, run again with all batchRequestObjects.
     unprocessedRequestObjects = batchRequestObjects;
   }
 
@@ -94,20 +99,20 @@ export const batchRequestWithExponentialBackoff = async <BatchFn extends BatchRe
 };
 
 /**
- * A map of [DDB error codes][ddb-docs-errors] which indicate that a batch request should be
- * retried. Known error codes which do _not_ indicate a request should be retried, such as
- * `AccessDeniedException`, have been excluded from this map.
+ * A map of {@link BatchStatementErrorCodeEnum|DDB batch-statement error codes}
+ * which indicate a batch request should be retried.
  *
+ * > See [DynamoDB — Error messages and codes][docs]
+ * >
  * > Note: these error codes are all HTTP 400 errors.
  *
- * [ddb-docs-errors]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
- *
- * @see [DynamoDB Docs: Error messages and codes][ddb-docs-errors]
+ * [docs]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
  */
-const ERR_CODE_SHOULD_RETRY: Record<string, boolean> = {
+const RETRYABLE_BATCH_ERROR_CODES: Readonly<
+  { [Code in BatchStatementErrorCodeEnum]?: boolean } & { [key: string]: boolean }
+> = {
   // Applicable to PROVISIONED BillingMode:
   ProvisionedThroughputExceeded: true,
-  ProvisionedThroughputExceededException: true, // <-- SDK should auto-retry
   // Applicable to PAY_PER_REQUEST BillingMode:
   RequestLimitExceeded: true,
-} as const;
+};
