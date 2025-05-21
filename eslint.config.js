@@ -13,7 +13,7 @@ export default tsEslint.config(
   // ALL FILES
   {
     name: "files:all/base",
-    files: ["src/**/*.[tj]s", "__mocks__/**/*", "./*.[tj]s"],
+    files: ["src/**/*.[tj]s", "./*.[tj]s"],
     linterOptions: { reportUnusedDisableDirectives: true },
     languageOptions: {
       ecmaVersion: "latest",
