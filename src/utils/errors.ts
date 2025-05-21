@@ -1,3 +1,4 @@
+import { CONNREFUSED as ECONNREFUSED } from "node:dns";
 import { safeJsonStringify, isPlainObject, isString } from "@nerdware/ts-type-safety-utils";
 import type {
   ModelSchemaNestedAttributes,
@@ -23,22 +24,37 @@ export class DdbSingleTableError extends Error {
 }
 
 /**
- * This error wraps DDB-client [ECONNREFUSED errors]({@link DdbClientErrorECONNREFUSED})
- * for network/connection errors.
- * @param arg Either a string or DDB-client error.
+ * This error is used for network/connection errors.
  */
-export class DdbConnectionError extends DdbSingleTableError {
+export class DdbConnectionError
+  extends DdbSingleTableError
+  implements SetNonNullable<NodeJS.ErrnoException, "code">
+{
   static override readonly DEFAULT_MSG: string =
     "Failed to connect to the provided DynamoDB endpoint";
 
-  constructor(arg?: unknown) {
-    let message = (isString(arg) && arg) || DdbConnectionError.DEFAULT_MSG;
+  /** Dictionary of relevant, connection-related NodeJS `err.code` values. */
+  static readonly NODE_ERROR_CODES = {
+    ECONNREFUSED,
+  } as const satisfies { [errCode: string]: NonNullable<NodeJS.ErrnoException["code"]> };
 
-    if (isPlainObject(arg) && isString(arg.message)) {
-      message += ` (${arg.message})`;
+  /** The {@link NodeJS.ErrnoException|NodeJS error code}. */
+  readonly code: NonNullable<NodeJS.ErrnoException["code"]>;
+
+  constructor(arg?: unknown) {
+    // Set defaults:
+    let message: string = DdbConnectionError.DEFAULT_MSG,
+      code: string = DdbConnectionError.NODE_ERROR_CODES.ECONNREFUSED;
+
+    if (isNonEmptyString(arg)) {
+      message = arg;
+    } else if (isPlainObject(arg)) {
+      if (isNonEmptyString(arg.message)) message += ` (${arg.message})`;
+      if (isNonEmptyString(arg.code)) code = arg.code;
     }
 
     super(message);
+    this.code = code;
     Error.captureStackTrace(this, DdbConnectionError);
   }
 }
