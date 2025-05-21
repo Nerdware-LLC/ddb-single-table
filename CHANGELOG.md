@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.11.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.10.0...v2.11.0-next.1) (2025-05-21)
+
+
+### Bug Fixes
+
+* ensure Buffer and Set values are not iterated through ([4d85a8d](https://github.com/Nerdware-LLC/ddb-single-table/commit/4d85a8d8958c62632fd35f50855f96453201e036))
+* update import path for `TableKeysAndIndexes` ([85e21a5](https://github.com/Nerdware-LLC/ddb-single-table/commit/85e21a5df6c72bfdfd11e9b1030393c8a5de1c69))
+
+
+### Features
+
+* add 'code' and `ECONNREFUSED` to DdbConnectionError ([1f51635](https://github.com/Nerdware-LLC/ddb-single-table/commit/1f51635e7430b070feb10e14413adb9056a42de6))
+* add `MarshallingConfigs` and `DEFAULT_MARSHALLING_CONFIGS` ([1d51b27](https://github.com/Nerdware-LLC/ddb-single-table/commit/1d51b278026b910e85e8e76c4ca42a80cb427553))
+* add type decs for "aws-sdk-client-mock-vitest" custom matchers ([519f70b](https://github.com/Nerdware-LLC/ddb-single-table/commit/519f70b87e2d68a57b46dea965cb494c116f94a0))
+* add types `NativeAttributeValue` and `NativeKeyAttributeValue` ([401b06c](https://github.com/Nerdware-LLC/ddb-single-table/commit/401b06ce34a1507af08ac7b43e6e45af4dd3794a))
+* replace `lib-dynamodb` with inline `marshall` and `unmarshall` fns ([268b89c](https://github.com/Nerdware-LLC/ddb-single-table/commit/268b89ce37bc675d3f30a042e4f109005625a402))
+* rm `DdbClientErrorECONNREFUSED` (Node err, not AwsError) ([8e8401b](https://github.com/Nerdware-LLC/ddb-single-table/commit/8e8401b223bbdfe95eb70b83e553111e61a3c78b))
+
 # [2.10.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.9.0...v2.10.0) (2025-05-09)
 
 
