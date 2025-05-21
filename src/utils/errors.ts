@@ -1,9 +1,14 @@
 import { CONNREFUSED as ECONNREFUSED } from "node:dns";
 import { safeJsonStringify, isPlainObject, isString } from "@nerdware/ts-type-safety-utils";
 import type {
+  KeyAttributeConfig,
   ModelSchemaNestedAttributes,
   ModelSchemaAttributeConfig,
 } from "../Schema/types/index.js";
+import type { SetNonNullable } from "type-fest";
+
+/** Internal `errors` util */
+const isNonEmptyString = (value: unknown): value is string => isString(value) && !!value;
 
 /**
  * This is the base `error` class for custom errors defined in this package. If the
@@ -17,7 +22,7 @@ export class DdbSingleTableError extends Error {
 
   constructor(message?: unknown, fallbackMsg: string = DdbSingleTableError.DEFAULT_MSG) {
     // This ctor allows `message` to be any type, but it's only used if it's a truthy string.
-    super((isString(message) && message) || fallbackMsg);
+    super(isNonEmptyString(message) ? message : fallbackMsg);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, DdbSingleTableError);
   }
@@ -116,16 +121,15 @@ export class InvalidExpressionError extends DdbSingleTableError {
   static override readonly DEFAULT_MSG: string = "Invalid expression";
 
   constructor(arg?: unknown) {
-    const message =
-      isString(arg) && arg
-        ? arg
-        : isPlainObject(arg)
-            && isString(arg.expressionName)
-            && isString(arg.invalidValueDescription)
-            && isString(arg.problem)
-          ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n`
-            + `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
-          : InvalidExpressionError.DEFAULT_MSG;
+    const message = isNonEmptyString(arg)
+      ? arg
+      : isPlainObject(arg)
+          && isString(arg.expressionName)
+          && isString(arg.invalidValueDescription)
+          && isString(arg.problem)
+        ? `Invalid ${arg.invalidValueDescription} (generating ${arg.expressionName}): \n`
+          + `${arg.problem}: ${safeJsonStringify(arg.invalidValue, null, 2)}`
+        : InvalidExpressionError.DEFAULT_MSG;
 
     super(message);
     Error.captureStackTrace(this, InvalidExpressionError);
