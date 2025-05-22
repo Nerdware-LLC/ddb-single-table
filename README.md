@@ -74,8 +74,6 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 - [📝 License](#-license)
 - [💬 Contact](#-contact)
 
----
-
 ## ✨ Key Features
 
 - Easy-to-use declarative API for managing DDB tables, connections, and models
@@ -830,11 +828,10 @@ DDB-ST models provide a high-level API for batching CRUD operations that handles
 
 ### Q: _How does DDB-ST interact with the underlying DynamoDB client?_<!-- omit in toc -->
 
-**A:** DDB-ST provides a single streamlined abstraction over both the document and vanilla DynamoDB clients:
+**A:** DDB-ST provides a wrapper around the DynamoDB client:
 
-- CRUD actions use the document client to provide built-in marshalling/unmarshalling of DDB-attribute objects.
-- Utility actions like DescribeTable which aren't included in the document client use the vanilla client.
-- To ensure client resources like socket connections are cleaned up, a listener is attached to the process "exit" event which calls the vanilla client's `destroy()` method. Note that although the document client does expose the same method, calling it on the doc-client results in a no-op.
+- To simplify client usage, the wrapper handles all marshalling and unmarshalling of data to/from DynamoDB types.
+- To ensure client resources like socket connections are cleaned up, a listener is attached to the process "exit" event which calls the client's `destroy()` method.
 
 ### Q: _What version of the AWS SDK does DDB-ST use?_<!-- omit in toc -->
 
@@ -865,4 +862,3 @@ Trevor Anderson — [Trevor@Nerdware.cloud](mailto:trevor@nerdware.cloud) — [@
 [**_Dare Mighty Things._**](https://www.youtube.com/watch?v=GO5FwsblpT8)
 
 </div>
-```

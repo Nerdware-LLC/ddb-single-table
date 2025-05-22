@@ -311,6 +311,7 @@ describe("DdbClientWrapper", () => {
       RequestItems: {
         [mockTableName]: mockBatchWriteRequests,
       },
+      exponentialBackoffConfigs: { initialDelay: 0 }, // <-- Zero here disables delays for testing
     } as const satisfies BatchWriteItemsInput;
 
     test(`creates a BatchWriteCommand and returns mocked "UnprocessedItems" when called with valid arguments`, async () => {

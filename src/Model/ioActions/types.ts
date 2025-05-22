@@ -72,24 +72,27 @@ export type IOActionRecursiveApplicator = (
 ) => unknown;
 
 /**
+ * The name of an IO-Action function.
+ */
+type IOActionName =
+  | "aliasMapping"
+  | "setDefaults"
+  | "transformValues"
+  | "transformItem"
+  | "typeChecking"
+  | "validate"
+  | "validateItem"
+  | "convertJsTypes"
+  | "checkRequired";
+
+/**
  * A dictionary to which all IO-Action functions belong.
  * > **This object serves as the `this` context for all IO-Action functions.**
  */
 export type IOActions = Readonly<
-  {
+  Record<IOActionName, IOAction> & {
     recursivelyApplyIOAction: IOActionRecursiveApplicator;
-  } & Record<
-    | "aliasMapping"
-    | "setDefaults"
-    | "transformValues"
-    | "transformItem"
-    | "typeChecking"
-    | "validate"
-    | "validateItem"
-    | "convertJsTypes"
-    | "checkRequired",
-    IOAction
-  >
+  }
 >;
 
 /**
@@ -98,10 +101,23 @@ export type IOActions = Readonly<
 export type IOActionsSet = Array<IOAction>;
 
 /**
- * Boolean flags for controlling which IO-Actions to use for a request or response. Model methods
- * define defaults for each flag which suit the methods purpose. For example, the `createItem`
- * method sets each flag to `true` by default, whereas the `updateItem` method defaults each flag
- * to `false`. Some flags only apply to certain methods, and/or a single `IODirection` (e.g.,
- * `setDefaults` is only applied to request arguments).
+ * The name of a `toDB` IO-Action.
  */
-export type EnabledIOActions = { [IOAction in keyof IOActions]?: boolean };
+type ToDbIOActionName = IOActionName;
+
+/**
+ * The name of a `fromDB` IO-Action.
+ */
+type FromDbIOActionName = Extract<
+  IOActionName,
+  "convertJsTypes" | "transformValues" | "transformItem" | "aliasMapping"
+>;
+
+/**
+ * Boolean flags for controlling which IO-Actions to use for a request or response.
+ */
+export type EnabledIOActions<T extends IODirection> = T extends "toDB"
+  ? { [IOAction in ToDbIOActionName]?: boolean }
+  : T extends "fromDB"
+    ? { [IOAction in FromDbIOActionName]?: boolean }
+    : never;

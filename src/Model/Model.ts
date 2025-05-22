@@ -375,10 +375,15 @@ export class Model<
         ...(this.schemaOptions.autoAddTimestamps && { updatedAt: new Date() }),
       },
       {
-        setDefaults: false,
-        transformItem: false,
-        validateItem: false,
-        checkRequired: false,
+        aliasMapping: true,
+        setDefaults: false, // disabled
+        transformValues: true,
+        transformItem: false, // disabled
+        typeChecking: true,
+        validate: true,
+        validateItem: false, // disabled
+        convertJsTypes: true,
+        checkRequired: false, // disabled
       }
     );
 
@@ -636,19 +641,19 @@ export class Model<
   // INSTANCE METHOD UTILS:
 
   /**
-   * Item-transforming action sets grouped by data flow directionality.
+   * Value-transforming action sets grouped by data flow directionality.
    *
-   * | `Method` | Description                                                     | Read/Write Usage                   |
-   * | :------- | :-------------------------------------------------------------: | :--------------------------------: |
-   * | `toDB`   | Actions executed on objects being _sent to_ the database.       | Only used for _writes_             |
-   * | `fromDB` | Actions executed on objects being _returned from_ the database. | Used for both _reads_ AND _writes_ |
+   * | `Method` | Description                                                         |
+   * | :------- | :-----------------------------------------------------------------: |
+   * | `toDB`   | Actions executed on values _before_ being passed to the SDK client. |
+   * | `fromDB` | Actions executed on values _returned_ from the SDK client.          |
    */
   readonly processItemAttributes = {
     /**
-     * This method applies `toDB` IO-Actions middleware to the provided `itemAttrs`.
-     * @param itemData The item being sent to the database.
-     * @param enabledIOActions Boolean flags for enabling/disabling IO-Actions.
-     * @returns The item after being processed by the IO-Actions.
+     * This method applies `toDB` IO-Actions to the provided `itemAttrs`.
+     * @param itemAttrs The values to be modified for the SDK client.
+     * @param enabledIOActions Boolean flags for enabling/disabling `toDB` IO-Actions.
+     * @returns The item after being processed by the `toDB` IO-Actions.
      */
     toDB: <
       ProcessedItemAttributes extends { [attrName: string]: NativeAttributeValue } = {
@@ -657,29 +662,40 @@ export class Model<
     >(
       itemAttrs: BaseItem,
       {
-        aliasMapping = true,
-        setDefaults = true,
-        transformValues = true,
-        transformItem = true,
-        typeChecking = true,
-        validate = true,
-        validateItem = true,
-        convertJsTypes = true,
-        checkRequired = true,
-      }: EnabledIOActions = {}
+        // When a 2nd argument is provided, only the specified toDB IO-Actions are enabled:
+        aliasMapping = false,
+        setDefaults = false,
+        transformValues = false,
+        transformItem = false,
+        typeChecking = false,
+        validate = false,
+        validateItem = false,
+        convertJsTypes = false,
+        checkRequired = false,
+      }: EnabledIOActions<"toDB"> = {
+        // When no 2nd argument is provided, all toDB IO-Actions are enabled by default:
+        aliasMapping: true,
+        setDefaults: true,
+        transformValues: true,
+        transformItem: true,
+        typeChecking: true,
+        validate: true,
+        validateItem: true,
+        convertJsTypes: true,
+        checkRequired: true,
+      }
     ): ProcessedItemAttributes => {
       // Assemble array of enabled IO-Actions in toDB order:
-      const toDBioActionsSet = [
-        ...(aliasMapping ? [ioActions.aliasMapping] : []),
-        ...(setDefaults ? [ioActions.setDefaults] : []),
-        ...(transformValues ? [ioActions.transformValues] : []),
-        ...(transformItem ? [ioActions.transformItem] : []),
-        ...(typeChecking ? [ioActions.typeChecking] : []),
-        ...(validate ? [ioActions.validate] : []),
-        ...(validateItem ? [ioActions.validateItem] : []),
-        ...(convertJsTypes ? [ioActions.convertJsTypes] : []),
-        ...(checkRequired ? [ioActions.checkRequired] : []),
-      ];
+      const toDBioActionsSet = [];
+      if (aliasMapping) toDBioActionsSet.push(ioActions.aliasMapping);
+      if (setDefaults) toDBioActionsSet.push(ioActions.setDefaults);
+      if (transformValues) toDBioActionsSet.push(ioActions.transformValues);
+      if (transformItem) toDBioActionsSet.push(ioActions.transformItem);
+      if (typeChecking) toDBioActionsSet.push(ioActions.typeChecking);
+      if (validate) toDBioActionsSet.push(ioActions.validate);
+      if (validateItem) toDBioActionsSet.push(ioActions.validateItem);
+      if (convertJsTypes) toDBioActionsSet.push(ioActions.convertJsTypes);
+      if (checkRequired) toDBioActionsSet.push(ioActions.checkRequired);
 
       return this.applyIOActionsToItemAttributes(
         { ...itemAttrs }, // dereferenced shallow copy
@@ -691,27 +707,33 @@ export class Model<
       );
     },
     /**
-     * This method applies `fromDB` IO-Actions to the provided `itemData`.
-     * @param itemData The item being returned from the database.
-     * @param enabledIOActions Boolean flags for enabling/disabling IO-Actions.
-     * @returns The item after being processed by the IO-Actions.
+     * This method applies `fromDB` IO-Actions to the provided `itemAttrs`.
+     * @param itemAttrs The values returned from the SDK client.
+     * @param enabledIOActions Boolean flags for enabling/disabling `fromDB` IO-Actions.
+     * @returns The values processed by the `fromDB` IO-Actions.
      */
     fromDB: <ProcessedItemAttributes extends BaseItem = BaseItem>(
       itemAttrs: BaseItem,
       {
-        convertJsTypes = true,
-        transformValues = true,
-        transformItem = true,
-        aliasMapping = true,
-      }: EnabledIOActions = {}
+        // When a 2nd argument is provided, only the specified fromDB IO-Actions are enabled:
+        convertJsTypes = false,
+        transformValues = false,
+        transformItem = false,
+        aliasMapping = false,
+      }: EnabledIOActions<"fromDB"> = {
+        // When no 2nd argument is provided, all fromDB IO-Actions are enabled by default:
+        convertJsTypes: true,
+        transformValues: true,
+        transformItem: true,
+        aliasMapping: true,
+      }
     ): ProcessedItemAttributes => {
       // Assemble array of enabled IO-Actions in fromDB order:
-      const fromDBioActionsSet = [
-        ...(convertJsTypes ? [ioActions.convertJsTypes] : []),
-        ...(transformValues ? [ioActions.transformValues] : []),
-        ...(transformItem ? [ioActions.transformItem] : []),
-        ...(aliasMapping ? [ioActions.aliasMapping] : []),
-      ];
+      const fromDBioActionsSet = [];
+      if (convertJsTypes) fromDBioActionsSet.push(ioActions.convertJsTypes);
+      if (transformValues) fromDBioActionsSet.push(ioActions.transformValues);
+      if (transformItem) fromDBioActionsSet.push(ioActions.transformItem);
+      if (aliasMapping) fromDBioActionsSet.push(ioActions.aliasMapping);
 
       return this.applyIOActionsToItemAttributes(
         { ...itemAttrs }, // dereferenced shallow copy
