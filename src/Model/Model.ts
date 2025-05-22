@@ -636,19 +636,19 @@ export class Model<
   // INSTANCE METHOD UTILS:
 
   /**
-   * Item-transforming action sets grouped by data flow directionality.
+   * Value-transforming action sets grouped by data flow directionality.
    *
-   * | `Method` | Description                                                     | Read/Write Usage                   |
-   * | :------- | :-------------------------------------------------------------: | :--------------------------------: |
-   * | `toDB`   | Actions executed on objects being _sent to_ the database.       | Only used for _writes_             |
-   * | `fromDB` | Actions executed on objects being _returned from_ the database. | Used for both _reads_ AND _writes_ |
+   * | `Method` | Description                                                         |
+   * | :------- | :-----------------------------------------------------------------: |
+   * | `toDB`   | Actions executed on values _before_ being passed to the SDK client. |
+   * | `fromDB` | Actions executed on values _returned_ from the SDK client.          |
    */
   readonly processItemAttributes = {
     /**
-     * This method applies `toDB` IO-Actions middleware to the provided `itemAttrs`.
-     * @param itemData The item being sent to the database.
-     * @param enabledIOActions Boolean flags for enabling/disabling IO-Actions.
-     * @returns The item after being processed by the IO-Actions.
+     * This method applies `toDB` IO-Actions to the provided `itemAttrs`.
+     * @param itemAttrs The values to be modified for the SDK client.
+     * @param enabledIOActions Boolean flags for enabling/disabling `toDB` IO-Actions.
+     * @returns The item after being processed by the `toDB` IO-Actions.
      */
     toDB: <
       ProcessedItemAttributes extends { [attrName: string]: NativeAttributeValue } = {
@@ -691,10 +691,10 @@ export class Model<
       );
     },
     /**
-     * This method applies `fromDB` IO-Actions to the provided `itemData`.
-     * @param itemData The item being returned from the database.
-     * @param enabledIOActions Boolean flags for enabling/disabling IO-Actions.
-     * @returns The item after being processed by the IO-Actions.
+     * This method applies `fromDB` IO-Actions to the provided `itemAttrs`.
+     * @param itemAttrs The values returned from the SDK client.
+     * @param enabledIOActions Boolean flags for enabling/disabling `fromDB` IO-Actions.
+     * @returns The values processed by the `fromDB` IO-Actions.
      */
     fromDB: <ProcessedItemAttributes extends BaseItem = BaseItem>(
       itemAttrs: BaseItem,
