@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.11.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.11.0...v2.11.1-next.1) (2025-05-22)
+
+
+### Bug Fixes
+
+* rm erroneous chars ([5fd41a8](https://github.com/Nerdware-LLC/ddb-single-table/commit/5fd41a8d6d01dde135a8f7261373eae9287ae20b))
+* update `EnabledIOActions` to only permit correct keys for the given `IODirection` ([4847b42](https://github.com/Nerdware-LLC/ddb-single-table/commit/4847b4236832b481361fe09995c47ccc04ac1f56))
+
 # [2.11.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.10.0...v2.11.0) (2025-05-21)
 
 
