@@ -375,10 +375,15 @@ export class Model<
         ...(this.schemaOptions.autoAddTimestamps && { updatedAt: new Date() }),
       },
       {
-        setDefaults: false,
-        transformItem: false,
-        validateItem: false,
-        checkRequired: false,
+        aliasMapping: true,
+        setDefaults: false, // disabled
+        transformValues: true,
+        transformItem: false, // disabled
+        typeChecking: true,
+        validate: true,
+        validateItem: false, // disabled
+        convertJsTypes: true,
+        checkRequired: false, // disabled
       }
     );
 
