@@ -669,17 +669,16 @@ export class Model<
       }: EnabledIOActions = {}
     ): ProcessedItemAttributes => {
       // Assemble array of enabled IO-Actions in toDB order:
-      const toDBioActionsSet = [
-        ...(aliasMapping ? [ioActions.aliasMapping] : []),
-        ...(setDefaults ? [ioActions.setDefaults] : []),
-        ...(transformValues ? [ioActions.transformValues] : []),
-        ...(transformItem ? [ioActions.transformItem] : []),
-        ...(typeChecking ? [ioActions.typeChecking] : []),
-        ...(validate ? [ioActions.validate] : []),
-        ...(validateItem ? [ioActions.validateItem] : []),
-        ...(convertJsTypes ? [ioActions.convertJsTypes] : []),
-        ...(checkRequired ? [ioActions.checkRequired] : []),
-      ];
+      const toDBioActionsSet = [];
+      if (aliasMapping) toDBioActionsSet.push(ioActions.aliasMapping);
+      if (setDefaults) toDBioActionsSet.push(ioActions.setDefaults);
+      if (transformValues) toDBioActionsSet.push(ioActions.transformValues);
+      if (transformItem) toDBioActionsSet.push(ioActions.transformItem);
+      if (typeChecking) toDBioActionsSet.push(ioActions.typeChecking);
+      if (validate) toDBioActionsSet.push(ioActions.validate);
+      if (validateItem) toDBioActionsSet.push(ioActions.validateItem);
+      if (convertJsTypes) toDBioActionsSet.push(ioActions.convertJsTypes);
+      if (checkRequired) toDBioActionsSet.push(ioActions.checkRequired);
 
       return this.applyIOActionsToItemAttributes(
         { ...itemAttrs }, // dereferenced shallow copy
@@ -706,12 +705,11 @@ export class Model<
       }: EnabledIOActions = {}
     ): ProcessedItemAttributes => {
       // Assemble array of enabled IO-Actions in fromDB order:
-      const fromDBioActionsSet = [
-        ...(convertJsTypes ? [ioActions.convertJsTypes] : []),
-        ...(transformValues ? [ioActions.transformValues] : []),
-        ...(transformItem ? [ioActions.transformItem] : []),
-        ...(aliasMapping ? [ioActions.aliasMapping] : []),
-      ];
+      const fromDBioActionsSet = [];
+      if (convertJsTypes) fromDBioActionsSet.push(ioActions.convertJsTypes);
+      if (transformValues) fromDBioActionsSet.push(ioActions.transformValues);
+      if (transformItem) fromDBioActionsSet.push(ioActions.transformItem);
+      if (aliasMapping) fromDBioActionsSet.push(ioActions.aliasMapping);
 
       return this.applyIOActionsToItemAttributes(
         { ...itemAttrs }, // dereferenced shallow copy
