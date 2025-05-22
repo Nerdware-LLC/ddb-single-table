@@ -662,16 +662,28 @@ export class Model<
     >(
       itemAttrs: BaseItem,
       {
-        aliasMapping = true,
-        setDefaults = true,
-        transformValues = true,
-        transformItem = true,
-        typeChecking = true,
-        validate = true,
-        validateItem = true,
-        convertJsTypes = true,
-        checkRequired = true,
-      }: EnabledIOActions = {}
+        // When a 2nd argument is provided, only the specified toDB IO-Actions are enabled:
+        aliasMapping = false,
+        setDefaults = false,
+        transformValues = false,
+        transformItem = false,
+        typeChecking = false,
+        validate = false,
+        validateItem = false,
+        convertJsTypes = false,
+        checkRequired = false,
+      }: EnabledIOActions<"toDB"> = {
+        // When no 2nd argument is provided, all toDB IO-Actions are enabled by default:
+        aliasMapping: true,
+        setDefaults: true,
+        transformValues: true,
+        transformItem: true,
+        typeChecking: true,
+        validate: true,
+        validateItem: true,
+        convertJsTypes: true,
+        checkRequired: true,
+      }
     ): ProcessedItemAttributes => {
       // Assemble array of enabled IO-Actions in toDB order:
       const toDBioActionsSet = [];
@@ -703,11 +715,18 @@ export class Model<
     fromDB: <ProcessedItemAttributes extends BaseItem = BaseItem>(
       itemAttrs: BaseItem,
       {
-        convertJsTypes = true,
-        transformValues = true,
-        transformItem = true,
-        aliasMapping = true,
-      }: EnabledIOActions = {}
+        // When a 2nd argument is provided, only the specified fromDB IO-Actions are enabled:
+        convertJsTypes = false,
+        transformValues = false,
+        transformItem = false,
+        aliasMapping = false,
+      }: EnabledIOActions<"fromDB"> = {
+        // When no 2nd argument is provided, all fromDB IO-Actions are enabled by default:
+        convertJsTypes: true,
+        transformValues: true,
+        transformItem: true,
+        aliasMapping: true,
+      }
     ): ProcessedItemAttributes => {
       // Assemble array of enabled IO-Actions in fromDB order:
       const fromDBioActionsSet = [];
