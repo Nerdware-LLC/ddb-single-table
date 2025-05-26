@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.12.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.11.1...v2.12.0-next.1) (2025-05-26)
+
+
+### Bug Fixes
+
+* rm nullish checks, simplify Date/str checks ([9a36bcb](https://github.com/Nerdware-LLC/ddb-single-table/commit/9a36bcb5e9e34181e88ad3c20d50c4a1db641c9c))
+* update `itemToReturn` to ensure provided arg is not mutated ([58a17cc](https://github.com/Nerdware-LLC/ddb-single-table/commit/58a17cc3b894a99f70ae34da96d4e00c1b5a899d))
+* update `setDefaults` to ensure provided arg is not mutated ([ffff889](https://github.com/Nerdware-LLC/ddb-single-table/commit/ffff889d55d7ec33c38ae8748db68ab56d7794e2))
+
+
+### Features
+
+* replace unix timestamps w ISO-8601 fmt strings ([fac3f11](https://github.com/Nerdware-LLC/ddb-single-table/commit/fac3f11e00116a42b3c9ff9898943c140ecede76))
+* rm Buffer conversions ([d2992c8](https://github.com/Nerdware-LLC/ddb-single-table/commit/d2992c866b2d698bb48f0ede5fc152f2adc191a1))
+* uninstall dayjs ([b955130](https://github.com/Nerdware-LLC/ddb-single-table/commit/b95513059ad152366f8e01037fb077f9cfc82ea5))
+
 ## [2.11.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.11.0...v2.11.1) (2025-05-22)
 
 
