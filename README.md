@@ -471,17 +471,19 @@ During write operations, if the object provided to the Model method contains a k
 
 The attribute's type. The following `type` values are supported:
 
-| Attribute Type | DynamoDB Representation              | Can use for<br>KEY attributes? | Can use for<br>NON-KEY attributes? |
-| :------------- | :----------------------------------- | :----------------------------: | :--------------------------------: |
-| `"string"`     | "S" (String)                         |               ✅               |                 ✅                 |
-| `"number"`     | "N" (Number)                         |               ✅               |                 ✅                 |
-| `"Buffer"`     | "B" (Binary)                         |               ✅               |                 ✅                 |
-| `"boolean"`    | "BOOL" (Boolean)                     |               ❌               |                 ✅                 |
-| `"Date"`       | Converted to Unix timestamp (Number) |               ❌               |                 ✅                 |
-| `"map"`        | "M" (Map)                            |               ❌               |                 ✅                 |
-| `"array"`      | "L" (List)                           |               ❌               |                 ✅                 |
-| `"tuple"`      | "L" (List)                           |               ❌               |                 ✅                 |
-| `"enum"`       | "S" (String)                         |               ❌               |                 ✅                 |
+| Attribute Type | DynamoDB Representation                      | Can use for<br>KEY attributes? | Can use for<br>NON-KEY attributes? |
+| :------------- | :------------------------------------------- | :----------------------------: | :--------------------------------: |
+| `"string"`     | "S" (String)                                 |               ✅               |                 ✅                 |
+| `"number"`     | "N" (Number)                                 |               ✅               |                 ✅                 |
+| `"Buffer"`     | "B" (Binary)                                 |               ✅               |                 ✅                 |
+| `"boolean"`    | "BOOL" (Boolean)                             |               ❌               |                 ✅                 |
+| `"Date"`       | Converted to [ISO-8601 String][mdn-iso-8601] |               ❌               |                 ✅                 |
+| `"map"`        | "M" (Map)                                    |               ❌               |                 ✅                 |
+| `"array"`      | "L" (List)                                   |               ❌               |                 ✅                 |
+| `"tuple"`      | "L" (List)                                   |               ❌               |                 ✅                 |
+| `"enum"`       | "S" (String)                                 |               ❌               |                 ✅                 |
+
+[mdn-iso-8601]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
 
 #### Nested Data Types
 

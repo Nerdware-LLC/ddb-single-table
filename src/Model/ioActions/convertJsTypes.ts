@@ -1,75 +1,88 @@
-import { isDate, isString, isSafeInteger, isBuffer } from "@nerdware/ts-type-safety-utils";
-import dayjs from "dayjs";
-import { hasDefinedProperty, isConvertibleToDate } from "../../utils/index.js";
+import { isDate, isString } from "@nerdware/ts-type-safety-utils";
+import { hasDefinedProperty } from "../../utils/index.js";
 import type { IOActions, IOAction, IODirection } from "./types.js";
 import type { SchemaSupportedTypeStringLiteral } from "../../Schema/types/index.js";
 import type { BaseItem } from "../../types/index.js";
 
+/**
+ * A mapping of supported JS types to IO-Action methods for converting to/from DynamoDB types.
+ */
 const DDB_TYPE_MAP: {
   readonly [TypeStringLiteral in SchemaSupportedTypeStringLiteral]?: {
     readonly [Key in IODirection]: (value: NonNullable<unknown>) => NonNullable<unknown>;
   };
 } = {
-  Buffer: {
-    toDB: (value) => (isBuffer(value) ? value.toString("binary") : value),
-    fromDB: (value) => (isString(value) ? Buffer.from(value, "binary") : value),
-  },
   Date: {
-    toDB: (value) =>
-      isDate(value) || isString(value)
-        ? dayjs(value).unix() // convert Dates/strings to unix timestamps
-        : value,
-    fromDB: (value) =>
-      isConvertibleToDate(value) // convert valid timestamps to Date objects
-        ? dayjs(
-            isSafeInteger(value)
-              ? value * 1000 // convert seconds to milliseconds
-              : value
-          ).toDate()
-        : value,
+    /** Converts a `Date` object or date string into an ISO-8601 formatted string. */
+    toDB: (value) => {
+      return isDate(value)
+        ? value.toISOString()
+        : isString(value) && !isNaN(Date.parse(value))
+          ? new Date(value).toISOString()
+          : value; // If not a valid date, return the original value
+    },
+    /** Converts a date string into a `Date` object. */
+    fromDB: (value) => {
+      return isString(value) && !isNaN(Date.parse(value)) ? new Date(value) : value;
+    },
   },
 };
 
 /**
- * This `IOAction` converts JS types to DynamoDB types and vice versa.
+ * This `IOAction` converts JS types to DynamoDB types and vice versa (see {@link DDB_TYPE_MAP}).
  *
- * - `"Date"` Attributes
- *   - `toDB`: JS Date objects are converted to unix timestamps
- *   - `fromDB`: Unix timestamps are converted to JS Date objects
+ * -------------------------------------------------------------------------------------------
+ * ### `toDB` Conversions
  *
- * - `"Buffer"` Attributes
- *   - `toDB`: NodeJS Buffers are converted to binary strings
- *   - `fromDB`: Binary data is converted into NodeJS Buffers
+ * > | JS Type &ensp; | → DynamoDB Type               |
+ * > | :------------- | :---------------------------- |
+ * > | `Date`         | → [ISO-8601][iso-8601] string |
+ *
+ * ### `fromDB` Conversions
+ *
+ * > | DynamoDB Type &ensp;                       | → JS Type |
+ * > | :----------------------------------------- | :-------- |
+ * > | [Date-time-formatted string][date-str-fmt] | → `Date`  |
+ *
+ * [iso-8601]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
+ * [date-str-fmt]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#date_time_string_format
  */
 export const convertJsTypes: IOAction = function (
   this: IOActions,
   item,
   { schemaEntries, ioDirection, ...ctx }
 ) {
+  // To avoid mutating the original item, create a new object to return
+  const itemToReturn: BaseItem = { ...item };
+
   // Iterate over schemaEntries
   for (let i = 0; i < schemaEntries.length; i++) {
     const [attrName, attrConfig] = schemaEntries[i];
 
-    // If the item does not have the attribute, or if its value is nullish, skip it
-    if (!hasDefinedProperty(item, attrName)) continue;
+    // If the itemToReturn does not have the attribute, or if its value is nullish, skip it
+    if (!hasDefinedProperty(itemToReturn, attrName)) continue;
 
-    const itemValue = item[attrName];
+    const itemValue = itemToReturn[attrName];
 
-    // If the attribute type is "Date" or "Buffer", use the DDB_TYPE_MAP
+    // Check if the attribute type is defined in DDB_TYPE_MAP
     const typeConverterFn = DDB_TYPE_MAP[attrConfig.type]?.[ioDirection];
 
     if (typeConverterFn) {
-      item[attrName] = typeConverterFn(itemValue);
+      itemToReturn[attrName] = typeConverterFn(itemValue);
     } else if ((attrConfig.type === "map" || attrConfig.type === "array") && attrConfig.schema) {
       // Run recursively on nested attributes
-      (item as BaseItem)[attrName] = this.recursivelyApplyIOAction(this.convertJsTypes, itemValue, {
-        parentItem: item,
-        ioDirection,
-        ...ctx,
-        schema: attrConfig.schema, // <-- overwrites ctx.schema with the nested schema
-      });
+      (itemToReturn as BaseItem)[attrName] = this.recursivelyApplyIOAction(
+        this.convertJsTypes,
+        itemValue,
+        {
+          parentItem: itemToReturn,
+          ioDirection,
+          ...ctx,
+          schema: attrConfig.schema, // <-- overwrites ctx.schema with the nested schema
+        }
+      );
     }
   }
 
-  return item;
+  return itemToReturn;
 };

@@ -5,15 +5,13 @@ import type { BaseItem } from "../../types/index.js";
  */
 export interface ModelSchemaOptions {
   /**
-   * Whether write methods should add `"createdAt"` and `"updatedAt"` operation timestamps to
-   * item parameters when creating or updating items respectively (default: `false`). Currently
-   * only numerical unix timestamps are supported, but other formats like ISO-8601 strings may
-   * be supported in the future if there is demand for it.
+   * Whether write methods should add `"createdAt"` and `"updatedAt"` operation timestamps
+   * to item parameters when creating or updating items respectively (default: `false`).
    *
    * When enabled, timestamp fields are added _before_ any `default` functions defined in your
-   * schema are called, so your `default` functions can access the timestamp values for use cases
-   * like UUID generation. For example, your schema could define a `"pk"` attribute with a `default`
-   * function which generates a timestamp-based UUID using the `createdAt` value.
+   * schema are called, so your `default` functions can access the timestamp values for use
+   * cases like UUID generation. For example, your schema could define a `"pk"` attribute with
+   * a `default` function which generates a timestamp-based UUID using the `createdAt` value.
    */
   readonly autoAddTimestamps?: boolean;
 

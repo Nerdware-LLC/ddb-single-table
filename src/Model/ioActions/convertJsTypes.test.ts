@@ -15,19 +15,16 @@ describe("IOAction: convertJsTypes", () => {
   /**
    * Mock value inputs for converted types:
    *
-   * | `JS Type` | `DynamoDB Type`  |
-   * | :-------- | :--------------- |
-   * | Date      | unix timestamp   |
-   * | Buffer    | binary string    |
+   * | JS Type &ensp; | DynamoDB Type    |
+   * | :------------- | :--------------- |
+   * | Date           | ISO-8601 string  |
    */
   const CONVERSION_VALUES = {
     JS: {
       DATE: new Date(JAN_1_2020_ISO_STR),
-      BUFFER: Buffer.from("foo"),
     },
     DDB: {
-      DATE: 1577836800,
-      BUFFER: Buffer.from("foo").toString("binary"),
+      DATE: JAN_1_2020_ISO_STR,
     },
   };
 
@@ -59,7 +56,6 @@ describe("IOAction: convertJsTypes", () => {
     id: { type: "string", required: true },
     DATE: { type: "Date" }, //         <-- top-level Date
     DATE_ISO_STR: { type: "Date" }, // <-- top-level Date (fromDB will be ISO-8601 string)
-    BUFFER: { type: "Buffer" }, //     <-- top-level Buffer
     books: {
       type: "array", // nest level 1
       required: true,
@@ -86,7 +82,6 @@ describe("IOAction: convertJsTypes", () => {
                         street: { type: "string", required: true },
                         DATE: { type: "Date" }, //         <-- nested Date
                         DATE_ISO_STR: { type: "Date" }, // <-- nested Date (fromDB will be ISO-8601 string)
-                        BUFFER: { type: "Buffer" }, //     <-- nested Buffer
                       },
                     },
                   },
@@ -119,11 +114,6 @@ describe("IOAction: convertJsTypes", () => {
     expect(result.DATE_ISO_STR).toStrictEqual(CONVERSION_VALUES.DDB.DATE);
     expect((result as any).books[0].author.publisher.address.DATE_ISO_STR).toStrictEqual(
       CONVERSION_VALUES.DDB.DATE
-    );
-
-    expect(result.BUFFER).toStrictEqual(CONVERSION_VALUES.DDB.BUFFER);
-    expect((result as any).books[0].author.publisher.address.BUFFER).toStrictEqual(
-      CONVERSION_VALUES.DDB.BUFFER
     );
   });
 
@@ -165,17 +155,10 @@ describe("IOAction: convertJsTypes", () => {
     expect((result as any).books[0].author.publisher.address.DATE_ISO_STR).toStrictEqual(
       CONVERSION_VALUES.JS.DATE
     );
-
-    expect(result.BUFFER).toStrictEqual(CONVERSION_VALUES.JS.BUFFER);
-    expect((result as any).books[0].author.publisher.address.BUFFER).toStrictEqual(
-      CONVERSION_VALUES.JS.BUFFER
-    );
   });
 
   test.each([
-    { ioDirection: "toDB", convertableValueType: "Buffer" },
     { ioDirection: "toDB", convertableValueType: "Date" },
-    { ioDirection: "fromDB", convertableValueType: "Buffer" },
     { ioDirection: "fromDB", convertableValueType: "Date" },
   ])(
     `leaves unexpected $convertableValueType values unchanged when "ioDirection" is "$ioDirection"`,

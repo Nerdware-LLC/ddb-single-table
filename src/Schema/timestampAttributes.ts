@@ -1,5 +1,4 @@
-import { isNull, isUndefined } from "@nerdware/ts-type-safety-utils";
-import { isConvertibleToDate } from "../utils/index.js";
+import { isDate, isString } from "@nerdware/ts-type-safety-utils";
 import type { ModelSchemaNestedMap, ModelSchemaAttributeConfig } from "./types/index.js";
 import type { TimestampAttributes } from "../types/TimestampAttributes.js";
 
@@ -10,10 +9,8 @@ export const BASE_TIMESTAMP_ATTRIBUTE_CONFIG = {
   type: "Date",
   required: true,
   default: () => new Date(),
-  validate: (value: unknown) => {
-    return value
-      ? isConvertibleToDate(value) //           If value is truthy, it must be a valid timestamp.
-      : isNull(value) || isUndefined(value); // If value is falsey, it must be null/undefined.
+  validate: (value: NonNullable<unknown>) => {
+    return isDate(value) || (isString(value) && !isNaN(Date.parse(value)));
   },
 } as const satisfies ModelSchemaAttributeConfig;
 
