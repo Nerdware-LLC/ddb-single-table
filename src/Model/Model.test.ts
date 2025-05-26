@@ -10,6 +10,7 @@ import {
   BatchStatementErrorCodeEnum as BatchErrorCode,
   type BatchStatementError,
 } from "@aws-sdk/client-dynamodb";
+import { isString } from "@nerdware/ts-type-safety-utils";
 import { mockClient } from "aws-sdk-client-mock";
 import * as batchRequestsModule from "../DdbClientWrapper/handleBatchRequests.js";
 import * as whereQueryModule from "../Expressions/WhereQuery/index.js";
@@ -139,6 +140,10 @@ describe("Model", () => {
   const mockItemKeys = mockItemsKeys[0];
   const unaliasedMockItem = unaliasedMockItems[0];
   const unaliasedMockItemKeys = unaliasedMockItemsKeys[0];
+
+  const isValidIso8601String = (val: unknown): boolean => {
+    return isString(val) && !!Date.parse(val) && new Date(val).toISOString() === val;
+  };
 
   describe("new Model()", () => {
     test("returns a Model instance with expected properties when provided valid arguments", () => {
@@ -321,16 +326,16 @@ describe("Model", () => {
       });
       expect(spies.processItemAttributesToDB).toHaveReturnedWith({
         ...unaliasedMockItem,
-        createdAt: expect.any(Number),
-        updatedAt: expect.any(Number),
+        createdAt: expect.toSatisfy(isValidIso8601String),
+        updatedAt: expect.toSatisfy(isValidIso8601String),
       });
 
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledExactlyOnceWith({
         Item: {
           ...unaliasedMockItem,
-          createdAt: expect.any(Number),
-          updatedAt: expect.any(Number),
+          createdAt: expect.toSatisfy(isValidIso8601String),
+          updatedAt: expect.toSatisfy(isValidIso8601String),
         },
         ConditionExpression: "attribute_not_exists(pk)",
       });
@@ -338,8 +343,8 @@ describe("Model", () => {
       // Assert `processItemAttributes.fromDB` was called and returned the expected result
       expect(spies.processItemAttributesFromDB).toHaveBeenCalledExactlyOnceWith({
         ...unaliasedMockItem,
-        createdAt: expect.any(Number),
-        updatedAt: expect.any(Number),
+        createdAt: expect.toSatisfy(isValidIso8601String),
+        updatedAt: expect.toSatisfy(isValidIso8601String),
       });
       expect(spies.processItemAttributesFromDB).toHaveReturnedWith({
         ...mockItem,
@@ -380,24 +385,24 @@ describe("Model", () => {
       });
       expect(spies.processItemAttributesToDB).toHaveReturnedWith({
         ...unaliasedMockItem,
-        createdAt: expect.any(Number),
-        updatedAt: expect.any(Number),
+        createdAt: expect.toSatisfy(isValidIso8601String),
+        updatedAt: expect.toSatisfy(isValidIso8601String),
       });
 
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledExactlyOnceWith({
         Item: {
           ...unaliasedMockItem,
-          createdAt: expect.any(Number),
-          updatedAt: expect.any(Number),
+          createdAt: expect.toSatisfy(isValidIso8601String),
+          updatedAt: expect.toSatisfy(isValidIso8601String),
         },
       });
 
       // Assert `processItemAttributes.fromDB` was called and returned the expected result
       expect(spies.processItemAttributesFromDB).toHaveBeenCalledExactlyOnceWith({
         ...unaliasedMockItem,
-        createdAt: expect.any(Number),
-        updatedAt: expect.any(Number),
+        createdAt: expect.toSatisfy(isValidIso8601String),
+        updatedAt: expect.toSatisfy(isValidIso8601String),
       });
       expect(spies.processItemAttributesFromDB).toHaveReturnedWith({
         ...mockItem,
@@ -419,8 +424,8 @@ describe("Model", () => {
         PutRequest: {
           Item: {
             ...item,
-            createdAt: expect.any(Number),
-            updatedAt: expect.any(Number),
+            createdAt: expect.toSatisfy(isValidIso8601String),
+            updatedAt: expect.toSatisfy(isValidIso8601String),
           },
         },
       }));
@@ -492,8 +497,8 @@ describe("Model", () => {
             PutRequest: {
               Item: {
                 ...mockModel.ddb.marshall(itemWithoutTimestamps),
-                createdAt: { N: expect.any(String) },
-                updatedAt: { N: expect.any(String) },
+                createdAt: { S: expect.toSatisfy(isValidIso8601String) },
+                updatedAt: { S: expect.toSatisfy(isValidIso8601String) },
               },
             },
           })
@@ -527,8 +532,8 @@ describe("Model", () => {
         Attributes: mockModel.ddb.marshall({
           ...unaliasedMockItem,
           sk: mockUpdatedHandle,
-          createdAt: Math.floor(new Date().getTime() / 1000),
-          updatedAt: Math.floor(new Date().getTime() / 1000),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }),
       });
 
@@ -553,7 +558,10 @@ describe("Model", () => {
         Key: unaliasedMockItemKeys,
         UpdateExpression: "SET #sk = :sk, #updatedAt = :updatedAt",
         ExpressionAttributeNames: { "#sk": "sk", "#updatedAt": "updatedAt" },
-        ExpressionAttributeValues: { ":sk": mockUpdatedHandle, ":updatedAt": expect.any(Number) },
+        ExpressionAttributeValues: {
+          ":sk": mockUpdatedHandle,
+          ":updatedAt": expect.toSatisfy(isValidIso8601String),
+        },
         ReturnValues: "ALL_NEW",
       });
     });
@@ -669,8 +677,8 @@ describe("Model", () => {
           PutRequest: {
             Item: {
               ...item,
-              createdAt: expect.any(Number),
-              updatedAt: expect.any(Number),
+              createdAt: expect.toSatisfy(isValidIso8601String),
+              updatedAt: expect.toSatisfy(isValidIso8601String),
             },
           },
         })),
@@ -686,7 +694,7 @@ describe("Model", () => {
       */
       const unprocessedItem = {
         ...unaliasedMockItems[0],
-        createdAt: Math.floor(new Date().getTime() / 1000),
+        createdAt: new Date().toISOString(),
       };
 
       mockDdbClient
@@ -755,8 +763,8 @@ describe("Model", () => {
                   data: PutRequest.Item.data,
                   profile: PutRequest.Item.profile,
                 }),
-                createdAt: { N: expect.any(String) },
-                updatedAt: { N: expect.any(String) },
+                createdAt: { S: expect.toSatisfy(isValidIso8601String) },
+                updatedAt: { S: expect.toSatisfy(isValidIso8601String) },
               },
             },
           }),
