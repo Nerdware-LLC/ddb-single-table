@@ -697,14 +697,10 @@ export class Model<
       if (convertJsTypes) toDBioActionsSet.push(ioActions.convertJsTypes);
       if (checkRequired) toDBioActionsSet.push(ioActions.checkRequired);
 
-      return this.applyIOActionsToItemAttributes(
-        { ...itemAttrs }, // dereferenced shallow copy
-        toDBioActionsSet,
-        {
-          ioDirection: "toDB",
-          aliasesMap: this.aliasesToAttributesMap,
-        }
-      );
+      return this.applyIOActionsToItemAttributes(itemAttrs, toDBioActionsSet, {
+        ioDirection: "toDB",
+        aliasesMap: this.aliasesToAttributesMap,
+      });
     },
     /**
      * This method applies `fromDB` IO-Actions to the provided `itemAttrs`.
@@ -735,14 +731,10 @@ export class Model<
       if (transformItem) fromDBioActionsSet.push(ioActions.transformItem);
       if (aliasMapping) fromDBioActionsSet.push(ioActions.aliasMapping);
 
-      return this.applyIOActionsToItemAttributes(
-        { ...itemAttrs }, // dereferenced shallow copy
-        fromDBioActionsSet,
-        {
-          ioDirection: "fromDB",
-          aliasesMap: this.attributesToAliasesMap,
-        }
-      );
+      return this.applyIOActionsToItemAttributes(itemAttrs, fromDBioActionsSet, {
+        ioDirection: "fromDB",
+        aliasesMap: this.attributesToAliasesMap,
+      });
     },
   };
 
@@ -791,10 +783,10 @@ export class Model<
       ...ioActionsCtxOverrides,
     };
 
-    // Reduce array of IO-Actions using a deref'd copy of itemAttrs as the init accum
+    // Reduce array of IO-Actions using itemAttrs as the init accum
     const processedItemAttrs = ioActionsSet.reduce(
       (itemAccum: BaseItem, ioAction) => ioAction.call(ioActions, itemAccum, ioActionsCtx),
-      { ...itemAttrs }
+      itemAttrs
     );
 
     return processedItemAttrs as ProcessedItemAttributes;
@@ -809,7 +801,7 @@ export class Model<
   private readonly processKeyArgs = (primaryKeyArgs: KeyParameters<Schema>): ItemKeys => {
     // Apply IO-Actions to the primary key args
     return this.applyIOActionsToItemAttributes(
-      { ...primaryKeyArgs }, // dereferenced shallow copy
+      primaryKeyArgs,
       [
         ioActions.aliasMapping,
         ioActions.setDefaults,
