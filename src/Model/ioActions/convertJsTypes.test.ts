@@ -15,18 +15,16 @@ describe("IOAction: convertJsTypes", () => {
   /**
    * Mock value inputs for converted types:
    *
-   * | `JS Type` | `DynamoDB Type`  |
-   * | :-------- | :--------------- |
-   * | Date      | unix timestamp   |
-   * | Buffer    | binary string    |
+   * | JS Type &ensp; | DynamoDB Type    |
+   * | :------------- | :--------------- |
+   * | Date           | ISO-8601 string  |
    */
   const CONVERSION_VALUES = {
     JS: {
       DATE: new Date(JAN_1_2020_ISO_STR),
     },
     DDB: {
-      DATE: 1577836800,
-      BUFFER: Buffer.from("foo").toString("binary"),
+      DATE: JAN_1_2020_ISO_STR,
     },
   };
 
