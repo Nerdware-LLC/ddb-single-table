@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [2.12.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.12.0...v2.12.1-next.1) (2025-05-28)
+
+
+### Bug Fixes
+
+* ensure `parentItem` is also updated w default values ([cd7e962](https://github.com/Nerdware-LLC/ddb-single-table/commit/cd7e962e211c2991b98297df028832356a6a5889))
+
 # [2.12.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.11.1...v2.12.0) (2025-05-26)
 
 
