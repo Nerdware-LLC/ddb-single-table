@@ -24,7 +24,10 @@ export const setDefaults: IOAction = function (
     if (hasKey(attrConfig as any, "default") && !hasDefinedProperty(itemToReturn, attrName)) {
       const attrDefault = attrConfig.default;
       // Check if "default" is a function, and if so, call it to get the "default" value
-      itemToReturn[attrName] = isFunction(attrDefault) ? attrDefault(parentItem) : attrDefault;
+      const attrDefaultValue = isFunction(attrDefault) ? attrDefault(parentItem) : attrDefault;
+      // Set the default value on the itemToReturn and parentItem
+      itemToReturn[attrName] = attrDefaultValue;
+      parentItem[attrName] = attrDefaultValue;
     }
     // Run recursively on nested attributes if parent value exists
     if (attrConfig.schema && hasKey(itemToReturn as any, attrName)) {
