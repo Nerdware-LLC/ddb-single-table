@@ -8,7 +8,7 @@
 
 A schema-based DynamoDB modeling tool, high-level API, and type-generator <br>
 built to _**supercharge**_ single-table designs!⚡<br><br>
-Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-features). <br>
+Marshalling ✅ Validation ✅ Where-style query API ✅ and more. <br>
 <font size="2"><i>Fully-typed support for ESM and CommonJS</i></font>
 
 [![npm package][npm-badge]](https://www.npmjs.com/package/@nerdware/ddb-single-table "npmjs.com: @nerdware/ddb-single-table")
@@ -87,8 +87,8 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and [more](#-key-featur
 - Property-level get/set modifiers
 - Schema-level get/set modifiers
 - Required/nullable property assertions
-- Easy access to a streamlined DynamoDB client (more info [here](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client))
-- Automatic retries for batch operations using exponential backoff (more info [here](#-batch-requests))
+- Easy access to a streamlined [DynamoDB client](#q-how-does-ddb-st-interact-with-the-underlying-dynamodb-client)
+- Automatic [retries for batch operations](#-batch-requests) using exponential backoff
 - Support for transactions — _group up to 100 operations into a single atomic transaction!_
 
 ## 🚀 Getting Started
