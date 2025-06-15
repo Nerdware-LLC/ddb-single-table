@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [2.13.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.12.1...v2.13.0) (2025-06-15)
+
+
+### Bug Fixes
+
+* **docs:** improve readability of README by removing redundant links ([1d20a59](https://github.com/Nerdware-LLC/ddb-single-table/commit/1d20a59e8de9bcca45050f7ee84e0ab809aada86))
+
+
+### Features
+
+* **exports:** add type-only exports for batch ops and model params ([2fc3858](https://github.com/Nerdware-LLC/ddb-single-table/commit/2fc3858275171d9b5dde2ba165a2c843e9b758cb))
+* **types:** add `convertDatesToStrings` option to `ItemTypeOpts` ([3ddcbf8](https://github.com/Nerdware-LLC/ddb-single-table/commit/3ddcbf84bc5514e0e9c2722f34960ecc12c261a0))
+
 # [2.13.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.12.1...v2.13.0-next.1) (2025-06-15)
 
 
