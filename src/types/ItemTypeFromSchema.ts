@@ -75,6 +75,7 @@ export type ItemTypeFromSchema<
     optionalIfDefault: false;
     nullableIfOptional: false;
     autoAddTimestamps: false;
+    convertDatesToStrings: false;
   },
 > = Simplify<
   Opts["autoAddTimestamps"] extends true
@@ -149,7 +150,10 @@ type AttrValue<
   : T["type"] extends "Buffer"
     ? CheckNullable<Buffer, T>
   : T["type"] extends "Date"
-    ? CheckNullable<Date, T>
+    ? CheckNullable<
+        Opts["convertDatesToStrings"] extends true ? string : Date,
+        T
+      >
   : T extends { type: "enum"; oneOf: ReadonlyArray<string> }
     ? CheckNullable<T["oneOf"][number], T>
   : NestDepth extends 32 // <-- Only nested types remain, so ensure NestDepth is not already maxed out.
