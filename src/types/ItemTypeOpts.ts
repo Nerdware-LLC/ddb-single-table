@@ -10,4 +10,6 @@ export type ItemTypeOpts = {
   nullableIfOptional?: boolean;
   /** Whether to add `"createdAt"` and `"updatedAt"` timestamp attributes. */
   autoAddTimestamps?: boolean;
+  /** Whether to replace all instances of `Date` with `string` (useful for mocking DDB responses). */
+  convertDatesToStrings?: boolean;
 };
