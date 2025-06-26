@@ -1,6 +1,8 @@
+import type { NativeKeyAttributeValue } from "./NativeAttributeValue.js";
+
 /**
- * An Item's keys (e.g., `{ id: "USER-1", sk: "FOO-SK" }`).
+ * A non-generic base type representing the key fields of an Item.
  */
-export interface ItemKeys {
-  [key: string]: string | number;
-}
+export type ItemKeys = {
+  [keyAttrName: string]: NativeKeyAttributeValue;
+};
