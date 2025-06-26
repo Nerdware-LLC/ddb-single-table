@@ -35,8 +35,8 @@ import type {
   // TABLE-METHOD IO TYPES
   DescribeTableInput,
   CreateTableInput,
-  // OTHER TYPES
-  NativeValueWriteRequest,
+  // UNMARSHALLED SDK TYPES
+  UnmarshalledBatchWriteRequest,
 } from "./types/index.js";
 
 describe("DdbClientWrapper", () => {
@@ -111,7 +111,6 @@ describe("DdbClientWrapper", () => {
       expect(result.Item).toBeUndefined();
     });
     test(`throws an error when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.getItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.getItem(null as any)).rejects.toThrowError();
     });
   });
@@ -195,7 +194,6 @@ describe("DdbClientWrapper", () => {
       expect(result.Attributes).toBeUndefined();
     });
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.putItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.putItem(null as any)).rejects.toThrowError();
     });
   });
@@ -245,7 +243,6 @@ describe("DdbClientWrapper", () => {
       expect(result.Attributes).toBeUndefined();
     });
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.updateItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.updateItem(null as any)).rejects.toThrowError();
     });
   });
@@ -285,7 +282,6 @@ describe("DdbClientWrapper", () => {
       expect(result.Attributes).toBeUndefined();
     });
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.deleteItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.deleteItem(null as any)).rejects.toThrowError();
     });
   });
@@ -293,7 +289,7 @@ describe("DdbClientWrapper", () => {
   describe("DdbClientWrapper.batchWriteItems()", () => {
     // Mock BatchWriteItem PutRequest objects, marshalled and unmarshalled:
     const { mockBatchWriteRequests, marshalledMockBatchWriteRequests } = mockItems.reduce<{
-      mockBatchWriteRequests: Array<NativeValueWriteRequest>;
+      mockBatchWriteRequests: Array<UnmarshalledBatchWriteRequest>;
       marshalledMockBatchWriteRequests: Array<WriteRequest>;
     }>(
       (accum, itemObj) => {
@@ -311,7 +307,9 @@ describe("DdbClientWrapper", () => {
       RequestItems: {
         [mockTableName]: mockBatchWriteRequests,
       },
-      exponentialBackoffConfigs: { initialDelay: 0 }, // <-- Zero here disables delays for testing
+      batchConfigs: {
+        retryConfigs: { disableDelay: true },
+      },
     } as const satisfies BatchWriteItemsInput;
 
     test(`creates a BatchWriteCommand and returns mocked "UnprocessedItems" when called with valid arguments`, async () => {

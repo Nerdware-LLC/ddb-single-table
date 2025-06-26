@@ -16,11 +16,10 @@ import {
   // TYPES
   type AttributeValue,
   type ConsumedCapacity,
-  type WriteRequest,
   type ItemCollectionMetrics,
 } from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { isArray } from "@nerdware/ts-type-safety-utils";
+import { DdbClientArgParser } from "./DdbClientArgParser.js";
 import { handleBatchRequests, MAX_CHUNK_SIZE } from "./handleBatchRequests.js";
 import type { TableConstructorParams } from "../Table/index.js";
 import type {
@@ -56,51 +55,22 @@ import type {
   GetRequest,
   WriteRequest,
 } from "./types/index.js";
-import type { NativeAttributeValue } from "../types/index.js";
 
 /**
- * A unified DynamoDB client with methods for instantiating DynamoDB client commands.
- * Where applicable, these wrapper methods also handle marshalling and unmarshalling
- * of attribute values, as well as batching/retry logic.
+ * A DynamoDB client wrapper with methods for instantiating DynamoDB client commands.
+ * Where applicable, these wrapper methods also handle the following concerns:
+ *
+ * - Marshalling and unmarshalling of attribute values
+ * - Conversion of JS `Date` objects to/from ISO-8601 datetime strings
+ * - Batching/retry logic
  */
-export class DdbClientWrapper {
+export class DdbClientWrapper extends DdbClientArgParser {
   /** The DynamoDB client instance. */
   private readonly _ddbClient: TableConstructorParams["ddbClient"];
-  private readonly tableName: TableConstructorParams["tableName"];
-  private readonly defaultMarshallingConfigs: Required<MarshallingConfigs>;
-
-  /** Invokes the `marshall` util function with the default marshalling configs. */
-  marshall = (
-    data: Record<string, NativeAttributeValue>,
-    options?: MarshallingConfigs["marshallOptions"]
-  ) => {
-    return marshall(data, {
-      ...this.defaultMarshallingConfigs.marshallOptions,
-      ...options,
-    });
-  };
-
-  /** Invokes the `unmarshall` util function with the default unmarshalling configs. */
-  unmarshall = (...[data, options]: Parameters<typeof unmarshall>) => {
-    return unmarshall(data, {
-      ...this.defaultMarshallingConfigs.unmarshallOptions,
-      ...options,
-    });
-  };
 
   constructor({ ddbClient, tableName, marshallingConfigs }: DdbClientWrapperConstructorParams) {
+    super({ tableName, marshallingConfigs });
     this._ddbClient = ddbClient;
-    this.tableName = tableName;
-    this.defaultMarshallingConfigs = {
-      marshallOptions: {
-        ...DEFAULT_MARSHALLING_CONFIGS.marshallOptions,
-        ...marshallingConfigs?.marshallOptions,
-      },
-      unmarshallOptions: {
-        ...DEFAULT_MARSHALLING_CONFIGS.unmarshallOptions,
-        ...marshallingConfigs?.unmarshallOptions,
-      },
-    };
   }
 
   /**
@@ -109,23 +79,15 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_GetItem.html
    */
   readonly getItem = async ({
-    Key,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
   }: GetItemInput): Promise<GetItemOutput> => {
-    // Create the command with marshalled attribute values
-    const cmd = new GetItemCommand({
-      TableName: this.tableName,
-      Key: this.marshall(Key, marshallOptions),
-      ...args,
-    });
-
-    const { Item, ...cmdOutput } = await this._ddbClient.send(cmd);
-
-    return {
-      ...(Item && { Item: this.unmarshall(Item, unmarshallOptions) }),
-      ...cmdOutput,
-    };
+    // Create a GetItemCommand with marshalled `Key`
+    const cmd = new GetItemCommand(this.prepCommandArgs(args, marshallOptions));
+    // Send the command to the DynamoDB client
+    const response = await this._ddbClient.send(cmd);
+    // Return response with unmarshalled `Item`
+    return this.parseClientResponse(response, unmarshallOptions);
   };
 
   /**
@@ -134,15 +96,20 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
    */
   readonly batchGetItems = async ({
-    RequestItems,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     batchConfigs = {},
-    ...args
+    ...rawCmdArgs
   }: BatchGetItemsInput): Promise<BatchGetItemsOutput> => {
     // Init variables to hold returned values:
     const returnedItems: Array<{ [attrName: string]: AttributeValue }> = [];
     const returnedConsumedCapacity: Array<ConsumedCapacity> = [];
     let returnedMetadata: BatchGetItemsOutput["$metadata"] = {};
+
+    // Create BatchGetItemCommand args with marshalled `RequestItems`
+    const { RequestItems, ...cmdArgs } = this.prepCommandArgs(rawCmdArgs, marshallOptions);
+
+    // Destructure the `KeysAndAttributes` object:
+    const { Keys: marshalledRequestItemsKeys, ...nonKeyReqParams } = RequestItems[this.tableName];
 
     // Define the fn for the batch-requests handler, ensure it updates `returnedItems`
     const submitBatchGetItemRequest: BatchRequestFunction<GetRequest> = async (
@@ -171,11 +138,6 @@ export class DdbClientWrapper {
       return UnprocessedKeys?.[this.tableName]?.Keys;
     };
 
-    // Marshall the `Keys` values in RequestItems
-    const marshalledRequestItemsKeys = RequestItems[this.tableName].Keys.map((item) =>
-      this.marshall(item, marshallOptions)
-    );
-
     // Submit the function to the batch-requests handler
     const unprocessedKeys = await handleBatchRequests<GetRequest>(
       submitBatchGetItemRequest,
@@ -186,17 +148,15 @@ export class DdbClientWrapper {
       }
     );
 
-    return {
-      ...(returnedItems.length > 0 && {
-        Responses: {
-          [this.tableName]: returnedItems.map((item) => this.unmarshall(item, unmarshallOptions)),
-        },
-      }),
-      ...(returnedConsumedCapacity.length > 0 && {
-        ConsumedCapacity: returnedConsumedCapacity,
-      }),
-      $metadata: returnedMetadata,
-    };
+    return this.parseClientResponse(
+      {
+        ...(returnedItems.length > 0 && { Responses: { [this.tableName]: returnedItems } }),
+        ...(unprocessedKeys && { UnprocessedKeys: unprocessedKeys }),
+        ...(returnedConsumedCapacity.length > 0 && { ConsumedCapacity: returnedConsumedCapacity }),
+        $metadata: returnedMetadata,
+      },
+      unmarshallOptions
+    );
   };
 
   /**
@@ -205,37 +165,15 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_PutItem.html
    */
   readonly putItem = async ({
-    Item,
-    ExpressionAttributeValues,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
   }: PutItemInput): Promise<PutItemOutput> => {
-    // Create the command with marshalled attribute values
-    const cmd = new PutItemCommand({
-      TableName: this.tableName,
-      Item: this.marshall(Item, marshallOptions),
-      ...(ExpressionAttributeValues && {
-        ExpressionAttributeValues: this.marshall(ExpressionAttributeValues, marshallOptions),
-      }),
-      ...args,
-    });
-
-    const { Attributes, ItemCollectionMetrics, ...cmdOutput } = await this._ddbClient.send(cmd);
-
-    const { ItemCollectionKey, SizeEstimateRangeGB } = ItemCollectionMetrics ?? {};
-
-    return {
-      ...(Attributes && { Attributes: this.unmarshall(Attributes, unmarshallOptions) }),
-      ...(ItemCollectionMetrics && {
-        ItemCollectionMetrics: {
-          ...(ItemCollectionKey && {
-            ItemCollectionKey: this.unmarshall(ItemCollectionKey, unmarshallOptions),
-          }),
-          ...(SizeEstimateRangeGB && { SizeEstimateRangeGB }),
-        },
-      }),
-      ...cmdOutput,
-    };
+    // Create a PutItemCommand with marshalled `Item` and `ExpressionAttributeValues`
+    const cmd = new PutItemCommand(this.prepCommandArgs(args, marshallOptions));
+    // Send the command to the DynamoDB client
+    const response = await this._ddbClient.send(cmd);
+    // Return response with unmarshalled `Attributes` and `ItemCollectionMetrics.ItemCollectionKey`
+    return this.parseClientResponse(response, unmarshallOptions);
   };
 
   /**
@@ -244,37 +182,15 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html
    */
   readonly updateItem = async ({
-    Key,
-    ExpressionAttributeValues,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
   }: UpdateItemInput): Promise<UpdateItemOutput> => {
-    // Create the command with marshalled attribute values
-    const cmd = new UpdateItemCommand({
-      TableName: this.tableName,
-      Key: this.marshall(Key, marshallOptions),
-      ...(ExpressionAttributeValues && {
-        ExpressionAttributeValues: this.marshall(ExpressionAttributeValues, marshallOptions),
-      }),
-      ...args,
-    });
-
-    const { Attributes, ItemCollectionMetrics, ...cmdOutput } = await this._ddbClient.send(cmd);
-
-    const { ItemCollectionKey, SizeEstimateRangeGB } = ItemCollectionMetrics ?? {};
-
-    return {
-      ...(Attributes && { Attributes: this.unmarshall(Attributes, unmarshallOptions) }),
-      ...(ItemCollectionMetrics && {
-        ItemCollectionMetrics: {
-          ...(ItemCollectionKey && {
-            ItemCollectionKey: this.unmarshall(ItemCollectionKey, unmarshallOptions),
-          }),
-          ...(SizeEstimateRangeGB && { SizeEstimateRangeGB }),
-        },
-      }),
-      ...cmdOutput,
-    };
+    // Create an UpdateItemCommand with marshalled `Key` and `ExpressionAttributeValues`
+    const cmd = new UpdateItemCommand(this.prepCommandArgs(args, marshallOptions));
+    // Send the command to the DynamoDB client
+    const response = await this._ddbClient.send(cmd);
+    // Return response with unmarshalled `Attributes` and `ItemCollectionMetrics.ItemCollectionKey`
+    return this.parseClientResponse(response, unmarshallOptions);
   };
 
   /**
@@ -283,37 +199,15 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DeleteItem.html
    */
   readonly deleteItem = async ({
-    Key,
-    ExpressionAttributeValues,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
   }: DeleteItemInput): Promise<DeleteItemOutput> => {
-    // Create the command with marshalled attribute values
-    const cmd = new DeleteItemCommand({
-      TableName: this.tableName,
-      Key: this.marshall(Key, marshallOptions),
-      ...(ExpressionAttributeValues && {
-        ExpressionAttributeValues: this.marshall(ExpressionAttributeValues, marshallOptions),
-      }),
-      ...args,
-    });
-
-    const { Attributes, ItemCollectionMetrics, ...cmdOutput } = await this._ddbClient.send(cmd);
-
-    const { ItemCollectionKey, SizeEstimateRangeGB } = ItemCollectionMetrics ?? {};
-
-    return {
-      ...(Attributes && { Attributes: this.unmarshall(Attributes, unmarshallOptions) }),
-      ...(ItemCollectionMetrics && {
-        ItemCollectionMetrics: {
-          ...(ItemCollectionKey && {
-            ItemCollectionKey: this.unmarshall(ItemCollectionKey, unmarshallOptions),
-          }),
-          ...(SizeEstimateRangeGB && { SizeEstimateRangeGB }),
-        },
-      }),
-      ...cmdOutput,
-    };
+    // Create a DeleteItemCommand with marshalled `Key` and `ExpressionAttributeValues`
+    const cmd = new DeleteItemCommand(this.prepCommandArgs(args, marshallOptions));
+    // Send the command to the DynamoDB client
+    const response = await this._ddbClient.send(cmd);
+    // Return response with unmarshalled `Attributes` and `ItemCollectionMetrics.ItemCollectionKey`
+    return this.parseClientResponse(response, unmarshallOptions);
   };
 
   /**
@@ -322,15 +216,20 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
    */
   readonly batchWriteItems = async ({
-    RequestItems,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     batchConfigs = {},
-    ...args
+    ...rawCmdArgs
   }: BatchWriteItemsInput): Promise<BatchWriteItemsOutput> => {
     // Init variables to hold returned values:
     const returnedItemCollectionMetrics: Array<ItemCollectionMetrics> = [];
     const returnedConsumedCapacity: Array<ConsumedCapacity> = [];
     let returnedMetadata: BatchGetItemsOutput["$metadata"] = {};
+
+    // Create BatchWriteItemCommand args with marshalled `RequestItems`
+    const { RequestItems, ...cmdArgs } = this.prepCommandArgs(rawCmdArgs, marshallOptions);
+
+    // Get the marshalled `RequestItems`
+    const marshalledRequestItems = RequestItems[this.tableName];
 
     // Define the fn for the batch-requests handler, ensure it updates `returnedItems`
     const submitBatchWriteItemRequest: BatchRequestFunction<WriteRequest> = async (
@@ -338,7 +237,7 @@ export class DdbClientWrapper {
     ) => {
       const response = await this._ddbClient.send(
         new BatchWriteItemCommand({
-          ...args,
+          ...cmdArgs,
           RequestItems: {
             [this.tableName]: batchWriteItemReqObjects,
           },
@@ -357,32 +256,6 @@ export class DdbClientWrapper {
       return UnprocessedItems?.[this.tableName];
     };
 
-    // Marshall the `RequestItems`
-    const marshalledRequestItems = RequestItems[this.tableName].reduce(
-      (accum: Array<WriteRequest>, writeRequest) => {
-        if (writeRequest.PutRequest) {
-          accum.push({
-            PutRequest: {
-              Item: this.marshall(writeRequest.PutRequest.Item, marshallOptions),
-            },
-          });
-        } else if (writeRequest.DeleteRequest) {
-          accum.push({
-            DeleteRequest: {
-              Key: this.marshall(writeRequest.DeleteRequest.Key, marshallOptions),
-            },
-          });
-        } else {
-          throw new ItemInputError(
-            `Invalid request item: ${JSON.stringify(writeRequest)}. `
-              + `Expected a PutRequest or DeleteRequest.`
-          );
-        }
-        return accum;
-      },
-      []
-    );
-
     // Submit the function to the batch-requests handler
     const unprocessedItems = await handleBatchRequests<WriteRequest>(
       submitBatchWriteItemRequest,
@@ -393,24 +266,17 @@ export class DdbClientWrapper {
       }
     );
 
-    return {
-      ...(returnedItemCollectionMetrics.length > 0 && {
-        ItemCollectionMetrics: {
-          [this.tableName]: returnedItemCollectionMetrics.map(
-            ({ ItemCollectionKey, SizeEstimateRangeGB }) => ({
-              ...(ItemCollectionKey && {
-                ItemCollectionKey: this.unmarshall(ItemCollectionKey, unmarshallOptions),
-              }),
-              ...(SizeEstimateRangeGB && { SizeEstimateRangeGB }),
-            })
-          ),
-        },
-      }),
-      ...(returnedConsumedCapacity.length > 0 && {
-        ConsumedCapacity: returnedConsumedCapacity,
-      }),
-      $metadata: returnedMetadata,
-    };
+    return this.parseClientResponse(
+      {
+        UnprocessedItems: unprocessedItems,
+        ...(returnedConsumedCapacity.length > 0 && { ConsumedCapacity: returnedConsumedCapacity }),
+        ...(returnedItemCollectionMetrics.length > 0 && {
+          ItemCollectionMetrics: { [this.tableName]: returnedItemCollectionMetrics },
+        }),
+        $metadata: returnedMetadata,
+      },
+      unmarshallOptions
+    );
   };
 
   /**
@@ -419,34 +285,15 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
    */
   readonly query = async ({
-    ExclusiveStartKey,
-    ExpressionAttributeValues,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
   }: QueryInput = {}): Promise<QueryOutput> => {
-    // Create the command with marshalled attribute values
-    const cmd = new QueryCommand({
-      TableName: this.tableName,
-      ...(ExclusiveStartKey && {
-        ExclusiveStartKey: this.marshall(ExclusiveStartKey, marshallOptions),
-      }),
-      ...(ExpressionAttributeValues && {
-        ExpressionAttributeValues: this.marshall(ExpressionAttributeValues, marshallOptions),
-      }),
-      ...args,
-    });
-
-    const { Items, LastEvaluatedKey, ...cmdOutput } = await this._ddbClient.send(cmd);
-
-    return {
-      ...(Items && {
-        Items: Items.map((item) => this.unmarshall(item, unmarshallOptions)),
-      }),
-      ...(LastEvaluatedKey && {
-        LastEvaluatedKey: this.unmarshall(LastEvaluatedKey, unmarshallOptions),
-      }),
-      ...cmdOutput,
-    };
+    // Create a QueryCommand with marshalled `ExclusiveStartKey` and `ExpressionAttributeValues`
+    const cmd = new QueryCommand(this.prepCommandArgs(args, marshallOptions));
+    // Send the command to the DynamoDB client
+    const response = await this._ddbClient.send(cmd);
+    // Return response with unmarshalled `Items` and `LastEvaluatedKey`
+    return this.parseClientResponse(response, unmarshallOptions);
   };
 
   /**
@@ -455,34 +302,15 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
    */
   readonly scan = async ({
-    ExclusiveStartKey,
-    ExpressionAttributeValues,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
   }: ScanInput = {}): Promise<ScanOutput> => {
-    // Create the command with marshalled attribute values
-    const cmd = new ScanCommand({
-      TableName: this.tableName,
-      ...(ExclusiveStartKey && {
-        ExclusiveStartKey: this.marshall(ExclusiveStartKey, marshallOptions),
-      }),
-      ...(ExpressionAttributeValues && {
-        ExpressionAttributeValues: this.marshall(ExpressionAttributeValues, marshallOptions),
-      }),
-      ...args,
-    });
-
-    const { Items, LastEvaluatedKey, ...cmdOutput } = await this._ddbClient.send(cmd);
-
-    return {
-      ...(Items && {
-        Items: Items.map((item) => this.unmarshall(item, unmarshallOptions)),
-      }),
-      ...(LastEvaluatedKey && {
-        LastEvaluatedKey: this.unmarshall(LastEvaluatedKey, unmarshallOptions),
-      }),
-      ...cmdOutput,
-    };
+    // Create a ScanCommand with marshalled `ExclusiveStartKey` and `ExpressionAttributeValues`
+    const cmd = new ScanCommand(this.prepCommandArgs(args, marshallOptions));
+    // Send the command to the DynamoDB client
+    const response = await this._ddbClient.send(cmd);
+    // Return response with unmarshalled `Items` and `LastEvaluatedKey`
+    return this.parseClientResponse(response, unmarshallOptions);
   };
 
   /**
@@ -491,86 +319,15 @@ export class DdbClientWrapper {
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html
    */
   readonly transactWriteItems = async ({
-    TransactItems,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
   }: TransactWriteItemsInput): Promise<TransactWriteItemsOutput> => {
-    // Create the command with marshalled attribute values
-    const cmd = new TransactWriteItemsCommand({
-      ...args,
-      TransactItems: TransactItems.map(
-        // Destructure the transactWriteItem to get the relevant fields
-        ({
-          ConditionCheck: {
-            Key: ccKey,
-            ConditionExpression: ccConditionExpr,
-            ExpressionAttributeValues: ccEAV,
-            ...conCheckRest
-          } = {},
-          Put: { Item: putItem, ExpressionAttributeValues: putEAV, ...putRest } = {},
-          Update: {
-            Key: updateKey,
-            UpdateExpression: updateExpr,
-            ExpressionAttributeValues: updateEAV,
-            ...updateRest
-          } = {},
-          Delete: { Key: deleteKey, ExpressionAttributeValues: deleteEAV, ...deleteRest } = {},
-        }) => ({
-          ...(ccKey && {
-            ConditionCheck: {
-              ...conCheckRest,
-              TableName: this.tableName,
-              Key: this.marshall(ccKey, marshallOptions),
-              ConditionExpression: ccConditionExpr!,
-              ...(ccEAV && { ExpressionAttributeValues: this.marshall(ccEAV, marshallOptions) }),
-            },
-          }),
-          ...(putItem && {
-            Put: {
-              ...putRest,
-              TableName: this.tableName,
-              Item: this.marshall(putItem, marshallOptions),
-              ...(putEAV && { ExpressionAttributeValues: this.marshall(putEAV, marshallOptions) }),
-            },
-          }),
-          ...(updateKey && {
-            Update: {
-              ...updateRest,
-              TableName: this.tableName,
-              Key: this.marshall(updateKey, marshallOptions),
-              UpdateExpression: updateExpr!,
-              ...(updateEAV && { ExpressionAttributeValues: this.marshall(updateEAV, marshallOptions) }), // prettier-ignore
-            },
-          }),
-          ...(deleteKey && {
-            Delete: {
-              ...deleteRest,
-              TableName: this.tableName,
-              Key: this.marshall(deleteKey, marshallOptions),
-              ...(deleteEAV && { ExpressionAttributeValues: this.marshall(deleteEAV, marshallOptions) }), // prettier-ignore
-            },
-          }),
-        })
-      ),
-    });
-
-    const { ItemCollectionMetrics, ...cmdOutput } = await this._ddbClient.send(cmd);
-
-    return {
-      ...(ItemCollectionMetrics && {
-        ItemCollectionMetrics: {
-          [this.tableName]: ItemCollectionMetrics[this.tableName].map(
-            ({ ItemCollectionKey, SizeEstimateRangeGB }) => ({
-              ...(ItemCollectionKey && {
-                ItemCollectionKey: this.unmarshall(ItemCollectionKey, unmarshallOptions),
-              }),
-              ...(SizeEstimateRangeGB && { SizeEstimateRangeGB }),
-            })
-          ),
-        },
-      }),
-      ...cmdOutput,
-    };
+    // Create the TransactWriteItemsCommand command with marshalled `TransactItems`
+    const cmd = new TransactWriteItemsCommand(this.prepCommandArgs(args, marshallOptions));
+    // Send the command to the DynamoDB client
+    const response = await this._ddbClient.send(cmd);
+    // Return response with unmarshalled `ItemCollectionMetrics`
+    return this.parseClientResponse(response, unmarshallOptions);
   };
 
   // CONTROL PLANE METHODS:
