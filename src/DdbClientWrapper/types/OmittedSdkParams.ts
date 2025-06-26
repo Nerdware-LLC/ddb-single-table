@@ -1,8 +1,8 @@
 /**
- * Union of deprecated/legacy SDK command-parameter names. To prevent their
- * use, this package omits them from all ddb client parameter typings.
+ * Union of deprecated/legacy SDK command-parameter names. To prevent their use,
+ * this package omits them from all command-input types.
  */
-type LegacyDdbSdkParameters =
+type LegacySdkCommandParams =
   | "AttributesToGet" //      Legacy param: instead use ProjectionExpression
   | "AttributeUpdates" //     Legacy param: instead use UpdateExpression
   | "ConditionalOperator" //  Legacy param: instead use ConditionExpression (for Query/Scan, instead use FilterExpression)
@@ -12,14 +12,14 @@ type LegacyDdbSdkParameters =
   | "ScanFilter"; //          Legacy param: instead use FilterExpression
 
 /**
- * Union of SDK command-parameter names which are internally handled by wrapper
- * methods and are therefore omitted from method-parameter typings.
+ * Union of SDK command-parameter names which are internally handled by `DdbClientArgParser`
+ * methods and are therefore omitted from command-input types.
  */
-type DdbSdkParametersInternallyHandledByWrapper = "TableName";
+type SdkCommandParamsInternallyHandledByArgParser = "TableName";
 
 /**
- * Union of SDK command-parameter names which are removed from method parameters.
+ * Union of SDK command-parameter names which are removed from command-input types.
  */
-export type OmittedDdbSdkParams =
-  | LegacyDdbSdkParameters
-  | DdbSdkParametersInternallyHandledByWrapper;
+export type OmittedSdkParams =
+  | LegacySdkCommandParams
+  | SdkCommandParamsInternallyHandledByArgParser;
