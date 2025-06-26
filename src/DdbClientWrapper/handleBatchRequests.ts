@@ -1,5 +1,6 @@
+import { isArray } from "@nerdware/ts-type-safety-utils";
 import { batchRequestWithExponentialBackoff } from "./batchRequestWithExponentialBackoff.js";
-import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "./types/index.js";
+import type { BatchRequestFunction, SomeBatchRequestObject, BatchConfigs } from "./types/index.js";
 
 /**
  * This DynamoDB batch-requests handler invokes the provided `submitBatchRequest` function with
@@ -7,7 +8,15 @@ import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "
  * returns any `UnprocessedItems`/`UnprocessedKeys`, or if it results in a retryable error,
  * the batch request will be retried with any remaining unprocessed request objects using the
  * exponential-backoff strategy described below, the behavior of which can be customized via the
- * [`exponentialBackoffConfigs`][backoff-configs] parameter.
+ * {@link BatchConfigs|`batchConfigs`} parameter.
+ *
+ * ### **Chunk Size:**
+ *
+ * The `chunkSize` is determined automatically based on whether the `batchRequestObjects` are
+ * `GetRequest` (100) or `WriteRequest` (25), since these are the maximum limits set by AWS for
+ * the `BatchGetItem` and `BatchWriteItem` operations, respectively. If you need to override
+ * this value for any reason, you can do so by providing a `chunkSize` property in the
+ * {@link BatchConfigs|`batchConfigs`} parameter.
  *
  * ### **Exponential Backoff Strategy:**
  *
@@ -25,35 +34,67 @@ import type { BatchRetryExponentialBackoffConfigs, BatchRequestFunction } from "
  *      to the base `delay`: `Math.round(Math.random() * delay)`. Note that the determination as to
  *      whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
  *
- * [backoff-configs]: {@link BatchRetryExponentialBackoffConfigs}
- *
  * @param submitBatchRequest A function which submits a DDB batch operation, and returns any `UnprocessedItems`/`UnprocessedKeys`.
  * @param batchRequestObjects The array of request objects to submit via the batch operation.
- * @param chunkSize The maximum limit set by AWS for the batch operation used in the `submitBatchRequest` function (e.g., `100` for `BatchGetItem`, `25` for `BatchWriteItem`).
- * @param exponentialBackoffConfigs Configs for the exponential-backoff retry strategy.
+ * @param batchConfigs {@link BatchConfigs} for customizing batch-operation handling/behavior.
  */
 export const handleBatchRequests = async <
-  BatchRequestObjectType extends object = Record<string, unknown>,
-  BatchFn extends
-    BatchRequestFunction<BatchRequestObjectType> = BatchRequestFunction<BatchRequestObjectType>,
+  BatchRequestObj extends SomeBatchRequestObject,
+  BatchFn extends BatchRequestFunction<BatchRequestObj> = BatchRequestFunction<BatchRequestObj>,
 >(
   submitBatchRequest: BatchFn,
-  batchRequestObjects: Parameters<BatchFn>[0],
-  chunkSize: number,
-  exponentialBackoffConfigs?: BatchRetryExponentialBackoffConfigs
-) => {
+  batchRequestObjects: Array<BatchRequestObj>,
+  { chunkSize: chunkSizeOverride, retryConfigs = {} }: BatchConfigs = {}
+): Promise<Array<BatchRequestObj> | undefined> => {
+  // Sanity check: ensure that the `batchRequestObjects` array is not empty
+  if (batchRequestObjects.length === 0) return;
+
+  // Simple heuristic to determine the batch-operation type (Get/Write):
+  const isBatchWriteOp =
+    Object.hasOwn(batchRequestObjects[0], "PutRequest")
+    || Object.hasOwn(batchRequestObjects[0], "DeleteRequest");
+
+  const maxChunkSize = isBatchWriteOp ? MAX_CHUNK_SIZE.WriteRequest : MAX_CHUNK_SIZE.GetRequest;
+
+  const chunkSize = chunkSizeOverride
+    ? Math.min(Math.max(1, chunkSizeOverride), maxChunkSize)
+    : maxChunkSize;
+
   // Shallow copy the initial batch requests array:
   const remainingBatchRequests = [...batchRequestObjects];
+
+  // This will hold any unprocessed batch requests that need to be returned:
+  const unprocessedBatchRequestsToReturn: Array<BatchRequestObj> = [];
 
   // Loop until all batch requests have been submitted:
   while (remainingBatchRequests.length > 0) {
     const batchRequestsChunk = remainingBatchRequests.splice(0, chunkSize);
 
-    // Run `submitBatchRequest` with the recursive exponential-backoff wrapper
-    await batchRequestWithExponentialBackoff(
+    /* Run `submitBatchRequest` with the recursive exponential-backoff wrapper,
+      and collect any unprocessed requests returned by the function. */
+    const unprocessedBatchRequestsFromChunk = await batchRequestWithExponentialBackoff(
       submitBatchRequest,
       batchRequestsChunk,
-      exponentialBackoffConfigs
+      retryConfigs
     );
+
+    // If there are unprocessed requests, add them to the array to return:
+    if (
+      isArray(unprocessedBatchRequestsFromChunk)
+      && unprocessedBatchRequestsFromChunk.length > 0
+    ) {
+      unprocessedBatchRequestsToReturn.push(...unprocessedBatchRequestsFromChunk);
+    }
   }
+
+  // If there are any unprocessed requests, return them:
+  if (unprocessedBatchRequestsToReturn.length > 0) return unprocessedBatchRequestsToReturn;
 };
+
+/**
+ * The maximum chunk sizes for DDB batch operations.
+ */
+export const MAX_CHUNK_SIZE = {
+  GetRequest: 100,
+  WriteRequest: 25,
+} as const satisfies Record<string, number>;

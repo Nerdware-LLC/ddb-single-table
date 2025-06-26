@@ -21,9 +21,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { isArray } from "@nerdware/ts-type-safety-utils";
-import { ItemInputError } from "../utils/errors.js";
-import { DEFAULT_MARSHALLING_CONFIGS, type MarshallingConfigs } from "../utils/index.js";
-import { handleBatchRequests } from "./handleBatchRequests.js";
+import { handleBatchRequests, MAX_CHUNK_SIZE } from "./handleBatchRequests.js";
 import type { TableConstructorParams } from "../Table/index.js";
 import type {
   DdbClientWrapperConstructorParams,
@@ -53,8 +51,10 @@ import type {
   CreateTableOutput,
   ListTablesInput,
   ListTablesOutput,
-  // OTHER TYPES
+  // BATCH OP TYPES
   BatchRequestFunction,
+  GetRequest,
+  WriteRequest,
 } from "./types/index.js";
 import type { NativeAttributeValue } from "../types/index.js";
 
@@ -136,7 +136,7 @@ export class DdbClientWrapper {
   readonly batchGetItems = async ({
     RequestItems,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
-    exponentialBackoffConfigs,
+    batchConfigs = {},
     ...args
   }: BatchGetItemsInput): Promise<BatchGetItemsOutput> => {
     // Init variables to hold returned values:
@@ -145,14 +145,15 @@ export class DdbClientWrapper {
     let returnedMetadata: BatchGetItemsOutput["$metadata"] = {};
 
     // Define the fn for the batch-requests handler, ensure it updates `returnedItems`
-    const submitBatchGetItemRequest: BatchRequestFunction<{
-      [attrName: string]: AttributeValue;
-    }> = async (batchGetItemReqObjects) => {
+    const submitBatchGetItemRequest: BatchRequestFunction<GetRequest> = async (
+      batchGetItemReqObjects
+    ) => {
       const response = await this._ddbClient.send(
         new BatchGetItemCommand({
-          ...args,
+          ...cmdArgs,
           RequestItems: {
             [this.tableName]: {
+              ...nonKeyReqParams,
               Keys: batchGetItemReqObjects,
             },
           },
@@ -176,11 +177,13 @@ export class DdbClientWrapper {
     );
 
     // Submit the function to the batch-requests handler
-    await handleBatchRequests<{ [attrName: string]: AttributeValue }>(
+    const unprocessedKeys = await handleBatchRequests<GetRequest>(
       submitBatchGetItemRequest,
-      marshalledRequestItemsKeys,
-      100, // <-- chunk size
-      exponentialBackoffConfigs
+      marshalledRequestItemsKeys!,
+      {
+        chunkSize: MAX_CHUNK_SIZE.GetRequest,
+        ...batchConfigs,
+      }
     );
 
     return {
@@ -321,7 +324,7 @@ export class DdbClientWrapper {
   readonly batchWriteItems = async ({
     RequestItems,
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
-    exponentialBackoffConfigs,
+    batchConfigs = {},
     ...args
   }: BatchWriteItemsInput): Promise<BatchWriteItemsOutput> => {
     // Init variables to hold returned values:
@@ -381,11 +384,13 @@ export class DdbClientWrapper {
     );
 
     // Submit the function to the batch-requests handler
-    await handleBatchRequests<WriteRequest>(
+    const unprocessedItems = await handleBatchRequests<WriteRequest>(
       submitBatchWriteItemRequest,
-      marshalledRequestItems,
-      100, // <-- chunk size
-      exponentialBackoffConfigs
+      marshalledRequestItems, //
+      {
+        chunkSize: MAX_CHUNK_SIZE.WriteRequest,
+        ...batchConfigs,
+      }
     );
 
     return {
