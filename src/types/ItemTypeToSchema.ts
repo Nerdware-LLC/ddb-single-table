@@ -1,6 +1,6 @@
 import type { BaseItem } from "./BaseItem.js";
-import type { NativeAttributeValue } from "./NativeAttributeValue.js";
 import type { NestDepthMax32, IterateNestDepthMax32 } from "./NestDepth.js";
+import type { SupportedAttributeValueType } from "./SupportedAttributeValueType.js";
 import type { AnyValidAttributeConfig, ModelSchemaAttributeConfig } from "../Schema/types/index.js";
 import type { Simplify, Except, IsAny, IsUnknown, IsNever, IsTuple, UnionToTuple } from "type-fest";
 
@@ -38,7 +38,7 @@ type ItemValueToAttrConfig<Value, NestDepth extends NestDepthMax32> =
  */
 // prettier-ignore
 type TypeAttrConfigForValue<
-  Value extends NonNullable<NativeAttributeValue>,
+  Value extends NonNullable<SupportedAttributeValueType>,
   NestDepth extends NestDepthMax32,
 > =
   Value extends string
