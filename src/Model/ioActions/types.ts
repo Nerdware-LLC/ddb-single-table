@@ -96,11 +96,6 @@ export type IOActions = Readonly<
 >;
 
 /**
- * An array of enabled {@link IOAction} functions.
- */
-export type IOActionsSet = Array<IOAction>;
-
-/**
  * The name of a `toDB` IO-Action.
  */
 type ToDbIOActionName = IOActionName;

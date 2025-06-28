@@ -4,7 +4,7 @@ import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Ex
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { ItemInputError } from "../utils/errors.js";
 import { ioActions } from "./ioActions/ioActions.js";
-import type { EnabledIOActions, IOActionsSet, IOActionContext } from "./ioActions/types.js";
+import type { EnabledIOActions, IOAction, IOActionContext } from "./ioActions/types.js";
 import type {
   ModelConstructorParams,
   AttributesAliasesMap,
@@ -752,7 +752,7 @@ export class Model<
     ProcessedItemAttributes extends BaseItem = ItemAttributes,
   >(
     itemAttrs: ItemAttributes,
-    ioActionsSet: IOActionsSet,
+    ioActionsSet: Array<IOAction>,
     {
       ioDirection,
       aliasesMap,
