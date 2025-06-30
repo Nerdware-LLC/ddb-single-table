@@ -46,10 +46,10 @@
   ],
   "scripts": {
     "lint": "eslint src",
-    "postlint": "npm run test:types",
+    "postlint": "npm run typecheck",
+    "typecheck": "tsc --project tsconfig.json --noEmit --skipLibCheck",
     "test": "vitest run",
     "test:ci": "vitest run --coverage --bail=1 --silent",
-    "test:types": "tsc --project tsconfig.json --noEmit --skipLibCheck",
     "prebuild": "[ -d dist ] && rm -rf dist || true",
     "build": "scripts/cicd.build.sh"
   },
