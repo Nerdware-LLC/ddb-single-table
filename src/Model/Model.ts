@@ -1,12 +1,11 @@
 import { isArray } from "@nerdware/ts-type-safety-utils";
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions/index.js";
+import { ioActions } from "../IOActions/IOActions.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { ItemInputError } from "../utils/errors.js";
-import { ioActions } from "./ioActions/ioActions.js";
-import type { EnabledIOActions, IOAction, IOActionContext } from "./ioActions/types.js";
 import type {
-  ModelConstructorParams,
+  ModelConstructorParameters,
   AttributesAliasesMap,
   KeyParameters,
   GetItemOpts,
@@ -20,6 +19,12 @@ import type {
   ScanOpts,
 } from "./types/index.js";
 import type {
+  IODirection,
+  EnabledIOActions,
+  IOAction,
+  IOActionContext,
+} from "../IOActions/types/index.js";
+import type {
   ModelSchemaType,
   ModelSchemaAttributeConfig,
   ModelSchemaOptions,
@@ -28,13 +33,12 @@ import type {
 import type { TableKeysAndIndexes } from "../Table/types/index.js";
 import type {
   BaseItem,
+  UnknownItem,
   ItemKeys,
   ItemTypeFromSchema,
   ItemCreationParameters,
-  ItemUpdateParameters,
-  NativeAttributeValue,
 } from "../types/index.js";
-import type { SetOptional } from "type-fest";
+import type { SetRequired, PartialDeep } from "type-fest";
 
 /**
  * Each Model instance is provided with CRUD methods featuring parameter and return types which
@@ -60,14 +64,12 @@ import type { SetOptional } from "type-fest";
  *   5. **`Type Checking`** — Checks properties for conformance with their `"type"`.
  *   6. **`Attribute Validation`** — Validates individual item properties.
  *   7. **`Item Validation`** — Validates an item in its entirety.
- *   8. **`Convert JS Types`** — Converts JS types into DynamoDB types.
- *   9. **`"Required" Checks`** — Checks for `"required"` and `"nullable"` attributes.
+ *   8. **`"Required" Checks`** — Checks for `"required"` and `"nullable"` attributes.
  *
  * **`fromDB`**:
- *   1. **`Convert JS Types`** — Converts DynamoDB types into JS types.
- *   2. **`Attribute fromDB Modifiers`** — Runs your `transformValue.fromDB` fns.
- *   3. **`Item fromDB Modifier`** — Runs your `transformItem.fromDB` fn.
- *   4. **`Alias Mapping`** — Replaces attribute names with "alias" keys.
+ *   1. **`Attribute fromDB Modifiers`** — Runs your `transformValue.fromDB` fns.
+ *   2. **`Item fromDB Modifier`** — Runs your `transformItem.fromDB` fn.
+ *   3. **`Alias Mapping`** — Replaces attribute names with "alias" keys.
  *
  * #### Ordering of Attributes
  * IO-Actions which process individual attributes always process attributes in the same order:
@@ -87,8 +89,8 @@ import type { SetOptional } from "type-fest";
  */
 export class Model<
   const Schema extends ModelSchemaType,
-  const ItemType extends BaseItem = ItemTypeFromSchema<Schema>,
-  const ItemCreationParams extends BaseItem = ItemCreationParameters<Schema>,
+  ItemType extends UnknownItem = ItemTypeFromSchema<Schema>,
+  ItemCreationParams extends UnknownItem = ItemCreationParameters<Schema>,
 > implements TableKeysAndIndexes
 {
   // INSTANCE PROPERTIES:
@@ -96,7 +98,6 @@ export class Model<
   readonly schema: Schema;
   readonly schemaEntries: ModelSchemaEntries;
   readonly schemaOptions: ModelSchemaOptions;
-  readonly schemaWithKeysOnly: Record<string, ModelSchemaAttributeConfig>;
   readonly attributesToAliasesMap: AttributesAliasesMap;
   readonly aliasesToAttributesMap: AttributesAliasesMap;
   readonly tableName: string;
@@ -122,7 +123,7 @@ export class Model<
       allowUnknownAttributes = ModelSchema.DEFAULT_OPTIONS.allowUnknownAttributes,
       transformItem,
       validateItem,
-    }: ModelConstructorParams
+    }: ModelConstructorParameters
   ) {
     // Validate the Model schema and obtain the Model's alias maps
     const { attributesToAliasesMap, aliasesToAttributesMap } = ModelSchema.validate(modelSchema, {
@@ -139,10 +140,6 @@ export class Model<
       allowUnknownAttributes,
       ...(transformItem && { transformItem }),
       ...(validateItem && { validateItem }),
-    };
-    this.schemaWithKeysOnly = {
-      [tableHashKey]: this.schema[tableHashKey],
-      ...(!!tableRangeKey && { [tableRangeKey]: this.schema[tableRangeKey] }),
     };
 
     this.attributesToAliasesMap = attributesToAliasesMap;
@@ -264,11 +261,14 @@ export class Model<
     item: ItemCreationParams,
     createItemOpts: CreateItemOpts = {}
   ): Promise<ItemType> => {
+    // Cache the current timestamp to ensure auto-added timestamps are both the same
+    const operationTimestamp = new Date();
+
     // Process `item`, and add timestamps if `autoAddTimestamps` is enabled
     const toDBitem = this.processItemAttributes.toDB({
       ...(this.schemaOptions.autoAddTimestamps && {
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: operationTimestamp,
+        updatedAt: operationTimestamp,
       }),
       ...item,
     });
@@ -305,11 +305,14 @@ export class Model<
     item: ItemCreationParams,
     upsertItemOpts: UpsertItemOpts = {}
   ): Promise<ItemType> => {
+    // Cache the current timestamp to ensure auto-added timestamps are both the same
+    const operationTimestamp = new Date();
+
     // Process `item`, and add timestamps if `autoAddTimestamps` is enabled
     const toDBitem = this.processItemAttributes.toDB({
       ...(this.schemaOptions.autoAddTimestamps && {
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: operationTimestamp,
+        updatedAt: operationTimestamp,
       }),
       ...item,
     });
@@ -366,10 +369,10 @@ export class Model<
       update,
       updateOptions,
       ...updateItemOpts
-    }: UpdateItemOpts<ItemUpdateParameters<ItemCreationParams>>
+    }: UpdateItemOpts<PartialDeep<ItemCreationParams, { recurseIntoArrays: true }>>
   ): Promise<ItemType> => {
     // Process `update`, and add `updatedAt` timestamp if `autoAddTimestamps` is enabled
-    const toDBupdateAttributes = this.processItemAttributes.toDB(
+    const toDBupdateAttributes = this.processItemAttributes.toDB<ItemType>(
       {
         ...update,
         ...(this.schemaOptions.autoAddTimestamps && { updatedAt: new Date() }),
@@ -382,7 +385,6 @@ export class Model<
         typeChecking: true,
         validate: true,
         validateItem: false, // disabled
-        convertJsTypes: true,
         checkRequired: false, // disabled
       }
     );
@@ -507,15 +509,16 @@ export class Model<
     if (!isArray(upsertItems) && !isArray(deleteItems))
       throw new ItemInputError("batchUpsertAndDeleteItems was called without valid arguments.");
 
+    // Cache the current timestamp to ensure auto-added timestamps are all the same
+    const operationTimestamp = new Date();
+
     // Process any `upsertItems`, and add timestamps if `autoAddTimestamps` is enabled
-    const toDBupsertItems: Array<{ [attrName: string]: NativeAttributeValue }> = isArray(
-      upsertItems
-    )
+    const toDBunaliasedUpsertItems: Array<BaseItem> = isArray(upsertItems)
       ? upsertItems.map((item) =>
           this.processItemAttributes.toDB({
             ...(this.schemaOptions.autoAddTimestamps && {
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: operationTimestamp,
+              updatedAt: operationTimestamp,
             }),
             ...item,
           })
@@ -527,27 +530,76 @@ export class Model<
       ? deleteItems.map((pks) => this.processKeyArgs(pks))
       : [];
 
-    // Make the array of BatchWriteItem request objects:
-    const batchWriteItemRequestObjects = [
-      ...toDBupsertItems.map((itemObj) => ({
-        PutRequest: { Item: itemObj }, // <-- upsert items formatted as PutRequest objects
-      })),
-      ...toDBunaliasedKeysToDelete.map((keysObj) => ({
-        DeleteRequest: { Key: keysObj }, // <-- deletion keys formatted as DeleteRequest objects
-      })),
-    ];
-
-    await this.ddb.batchWriteItems({
+    const response = await this.ddb.batchWriteItems({
       ...batchWriteItemsOpts,
       RequestItems: {
-        [this.tableName]: batchWriteItemRequestObjects,
+        [this.tableName]: [
+          ...toDBunaliasedUpsertItems.map((itemObj) => ({
+            PutRequest: { Item: itemObj }, // <-- upsert items formatted as PutRequest objects
+          })),
+          ...toDBunaliasedKeysToDelete.map((keysObj) => ({
+            DeleteRequest: { Key: keysObj }, // <-- deletion keys formatted as DeleteRequest objects
+          })),
+        ],
       },
     });
 
-    // BatchWrite does not return items, so the input params are formatted for return.
+    // If there are any unprocessed items, they will be filtered out of the returned items.
+    const unprocessedBatchWriteItems = response.UnprocessedItems?.[this.tableName];
+
+    // Reduce UnprocessedItems (if any) into arrays of unprocessed PutRequest and DeleteRequest objects.
+    const { unprocessedPutRequestItems, unprocessedDeleteRequestKeys } = unprocessedBatchWriteItems
+      ? unprocessedBatchWriteItems.reduce<{
+          unprocessedPutRequestItems: Array<BaseItem>;
+          unprocessedDeleteRequestKeys: Array<ItemKeys>;
+        }>(
+          (accum, { PutRequest, DeleteRequest }) => {
+            if (PutRequest) accum.unprocessedPutRequestItems.push(PutRequest.Item);
+            else if (DeleteRequest) accum.unprocessedDeleteRequestKeys.push(DeleteRequest.Key);
+            return accum;
+          },
+          { unprocessedPutRequestItems: [], unprocessedDeleteRequestKeys: [] }
+        )
+      : {};
+
+    // Create array of PROCESSED upsert-items by filtering out any UNPROCESSED items:
+    const processedToDBunaliasedUpsertItems = unprocessedPutRequestItems
+      ? toDBunaliasedUpsertItems.filter(
+          (item) =>
+            !unprocessedPutRequestItems.some(
+              (unprocessedPutReqItem) =>
+                item[this.tableHashKey] === unprocessedPutReqItem[this.tableHashKey]
+                && (!this.tableRangeKey
+                  || item[this.tableRangeKey] === unprocessedPutReqItem[this.tableRangeKey])
+            )
+        )
+      : toDBunaliasedUpsertItems;
+
+    // Create array of PROCESSED delete-op keys by filtering out any UNPROCESSED keys:
+    const processedToDBunaliasedKeysToDelete = unprocessedDeleteRequestKeys
+      ? toDBunaliasedKeysToDelete.filter(
+          (keys) =>
+            !unprocessedDeleteRequestKeys.some(
+              (unprocessedDeleteReqKeys) =>
+                keys[this.tableHashKey] === unprocessedDeleteReqKeys[this.tableHashKey]
+                && (!this.tableRangeKey
+                  || keys[this.tableRangeKey] === unprocessedDeleteReqKeys[this.tableRangeKey])
+            )
+        )
+      : toDBunaliasedKeysToDelete;
+
+    // BatchWriteItem does not return items, so the input params are formatted for return.
     return {
-      upsertItems: toDBupsertItems.map((item) => this.processItemAttributes.fromDB<ItemType>(item)),
-      ...(deleteItems && { deleteItems }),
+      ...(upsertItems && {
+        upsertItems: processedToDBunaliasedUpsertItems.map((item) =>
+          this.processItemAttributes.fromDB<ItemType>(item)
+        ),
+      }),
+      ...(deleteItems && {
+        deleteItems: processedToDBunaliasedKeysToDelete.map((itemKeys) =>
+          this.processItemAttributes.fromDB<KeyParameters<Schema>>(itemKeys)
+        ),
+      }),
     };
   };
 
@@ -641,26 +693,27 @@ export class Model<
   // INSTANCE METHOD UTILS:
 
   /**
-   * Value-transforming action sets grouped by data flow directionality.
+   * Value-transforming action sets grouped by data-flow directionality.
    *
    * | `Method` | Description                                                         |
    * | :------- | :-----------------------------------------------------------------: |
    * | `toDB`   | Actions executed on values _before_ being passed to the SDK client. |
    * | `fromDB` | Actions executed on values _returned_ from the SDK client.          |
    */
-  readonly processItemAttributes = {
+  readonly processItemAttributes: {
+    [K in IODirection]: <ProcessedItemAttributes extends UnknownItem = BaseItem>(
+      itemAttrs: UnknownItem,
+      enabledIOActions?: EnabledIOActions<K>
+    ) => ProcessedItemAttributes;
+  } = {
     /**
      * This method applies `toDB` IO-Actions to the provided `itemAttrs`.
      * @param itemAttrs The values to be modified for the SDK client.
      * @param enabledIOActions Boolean flags for enabling/disabling `toDB` IO-Actions.
      * @returns The item after being processed by the `toDB` IO-Actions.
      */
-    toDB: <
-      ProcessedItemAttributes extends { [attrName: string]: NativeAttributeValue } = {
-        [attrName: string]: NativeAttributeValue;
-      },
-    >(
-      itemAttrs: BaseItem,
+    toDB: (
+      itemAttrs,
       {
         // When a 2nd argument is provided, only the specified toDB IO-Actions are enabled:
         aliasMapping = false,
@@ -670,9 +723,8 @@ export class Model<
         typeChecking = false,
         validate = false,
         validateItem = false,
-        convertJsTypes = false,
         checkRequired = false,
-      }: EnabledIOActions<"toDB"> = {
+      } = {
         // When no 2nd argument is provided, all toDB IO-Actions are enabled by default:
         aliasMapping: true,
         setDefaults: true,
@@ -681,23 +733,21 @@ export class Model<
         typeChecking: true,
         validate: true,
         validateItem: true,
-        convertJsTypes: true,
         checkRequired: true,
       }
-    ): ProcessedItemAttributes => {
+    ) => {
       // Assemble array of enabled IO-Actions in toDB order:
-      const toDBioActionsSet = [];
-      if (aliasMapping) toDBioActionsSet.push(ioActions.aliasMapping);
-      if (setDefaults) toDBioActionsSet.push(ioActions.setDefaults);
-      if (transformValues) toDBioActionsSet.push(ioActions.transformValues);
-      if (transformItem) toDBioActionsSet.push(ioActions.transformItem);
-      if (typeChecking) toDBioActionsSet.push(ioActions.typeChecking);
-      if (validate) toDBioActionsSet.push(ioActions.validate);
-      if (validateItem) toDBioActionsSet.push(ioActions.validateItem);
-      if (convertJsTypes) toDBioActionsSet.push(ioActions.convertJsTypes);
-      if (checkRequired) toDBioActionsSet.push(ioActions.checkRequired);
+      const toDBioActions = [];
+      if (aliasMapping) toDBioActions.push(ioActions.aliasMapping);
+      if (setDefaults) toDBioActions.push(ioActions.setDefaults);
+      if (transformValues) toDBioActions.push(ioActions.transformValues);
+      if (transformItem) toDBioActions.push(ioActions.transformItem);
+      if (typeChecking) toDBioActions.push(ioActions.typeChecking);
+      if (validate) toDBioActions.push(ioActions.validate);
+      if (validateItem) toDBioActions.push(ioActions.validateItem);
+      if (checkRequired) toDBioActions.push(ioActions.checkRequired);
 
-      return this.applyIOActionsToItemAttributes(itemAttrs, toDBioActionsSet, {
+      return this.applyIOActionsToItemAttributes(itemAttrs, toDBioActions, {
         ioDirection: "toDB",
         aliasesMap: this.aliasesToAttributesMap,
       });
@@ -708,30 +758,27 @@ export class Model<
      * @param enabledIOActions Boolean flags for enabling/disabling `fromDB` IO-Actions.
      * @returns The values processed by the `fromDB` IO-Actions.
      */
-    fromDB: <ProcessedItemAttributes extends BaseItem = BaseItem>(
-      itemAttrs: BaseItem,
+    fromDB: (
+      itemAttrs,
       {
         // When a 2nd argument is provided, only the specified fromDB IO-Actions are enabled:
-        convertJsTypes = false,
         transformValues = false,
         transformItem = false,
         aliasMapping = false,
-      }: EnabledIOActions<"fromDB"> = {
+      } = {
         // When no 2nd argument is provided, all fromDB IO-Actions are enabled by default:
-        convertJsTypes: true,
         transformValues: true,
         transformItem: true,
         aliasMapping: true,
       }
-    ): ProcessedItemAttributes => {
+    ) => {
       // Assemble array of enabled IO-Actions in fromDB order:
-      const fromDBioActionsSet = [];
-      if (convertJsTypes) fromDBioActionsSet.push(ioActions.convertJsTypes);
-      if (transformValues) fromDBioActionsSet.push(ioActions.transformValues);
-      if (transformItem) fromDBioActionsSet.push(ioActions.transformItem);
-      if (aliasMapping) fromDBioActionsSet.push(ioActions.aliasMapping);
+      const fromDBioActions = [];
+      if (transformValues) fromDBioActions.push(ioActions.transformValues);
+      if (transformItem) fromDBioActions.push(ioActions.transformItem);
+      if (aliasMapping) fromDBioActions.push(ioActions.aliasMapping);
 
-      return this.applyIOActionsToItemAttributes(itemAttrs, fromDBioActionsSet, {
+      return this.applyIOActionsToItemAttributes(itemAttrs, fromDBioActions, {
         ioDirection: "fromDB",
         aliasesMap: this.attributesToAliasesMap,
       });
@@ -748,20 +795,22 @@ export class Model<
    * @returns The item after being processed by the IO-Actions.
    */
   private readonly applyIOActionsToItemAttributes = <
-    ItemAttributes extends BaseItem,
-    ProcessedItemAttributes extends BaseItem = ItemAttributes,
+    ItemAttributes extends UnknownItem,
+    ProcessedItemAttributes extends UnknownItem = ItemAttributes,
   >(
     itemAttrs: ItemAttributes,
-    ioActionsSet: Array<IOAction>,
+    ioActionsArray: Array<IOAction>,
     {
       ioDirection,
-      aliasesMap,
+      aliasesMap = ioDirection === "toDB"
+        ? this.aliasesToAttributesMap
+        : this.attributesToAliasesMap,
       modelName = this.modelName,
       schema: schemaOverride,
       schemaEntries,
       schemaOptions = this.schemaOptions,
       ...ioActionsCtxOverrides
-    }: SetOptional<IOActionContext, Exclude<keyof IOActionContext, "ioDirection" | "aliasesMap">>
+    }: SetRequired<Partial<IOActionContext>, "ioDirection">
   ): ProcessedItemAttributes => {
     // Top-level IO-Actions ctx object:
     const ioActionsCtx = {
@@ -784,19 +833,19 @@ export class Model<
     };
 
     // Reduce array of IO-Actions using itemAttrs as the init accum
-    const processedItemAttrs = ioActionsSet.reduce(
-      (itemAccum: BaseItem, ioAction) => ioAction.call(ioActions, itemAccum, ioActionsCtx),
-      itemAttrs
+    const processedItemAttrs = ioActionsArray.reduce(
+      (itemAccum, ioAction) => ioAction.call(ioActions, itemAccum, ioActionsCtx),
+      itemAttrs as BaseItem
     );
 
     return processedItemAttrs as ProcessedItemAttributes;
   };
 
   /**
-   * This private Model method takes primary key args from public methods like `Model.getItem` and
-   * applies key-specific IO-Actions accordingly. The IO-Actions context object provided to the
-   * `applyIOActionsToItemAttributes` private method only contains the key attributes, i.e., the
-   * provided `schema` only contains the `tableHashKey` and `tableRangeKey` attributes.
+   * This private Model method takes primary key args from public methods like `Model.getItem`
+   * and applies key-specific IO-Actions accordingly. The IO-Actions context object provided to
+   * the `applyIOActionsToItemAttributes` private method only contains the key attributes, i.e.,
+   * the provided `schema` only contains the `tableHashKey` and `tableRangeKey` attributes.
    */
   private readonly processKeyArgs = (primaryKeyArgs: KeyParameters<Schema>): ItemKeys => {
     // Apply IO-Actions to the primary key args
@@ -808,13 +857,14 @@ export class Model<
         ioActions.transformValues,
         ioActions.typeChecking,
         ioActions.validate,
-        ioActions.convertJsTypes,
         ioActions.checkRequired,
       ],
       {
         ioDirection: "toDB",
-        aliasesMap: this.aliasesToAttributesMap,
-        schema: this.schemaWithKeysOnly,
+        schema: {
+          [this.tableHashKey]: this.schema[this.tableHashKey],
+          ...(!!this.tableRangeKey && { [this.tableRangeKey]: this.schema[this.tableRangeKey] }),
+        },
         schemaEntries: [
           [this.tableHashKey, this.schema[this.tableHashKey]],
           ...(this.tableRangeKey
