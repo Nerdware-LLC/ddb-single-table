@@ -1,18 +1,19 @@
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { isArray, safeJsonStringify } from "@nerdware/ts-type-safety-utils";
 import { ItemInputError } from "../utils/errors.js";
-import type { TableConstructorParams } from "../Table/index.js";
-import type { NativeAttributeValue } from "../types/index.js";
+import { convertJsDates } from "./convertJsDates.js";
 import type {
   UnmarshalledBatchGetItemCommandInput,
   UnmarshalledBatchWriteItemCommandInput,
   // HELPER-METHOD TYPES
+  MarshallingMethod,
+  UnmarshallingMethod,
   SomeUnmarshalledCommandInput,
   SomeMarshalledCommandOutput,
   MarshallingConfigs,
   ToMarshalledSdkInput,
   ToUnmarshalledSdkOutput,
-  DdbClientWrapperConstructorParams,
+  DdbClientFieldParserConstructorParameters,
 } from "./types/index.js";
 import type { ItemCollectionMetrics } from "@aws-sdk/client-dynamodb";
 import type { Simplify, RequiredDeep, AllUnionFields } from "type-fest";
@@ -20,9 +21,9 @@ import type { Simplify, RequiredDeep, AllUnionFields } from "type-fest";
 /**
  * Utility class for preparing DynamoDB client command arguments and parsing client responses.
  */
-export class DdbClientArgParser {
+export class DdbClientFieldParser {
   /**
-   * Default {@link MarshallingConfigs} for the DynamoDB client.
+   * Default {@link MarshallingConfigs} for the DynamoDB `marshall` and `unmarshall` util fns.
    * > Note: the SDK defaults all of these options to `false`.
    */
   static readonly DEFAULT_MARSHALLING_CONFIGS = {
@@ -39,33 +40,56 @@ export class DdbClientArgParser {
     },
   } as const satisfies RequiredDeep<MarshallingConfigs>;
 
-  /** The DynamoDB client instance. */
-  protected readonly tableName: TableConstructorParams["tableName"];
+  protected readonly tableName: DdbClientFieldParserConstructorParameters["tableName"];
   protected readonly defaultMarshallingConfigs: Required<MarshallingConfigs>;
 
+  constructor({ tableName, marshallingConfigs }: DdbClientFieldParserConstructorParameters) {
+    this.tableName = tableName;
+    this.defaultMarshallingConfigs = {
+      marshallOptions: {
+        ...DdbClientFieldParser.DEFAULT_MARSHALLING_CONFIGS.marshallOptions,
+        ...marshallingConfigs?.marshallOptions,
+      },
+      unmarshallOptions: {
+        ...DdbClientFieldParser.DEFAULT_MARSHALLING_CONFIGS.unmarshallOptions,
+        ...marshallingConfigs?.unmarshallOptions,
+      },
+    };
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // MARSHALLING UTIL METHODS:
+
   /** Invokes the `marshall` util function with the default marshalling configs. */
-  readonly marshall = (
-    data: Record<string, NativeAttributeValue>,
-    options?: MarshallingConfigs["marshallOptions"]
-  ) => {
+  readonly marshall: MarshallingMethod = (data, marshallOpts) => {
     return marshall(data, {
       ...this.defaultMarshallingConfigs.marshallOptions,
-      ...options,
+      ...marshallOpts,
     });
   };
 
+  /** Converts JS `Date` objects to datetime strings, and then marshalls the result. */
+  readonly marshallAndConvertDates: MarshallingMethod = (data, marshallOpts) => {
+    return this.marshall(convertJsDates("toDB", data), marshallOpts);
+  };
+
   /** Invokes the `unmarshall` util function with the default unmarshalling configs. */
-  readonly unmarshall = (...[data, options]: Parameters<typeof unmarshall>) => {
+  readonly unmarshall: UnmarshallingMethod = (data, unmarshallOpts) => {
     return unmarshall(data, {
       ...this.defaultMarshallingConfigs.unmarshallOptions,
-      ...options,
+      ...unmarshallOpts,
     });
+  };
+
+  /** Unmarshalls the provided `data`, and then converts datetime strings to JS `Date` objects. */
+  readonly unmarshallAndConvertDates: UnmarshallingMethod = (data, unmarshallOpts) => {
+    return convertJsDates("fromDB", this.unmarshall(data, unmarshallOpts));
   };
 
   /////////////////////////////////////////////////////////////////////////////
   // COMMAND-ARG PREP METHODS:
 
-  private readonly isBatchGetRequestItems = (
+  private readonly isBatchGetItemRequestItems = (
     requestItems:
       | UnmarshalledBatchGetItemCommandInput["RequestItems"]
       | UnmarshalledBatchWriteItemCommandInput["RequestItems"]
@@ -80,7 +104,7 @@ export class DdbClientArgParser {
     marshallOptions?: MarshallingConfigs["marshallOptions"]
   ) => {
     return {
-      [this.tableName]: this.isBatchGetRequestItems(requestItems)
+      [this.tableName]: this.isBatchGetItemRequestItems(requestItems)
         ? {
             ...requestItems[this.tableName],
             Keys: requestItems[this.tableName].Keys.map((key) =>
@@ -89,11 +113,18 @@ export class DdbClientArgParser {
           }
         : requestItems[this.tableName].map((batchWriteReq) => {
             const { PutRequest, DeleteRequest } = batchWriteReq;
-            // FIXME Date conversion on PutRequest.Item
             if (PutRequest)
-              return { PutRequest: { Item: this.marshall(PutRequest.Item, marshallOptions) } };
+              return {
+                PutRequest: {
+                  Item: this.marshallAndConvertDates(PutRequest.Item, marshallOptions),
+                },
+              };
             if (DeleteRequest)
-              return { DeleteRequest: { Key: this.marshall(DeleteRequest.Key, marshallOptions) } };
+              return {
+                DeleteRequest: {
+                  Key: this.marshall(DeleteRequest.Key, marshallOptions),
+                },
+              };
             throw new ItemInputError(
               `Invalid request item for BatchWriteItem operation.
                 Expected a valid PutRequest or DeleteRequest.
@@ -125,12 +156,11 @@ export class DdbClientArgParser {
     } = unmarshalledCommandArgs as AllUnionFields<SomeUnmarshalledCommandInput>;
 
     return {
-      TableName: this.tableName,
+      // Always add `TableName` UNLESS it's a batch or transaction command:
+      ...(!requestItems && !transactItems && { TableName: this.tableName }),
       ...(key && { Key: this.marshall(key, marshallOpts) }),
-      // FIXME Date conversion on Item
-      ...(item && { Item: this.marshall(item, marshallOpts) }),
-      // FIXME Date conversion on ExpressionAttributeValues
-      ...(eav && { ExpressionAttributeValues: this.marshall(eav, marshallOpts) }),
+      ...(item && { Item: this.marshallAndConvertDates(item, marshallOpts) }),
+      ...(eav && { ExpressionAttributeValues: this.marshallAndConvertDates(eav, marshallOpts) }),
       ...(exclStartKey && { ExclusiveStartKey: this.marshall(exclStartKey, marshallOpts) }),
       ...(requestItems && { RequestItems: this.prepRequestItems(requestItems, marshallOpts) }),
       ...(transactItems && {
@@ -147,18 +177,19 @@ export class DdbClientArgParser {
                 ...ccRest,
                 TableName: this.tableName,
                 Key: this.marshall(ccKey, marshallOpts),
-                // FIXME Date conversion would need to happen here
-                ...(ccEAV && { ExpressionAttributeValues: this.marshall(ccEAV, marshallOpts) }),
+                ...(ccEAV && {
+                  ExpressionAttributeValues: this.marshallAndConvertDates(ccEAV, marshallOpts),
+                }),
               },
             }),
             ...(putItem && {
               Put: {
                 ...putRest,
                 TableName: this.tableName,
-                // FIXME Date conversion would need to happen here.
-                Item: this.marshall(putItem, marshallOpts),
-                // FIXME Date conversion would need to happen here.
-                ...(putEAV && { ExpressionAttributeValues: this.marshall(putEAV, marshallOpts) }),
+                Item: this.marshallAndConvertDates(putItem, marshallOpts),
+                ...(putEAV && {
+                  ExpressionAttributeValues: this.marshallAndConvertDates(putEAV, marshallOpts),
+                }),
               },
             }),
             ...(updateKey && {
@@ -166,8 +197,9 @@ export class DdbClientArgParser {
                 ...updateRest,
                 TableName: this.tableName,
                 Key: this.marshall(updateKey, marshallOpts),
-                // FIXME Date conversion would need to happen here
-                ...(updEAV && { ExpressionAttributeValues: this.marshall(updEAV, marshallOpts) }),
+                ...(updEAV && {
+                  ExpressionAttributeValues: this.marshallAndConvertDates(updEAV, marshallOpts),
+                }),
               },
             }),
             ...(deleteKey && {
@@ -175,8 +207,9 @@ export class DdbClientArgParser {
                 ...delRest,
                 TableName: this.tableName,
                 Key: this.marshall(deleteKey, marshallOpts),
-                // FIXME Date conversion would need to happen here
-                ...(delEAV && { ExpressionAttributeValues: this.marshall(delEAV, marshallOpts) }),
+                ...(delEAV && {
+                  ExpressionAttributeValues: this.marshallAndConvertDates(delEAV, marshallOpts),
+                }),
               },
             }),
           })
@@ -199,14 +232,16 @@ export class DdbClientArgParser {
     { ItemCollectionKey, SizeEstimateRangeGB }: ItemCollectionMetrics,
     unmarshallOptions?: MarshallingConfigs["unmarshallOptions"]
   ) => ({
-    ...(SizeEstimateRangeGB && { SizeEstimateRangeGB }),
+    ...(SizeEstimateRangeGB && {
+      SizeEstimateRangeGB,
+    }),
     ...(ItemCollectionKey && {
       ItemCollectionKey: this.unmarshall(ItemCollectionKey, unmarshallOptions),
     }),
   });
 
   private readonly parseItemCollectionMetrics = (
-    icMetrics: ItemCollectionMetrics | Record<string, Array<ItemCollectionMetrics>>,
+    icMetrics: ItemCollectionMetrics | { [tableName: string]: Array<ItemCollectionMetrics> },
     unmarshallOptions?: MarshallingConfigs["unmarshallOptions"]
   ) => {
     return this.isSingleItemCollectionMetrics(icMetrics)
@@ -241,19 +276,25 @@ export class DdbClientArgParser {
     } = clientResponse as AllUnionFields<SomeMarshalledCommandOutput>;
 
     return {
-      // FIXME Date conversion on Item
-      ...(item && { Item: this.unmarshall(item, unmarshallOptions) }),
-      // FIXME Date conversion on each `item` here
-      ...(items && { Items: items.map((item) => this.unmarshall(item, unmarshallOptions)) }),
-      // FIXME Date conversion on Attributes
-      ...(attributes && { Attributes: this.unmarshall(attributes, unmarshallOptions) }),
-      ...(lastEvalKey && { LastEvaluatedKey: this.unmarshall(lastEvalKey, unmarshallOptions) }),
-      ...(icMetrics && { ItemCollectionMetrics: this.parseItemCollectionMetrics(icMetrics) }),
+      ...(item && {
+        Item: this.unmarshallAndConvertDates(item, unmarshallOptions),
+      }),
+      ...(items && {
+        Items: items.map((item) => this.unmarshallAndConvertDates(item, unmarshallOptions)),
+      }),
+      ...(attributes && {
+        Attributes: this.unmarshallAndConvertDates(attributes, unmarshallOptions),
+      }),
+      ...(lastEvalKey && {
+        LastEvaluatedKey: this.unmarshall(lastEvalKey, unmarshallOptions),
+      }),
+      ...(icMetrics && {
+        ItemCollectionMetrics: this.parseItemCollectionMetrics(icMetrics),
+      }),
       ...(responses && {
         Responses: {
-          // FIXME Date conversion on each `item` here
           [this.tableName]: responses[this.tableName].map((item) =>
-            this.unmarshall(item, unmarshallOptions)
+            this.unmarshallAndConvertDates(item, unmarshallOptions)
           ),
         },
       }),
@@ -269,40 +310,23 @@ export class DdbClientArgParser {
       }),
       ...(isArray(unprocessedItems?.[this.tableName]) && {
         UnprocessedItems: {
-          [this.tableName]: unprocessedItems[this.tableName].map((batchWriteReq) => {
-            const { PutRequest, DeleteRequest } = batchWriteReq;
-            if (PutRequest)
-              return {
-                PutRequest: { Item: this.unmarshall(PutRequest.Item ?? {}, unmarshallOptions) },
-              };
-            if (DeleteRequest)
-              return {
-                DeleteRequest: { Key: this.unmarshall(DeleteRequest.Key ?? {}, unmarshallOptions) },
-              };
-            return batchWriteReq; // Should never happen, but just in case
-          }),
+          [this.tableName]: unprocessedItems[this.tableName].map(
+            ({ PutRequest, DeleteRequest }) => ({
+              ...(PutRequest && {
+                PutRequest: {
+                  Item: this.unmarshallAndConvertDates(PutRequest.Item ?? {}, unmarshallOptions),
+                },
+              }),
+              ...(DeleteRequest && {
+                DeleteRequest: {
+                  Key: this.unmarshall(DeleteRequest.Key ?? {}, unmarshallOptions),
+                },
+              }),
+            })
+          ),
         },
       }),
       ...otherFields,
     } as ToUnmarshalledSdkOutput<MarshalledCmdOutput>;
   };
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  constructor({
-    tableName,
-    marshallingConfigs,
-  }: Pick<DdbClientWrapperConstructorParams, "tableName" | "marshallingConfigs">) {
-    this.tableName = tableName;
-    this.defaultMarshallingConfigs = {
-      marshallOptions: {
-        ...DdbClientArgParser.DEFAULT_MARSHALLING_CONFIGS.marshallOptions,
-        ...marshallingConfigs?.marshallOptions,
-      },
-      unmarshallOptions: {
-        ...DdbClientArgParser.DEFAULT_MARSHALLING_CONFIGS.unmarshallOptions,
-        ...marshallingConfigs?.unmarshallOptions,
-      },
-    };
-  }
 }
