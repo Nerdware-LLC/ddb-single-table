@@ -1,3 +1,5 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import eslintJS from "@eslint/js";
 import stylisticPlugin from "@stylistic/eslint-plugin";
 import vitestPlugin from "@vitest/eslint-plugin";
@@ -22,7 +24,9 @@ export default tsEslint.config(
       parser: tsEslint.parser,
       parserOptions: {
         projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+        tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
+        /* Note: use `tsconfigRootDir: import.meta.dirname` once "engines.node"
+          gets bumped to ">=22.0.0" (NodeJS v20 will reach EOL on April 30, 2026). */
       },
     },
     plugins: {
