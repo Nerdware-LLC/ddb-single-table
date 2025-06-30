@@ -1,5 +1,5 @@
 import { aliasMapping } from "./aliasMapping.js";
-import type { IOActions, IOActionContext } from "./types.js";
+import type { IOActions, IOActionContext } from "./types/index.js";
 
 describe("IOAction: aliasMapping", () => {
   // Mock `this` context can be empty bc aliasMapping doesn't use any other IOActions

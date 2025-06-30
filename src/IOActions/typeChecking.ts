@@ -5,19 +5,15 @@ import {
   ItemInputError,
   getAttrErrID,
   stringifyNestedSchema,
-} from "../../utils/index.js";
-import type { IOActions, IOAction } from "./types.js";
+} from "../utils/index.js";
+import type { IOAction } from "./types/index.js";
 
 /**
  * This `IOAction` ensures item values conform with their `"type"` as defined in the schema.
  *
  * @throws {ItemInputError} If an attribute's value does not match the expected `"type"`.
  */
-export const typeChecking: IOAction = function (
-  this: IOActions,
-  item,
-  { schemaEntries, modelName, ...ctx }
-) {
+export const typeChecking: IOAction = function (this, item, { schemaEntries, modelName, ...ctx }) {
   // Iterate over schemaEntries
   for (let i = 0; i < schemaEntries.length; i++) {
     const [attrName, attrConfig] = schemaEntries[i];

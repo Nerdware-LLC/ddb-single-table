@@ -1,5 +1,5 @@
-import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../../utils/index.js";
-import type { IOActions, IOAction } from "./types.js";
+import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../utils/index.js";
+import type { IOAction } from "./types/index.js";
 
 /**
  * This `IOAction` validates an item's individual properties using
@@ -7,11 +7,7 @@ import type { IOActions, IOAction } from "./types.js";
  *
  * @throws {ItemInputError} If any attribute's `"validate"` function returns `false`.
  */
-export const validate: IOAction = function (
-  this: IOActions,
-  item,
-  { schemaEntries, modelName, ...ctx }
-) {
+export const validate: IOAction = function (this, item, { schemaEntries, modelName, ...ctx }) {
   // Iterate over schemaEntries
   for (let i = 0; i < schemaEntries.length; i++) {
     const [attrName, attrConfig] = schemaEntries[i];

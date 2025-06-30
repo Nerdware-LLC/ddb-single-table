@@ -1,6 +1,6 @@
 import { isUndefined } from "@nerdware/ts-type-safety-utils";
-import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../../utils/index.js";
-import type { IOActions, IOAction } from "./types.js";
+import { hasDefinedProperty, ItemInputError, getAttrErrID } from "../utils/index.js";
+import type { IOAction } from "./types/index.js";
 
 /**
  * This `IOAction` performs nullish-value `item` validation checks:
@@ -8,11 +8,7 @@ import type { IOActions, IOAction } from "./types.js";
  * @throws {ItemInputError} If an attr is `required`, and the value is missing/`undefined`.
  * @throws {ItemInputError} If an attr is _**NOT**_ `nullable`, and the value is `null`.
  */
-export const checkRequired: IOAction = function (
-  this: IOActions,
-  item,
-  { schemaEntries, modelName, ...ctx }
-) {
+export const checkRequired: IOAction = function (this, item, { schemaEntries, modelName, ...ctx }) {
   // Iterate over schemaEntries
   for (let i = 0; i < schemaEntries.length; i++) {
     const [attrName, attrConfig] = schemaEntries[i];

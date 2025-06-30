@@ -1,7 +1,7 @@
 import { checkRequired } from "./checkRequired.js";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
-import type { IOActions, IOActionContext } from "./types.js";
-import type { ModelSchemaType } from "../../Schema/index.js";
+import type { IOActions, IOActionContext } from "./types/index.js";
+import type { ModelSchemaType } from "../Schema/types/index.js";
 
 describe("IOAction: checkRequired", () => {
   // Mock `this` context with bound methods: `checkRequired` and `recursivelyApplyIOAction`

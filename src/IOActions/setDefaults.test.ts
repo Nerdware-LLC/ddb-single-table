@@ -1,7 +1,7 @@
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { setDefaults } from "./setDefaults.js";
-import type { IOActions, IOActionContext } from "./types.js";
-import type { ModelSchemaType } from "../../Schema/index.js";
+import type { IOActions, IOActionContext } from "./types/index.js";
+import type { ModelSchemaType } from "../Schema/types/index.js";
 
 describe("IOAction: setDefaults", () => {
   // Mock `this` context with bound methods: `setDefaults` and `recursivelyApplyIOAction`

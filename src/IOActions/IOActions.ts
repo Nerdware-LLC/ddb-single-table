@@ -1,6 +1,5 @@
 import { aliasMapping } from "./aliasMapping.js";
 import { checkRequired } from "./checkRequired.js";
-import { convertJsTypes } from "./convertJsTypes.js";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { setDefaults } from "./setDefaults.js";
 import { transformItem } from "./transformItem.js";
@@ -8,7 +7,7 @@ import { transformValues } from "./transformValues.js";
 import { typeChecking } from "./typeChecking.js";
 import { validate } from "./validate.js";
 import { validateItem } from "./validateItem.js";
-import type { IOActions } from "./types.js";
+import type { IOActions } from "./types/index.js";
 
 /**
  * An object with various methods used to validate and transform items to/from the db.
@@ -32,8 +31,6 @@ export const ioActions: IOActions = Object.freeze({
   validate,
   /** Uses `validateItem` function to validate an item in its entirety (if defined). */
   validateItem,
-  /** Converts JS types to DynamoDB types and vice versa. */
-  convertJsTypes,
   /** Performs nullish-value validation checks using `required` and `nullable` attr configs. */
   checkRequired,
 });

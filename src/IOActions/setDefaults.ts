@@ -1,7 +1,7 @@
 import { hasKey, isFunction } from "@nerdware/ts-type-safety-utils";
-import { hasDefinedProperty } from "../../utils/hasDefinedProperty.js";
-import type { IOActions, IOAction } from "./types.js";
-import type { BaseItem } from "../../types/index.js";
+import { hasDefinedProperty } from "../utils/hasDefinedProperty.js";
+import type { IOAction } from "./types/index.js";
+import type { BaseItem } from "../types/index.js";
 
 /**
  * This `IOAction` applies any `"default"`s defined in the schema. Attribute
@@ -9,7 +9,7 @@ import type { BaseItem } from "../../types/index.js";
  * as an own-property, or the attribute value is `null`/`undefined`.
  */
 export const setDefaults: IOAction = function (
-  this: IOActions,
+  this,
   item,
   { schemaEntries, parentItem = item, ...ctx }
 ) {

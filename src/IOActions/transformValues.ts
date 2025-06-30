@@ -1,13 +1,13 @@
-import { isFunction } from "@nerdware/ts-type-safety-utils";
-import type { IOActions, IOAction } from "./types.js";
-import type { BaseItem } from "../../types/index.js";
+import { isFunction, isUndefined } from "@nerdware/ts-type-safety-utils";
+import type { IOAction } from "./types/index.js";
+import type { BaseItem } from "../types/index.js";
 
 /**
  * This `IOAction` uses `transformValue` functions (if defined) to transform
  * attribute values before they are validated, converted to DynamoDB types, etc.
  */
 export const transformValues: IOAction = function (
-  this: IOActions,
+  this,
   item,
   { schemaEntries, ioDirection, ...ctx }
 ) {
@@ -25,7 +25,7 @@ export const transformValues: IOAction = function (
       // Get new value; any type mismatches are caught later by the `typeChecking` method
       const transformedValue = transformValue(itemToReturn[attrName]);
       // If transformedValue is not undefined, add it to itemToReturn
-      if (transformedValue !== undefined) itemToReturn[attrName] = transformedValue;
+      if (!isUndefined(transformedValue)) itemToReturn[attrName] = transformedValue;
     }
 
     // Run recursively on nested attributes if parent value exists

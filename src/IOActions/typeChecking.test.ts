@@ -1,7 +1,7 @@
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { typeChecking } from "./typeChecking.js";
-import type { IOActions, IOActionContext } from "./types.js";
-import type { ModelSchemaType } from "../../Schema/types/index.js";
+import type { IOActions, IOActionContext } from "./types/index.js";
+import type { ModelSchemaType } from "../Schema/types/index.js";
 
 describe("IOAction: typeChecking", () => {
   // Mock `this` context with bound methods: `typeChecking` and `recursivelyApplyIOAction`

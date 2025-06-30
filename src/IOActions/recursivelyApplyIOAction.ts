@@ -1,12 +1,12 @@
-import { isType } from "../../utils/isType.js";
-import type { IOActions, IOActionRecursiveApplicator } from "./types.js";
-import type { ModelSchemaType, ModelSchemaEntries } from "../../Schema/types/index.js";
+import { isType } from "../utils/isType.js";
+import type { IOActionRecursiveApplicator } from "./types/index.js";
+import type { ModelSchemaType, ModelSchemaEntries } from "../Schema/types/index.js";
 
 /**
  * Applies the provided `ioAction` to nested attribute types.
  */
 export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
-  this: IOActions,
+  this,
   ioAction,
   attrValue,
   { schema: nestedSchema, ...ctx }

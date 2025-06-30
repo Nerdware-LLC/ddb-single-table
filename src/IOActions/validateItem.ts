@@ -1,6 +1,6 @@
 import { isFunction } from "@nerdware/ts-type-safety-utils";
-import { ItemInputError } from "../../utils/errors.js";
-import type { IOActions, IOAction } from "./types.js";
+import { ItemInputError } from "../utils/errors.js";
+import type { IOAction } from "./types/index.js";
 
 /**
  * This `IOAction` uses `modelSchemaOptions.validateItem` to validate an item in its entirety.
@@ -8,7 +8,7 @@ import type { IOActions, IOAction } from "./types.js";
  * @throws {ItemInputError} If the `validateItem` function returns `false`.
  */
 export const validateItem: IOAction = function (
-  this: IOActions,
+  this,
   item,
   { modelName, schemaOptions: { validateItem } }
 ) {

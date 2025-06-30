@@ -1,5 +1,5 @@
 import { isFunction } from "@nerdware/ts-type-safety-utils";
-import type { IOActions, IOAction } from "./types.js";
+import type { IOAction } from "./types/index.js";
 
 /**
  * This `IOAction` uses the `transformItem` method (if defined in the Model's
@@ -8,11 +8,7 @@ import type { IOActions, IOAction } from "./types.js";
  * **it may necessitate providing explicit Model type params for `ItemOutput` and/or
  * `ItemInput`, depending on the changes made.**
  */
-export const transformItem: IOAction = function (
-  this: IOActions,
-  item,
-  { schemaOptions, ioDirection }
-) {
+export const transformItem: IOAction = function (this, item, { schemaOptions, ioDirection }) {
   // If schemaOptions has transformItem toDB/fromDB, pass the existing item into the fn
   const transformItem = schemaOptions.transformItem?.[ioDirection];
 
