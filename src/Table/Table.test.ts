@@ -2,7 +2,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { Model } from "../Model/index.js";
 import { SchemaValidationError } from "../utils/index.js";
 import { Table } from "./Table.js";
-import type { MarshallingConfigs } from "../utils/index.js";
+import type { MarshallingConfigs } from "../DdbClientWrapper/index.js";
 
 describe("Table", () => {
   // Setup a ddb client:
