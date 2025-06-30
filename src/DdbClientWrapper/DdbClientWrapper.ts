@@ -17,39 +17,49 @@ import {
   type AttributeValue,
   type ConsumedCapacity,
   type ItemCollectionMetrics,
+  // SDK COMMAND TYPES
+  type GetItemCommandOutput as SDKGetItemCmdOutput,
+  type BatchGetItemCommandOutput as SDKBatchGetItemCmdOutput,
+  type PutItemCommandOutput as SDKPutItemCmdOutput,
+  type UpdateItemCommandOutput as SDKUpdateItemCmdOutput,
+  type DeleteItemCommandOutput as SDKDeleteItemCmdOutput,
+  type BatchWriteItemCommandOutput as SDKBatchWriteItemCmdOutput,
+  type QueryCommandOutput as SDKQueryCmdOutput,
+  type ScanCommandOutput as SDKScanCmdOutput,
+  type TransactWriteItemsCommandOutput as SDKTransactWriteItemsCmdOutput,
 } from "@aws-sdk/client-dynamodb";
 import { isArray } from "@nerdware/ts-type-safety-utils";
-import { DdbClientArgParser } from "./DdbClientArgParser.js";
+import { DdbClientFieldParser } from "./DdbClientFieldParser.js";
 import { handleBatchRequests, MAX_CHUNK_SIZE } from "./handleBatchRequests.js";
-import type { TableConstructorParams } from "../Table/index.js";
+import type { TableConstructorParameters } from "../Table/index.js";
 import type {
-  DdbClientWrapperConstructorParams,
+  DdbClientWrapperConstructorParameters,
   // MODEL-METHOD IO TYPES
-  GetItemInput,
-  GetItemOutput,
-  BatchGetItemsInput,
-  BatchGetItemsOutput,
-  PutItemInput,
-  PutItemOutput,
-  BatchWriteItemsInput,
-  BatchWriteItemsOutput,
-  UpdateItemInput,
-  UpdateItemOutput,
-  DeleteItemInput,
-  DeleteItemOutput,
-  QueryInput,
-  QueryOutput,
-  ScanInput,
-  ScanOutput,
-  TransactWriteItemsInput,
-  TransactWriteItemsOutput,
+  ClientWrapperGetItemInput,
+  ClientWrapperGetItemOutput,
+  ClientWrapperBatchGetItemInput,
+  ClientWrapperBatchGetItemOutput,
+  ClientWrapperPutItemInput,
+  ClientWrapperPutItemOutput,
+  ClientWrapperBatchWriteItemInput,
+  ClientWrapperBatchWriteItemOutput,
+  ClientWrapperUpdateItemInput,
+  ClientWrapperUpdateItemOutput,
+  ClientWrapperDeleteItemInput,
+  ClientWrapperDeleteItemOutput,
+  ClientWrapperQueryInput,
+  ClientWrapperQueryOutput,
+  ClientWrapperScanInput,
+  ClientWrapperScanOutput,
+  ClientWrapperTransactWriteItemsInput,
+  ClientWrapperTransactWriteItemsOutput,
   // TABLE-METHOD IO TYPES
-  DescribeTableInput,
-  DescribeTableOutput,
-  CreateTableInput,
-  CreateTableOutput,
-  ListTablesInput,
-  ListTablesOutput,
+  ClientWrapperDescribeTableInput,
+  ClientWrapperDescribeTableOutput,
+  ClientWrapperCreateTableInput,
+  ClientWrapperCreateTableOutput,
+  ClientWrapperListTablesInput,
+  ClientWrapperListTablesOutput,
   // BATCH OP TYPES
   BatchRequestFunction,
   GetRequest,
@@ -64,11 +74,11 @@ import type {
  * - Conversion of JS `Date` objects to/from ISO-8601 datetime strings
  * - Batching/retry logic
  */
-export class DdbClientWrapper extends DdbClientArgParser {
+export class DdbClientWrapper extends DdbClientFieldParser {
   /** The DynamoDB client instance. */
-  private readonly _ddbClient: TableConstructorParams["ddbClient"];
+  private readonly _ddbClient: TableConstructorParameters["ddbClient"];
 
-  constructor({ ddbClient, tableName, marshallingConfigs }: DdbClientWrapperConstructorParams) {
+  constructor({ ddbClient, tableName, marshallingConfigs }: DdbClientWrapperConstructorParameters) {
     super({ tableName, marshallingConfigs });
     this._ddbClient = ddbClient;
   }
@@ -81,13 +91,13 @@ export class DdbClientWrapper extends DdbClientArgParser {
   readonly getItem = async ({
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
-  }: GetItemInput): Promise<GetItemOutput> => {
+  }: ClientWrapperGetItemInput): Promise<ClientWrapperGetItemOutput> => {
     // Create a GetItemCommand with marshalled `Key`
     const cmd = new GetItemCommand(this.prepCommandArgs(args, marshallOptions));
     // Send the command to the DynamoDB client
     const response = await this._ddbClient.send(cmd);
     // Return response with unmarshalled `Item`
-    return this.parseClientResponse(response, unmarshallOptions);
+    return this.parseClientResponse<SDKGetItemCmdOutput>(response, unmarshallOptions);
   };
 
   /**
@@ -99,11 +109,11 @@ export class DdbClientWrapper extends DdbClientArgParser {
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     batchConfigs = {},
     ...rawCmdArgs
-  }: BatchGetItemsInput): Promise<BatchGetItemsOutput> => {
+  }: ClientWrapperBatchGetItemInput): Promise<ClientWrapperBatchGetItemOutput> => {
     // Init variables to hold returned values:
     const returnedItems: Array<{ [attrName: string]: AttributeValue }> = [];
     const returnedConsumedCapacity: Array<ConsumedCapacity> = [];
-    let returnedMetadata: BatchGetItemsOutput["$metadata"] = {};
+    let returnedMetadata: ClientWrapperBatchGetItemOutput["$metadata"] = {};
 
     // Create BatchGetItemCommand args with marshalled `RequestItems`
     const { RequestItems, ...cmdArgs } = this.prepCommandArgs(rawCmdArgs, marshallOptions);
@@ -141,18 +151,24 @@ export class DdbClientWrapper extends DdbClientArgParser {
     // Submit the function to the batch-requests handler
     const unprocessedKeys = await handleBatchRequests<GetRequest>(
       submitBatchGetItemRequest,
-      marshalledRequestItemsKeys!,
+      marshalledRequestItemsKeys,
       {
         chunkSize: MAX_CHUNK_SIZE.GetRequest,
         ...batchConfigs,
       }
     );
 
-    return this.parseClientResponse(
+    return this.parseClientResponse<SDKBatchGetItemCmdOutput>(
       {
-        ...(returnedItems.length > 0 && { Responses: { [this.tableName]: returnedItems } }),
-        ...(unprocessedKeys && { UnprocessedKeys: unprocessedKeys }),
-        ...(returnedConsumedCapacity.length > 0 && { ConsumedCapacity: returnedConsumedCapacity }),
+        ...(returnedItems.length > 0 && {
+          Responses: { [this.tableName]: returnedItems },
+        }),
+        ...(unprocessedKeys && {
+          UnprocessedKeys: { [this.tableName]: { Keys: unprocessedKeys } },
+        }),
+        ...(returnedConsumedCapacity.length > 0 && {
+          ConsumedCapacity: returnedConsumedCapacity,
+        }),
         $metadata: returnedMetadata,
       },
       unmarshallOptions
@@ -167,13 +183,13 @@ export class DdbClientWrapper extends DdbClientArgParser {
   readonly putItem = async ({
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
-  }: PutItemInput): Promise<PutItemOutput> => {
+  }: ClientWrapperPutItemInput): Promise<ClientWrapperPutItemOutput> => {
     // Create a PutItemCommand with marshalled `Item` and `ExpressionAttributeValues`
     const cmd = new PutItemCommand(this.prepCommandArgs(args, marshallOptions));
     // Send the command to the DynamoDB client
     const response = await this._ddbClient.send(cmd);
     // Return response with unmarshalled `Attributes` and `ItemCollectionMetrics.ItemCollectionKey`
-    return this.parseClientResponse(response, unmarshallOptions);
+    return this.parseClientResponse<SDKPutItemCmdOutput>(response, unmarshallOptions);
   };
 
   /**
@@ -184,13 +200,13 @@ export class DdbClientWrapper extends DdbClientArgParser {
   readonly updateItem = async ({
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
-  }: UpdateItemInput): Promise<UpdateItemOutput> => {
+  }: ClientWrapperUpdateItemInput): Promise<ClientWrapperUpdateItemOutput> => {
     // Create an UpdateItemCommand with marshalled `Key` and `ExpressionAttributeValues`
     const cmd = new UpdateItemCommand(this.prepCommandArgs(args, marshallOptions));
     // Send the command to the DynamoDB client
     const response = await this._ddbClient.send(cmd);
     // Return response with unmarshalled `Attributes` and `ItemCollectionMetrics.ItemCollectionKey`
-    return this.parseClientResponse(response, unmarshallOptions);
+    return this.parseClientResponse<SDKUpdateItemCmdOutput>(response, unmarshallOptions);
   };
 
   /**
@@ -201,13 +217,13 @@ export class DdbClientWrapper extends DdbClientArgParser {
   readonly deleteItem = async ({
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
-  }: DeleteItemInput): Promise<DeleteItemOutput> => {
+  }: ClientWrapperDeleteItemInput): Promise<ClientWrapperDeleteItemOutput> => {
     // Create a DeleteItemCommand with marshalled `Key` and `ExpressionAttributeValues`
     const cmd = new DeleteItemCommand(this.prepCommandArgs(args, marshallOptions));
     // Send the command to the DynamoDB client
     const response = await this._ddbClient.send(cmd);
     // Return response with unmarshalled `Attributes` and `ItemCollectionMetrics.ItemCollectionKey`
-    return this.parseClientResponse(response, unmarshallOptions);
+    return this.parseClientResponse<SDKDeleteItemCmdOutput>(response, unmarshallOptions);
   };
 
   /**
@@ -219,11 +235,11 @@ export class DdbClientWrapper extends DdbClientArgParser {
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     batchConfigs = {},
     ...rawCmdArgs
-  }: BatchWriteItemsInput): Promise<BatchWriteItemsOutput> => {
+  }: ClientWrapperBatchWriteItemInput): Promise<ClientWrapperBatchWriteItemOutput> => {
     // Init variables to hold returned values:
     const returnedItemCollectionMetrics: Array<ItemCollectionMetrics> = [];
     const returnedConsumedCapacity: Array<ConsumedCapacity> = [];
-    let returnedMetadata: BatchGetItemsOutput["$metadata"] = {};
+    let returnedMetadata: ClientWrapperBatchWriteItemOutput["$metadata"] = {};
 
     // Create BatchWriteItemCommand args with marshalled `RequestItems`
     const { RequestItems, ...cmdArgs } = this.prepCommandArgs(rawCmdArgs, marshallOptions);
@@ -266,10 +282,14 @@ export class DdbClientWrapper extends DdbClientArgParser {
       }
     );
 
-    return this.parseClientResponse(
+    return this.parseClientResponse<SDKBatchWriteItemCmdOutput>(
       {
-        UnprocessedItems: unprocessedItems,
-        ...(returnedConsumedCapacity.length > 0 && { ConsumedCapacity: returnedConsumedCapacity }),
+        ...(unprocessedItems && {
+          UnprocessedItems: { [this.tableName]: unprocessedItems },
+        }),
+        ...(returnedConsumedCapacity.length > 0 && {
+          ConsumedCapacity: returnedConsumedCapacity,
+        }),
         ...(returnedItemCollectionMetrics.length > 0 && {
           ItemCollectionMetrics: { [this.tableName]: returnedItemCollectionMetrics },
         }),
@@ -287,13 +307,13 @@ export class DdbClientWrapper extends DdbClientArgParser {
   readonly query = async ({
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
-  }: QueryInput = {}): Promise<QueryOutput> => {
+  }: ClientWrapperQueryInput = {}): Promise<ClientWrapperQueryOutput> => {
     // Create a QueryCommand with marshalled `ExclusiveStartKey` and `ExpressionAttributeValues`
     const cmd = new QueryCommand(this.prepCommandArgs(args, marshallOptions));
     // Send the command to the DynamoDB client
     const response = await this._ddbClient.send(cmd);
     // Return response with unmarshalled `Items` and `LastEvaluatedKey`
-    return this.parseClientResponse(response, unmarshallOptions);
+    return this.parseClientResponse<SDKQueryCmdOutput>(response, unmarshallOptions);
   };
 
   /**
@@ -304,13 +324,13 @@ export class DdbClientWrapper extends DdbClientArgParser {
   readonly scan = async ({
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
-  }: ScanInput = {}): Promise<ScanOutput> => {
+  }: ClientWrapperScanInput = {}): Promise<ClientWrapperScanOutput> => {
     // Create a ScanCommand with marshalled `ExclusiveStartKey` and `ExpressionAttributeValues`
     const cmd = new ScanCommand(this.prepCommandArgs(args, marshallOptions));
     // Send the command to the DynamoDB client
     const response = await this._ddbClient.send(cmd);
     // Return response with unmarshalled `Items` and `LastEvaluatedKey`
-    return this.parseClientResponse(response, unmarshallOptions);
+    return this.parseClientResponse<SDKScanCmdOutput>(response, unmarshallOptions);
   };
 
   /**
@@ -321,13 +341,13 @@ export class DdbClientWrapper extends DdbClientArgParser {
   readonly transactWriteItems = async ({
     marshallingConfigs: { marshallOptions, unmarshallOptions } = {},
     ...args
-  }: TransactWriteItemsInput): Promise<TransactWriteItemsOutput> => {
+  }: ClientWrapperTransactWriteItemsInput): Promise<ClientWrapperTransactWriteItemsOutput> => {
     // Create the TransactWriteItemsCommand command with marshalled `TransactItems`
     const cmd = new TransactWriteItemsCommand(this.prepCommandArgs(args, marshallOptions));
     // Send the command to the DynamoDB client
     const response = await this._ddbClient.send(cmd);
     // Return response with unmarshalled `ItemCollectionMetrics`
-    return this.parseClientResponse(response, unmarshallOptions);
+    return this.parseClientResponse<SDKTransactWriteItemsCmdOutput>(response, unmarshallOptions);
   };
 
   // CONTROL PLANE METHODS:
@@ -337,7 +357,9 @@ export class DdbClientWrapper extends DdbClientArgParser {
    *
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html
    */
-  readonly describeTable = async (args: DescribeTableInput = {}): Promise<DescribeTableOutput> => {
+  readonly describeTable = async (
+    args: ClientWrapperDescribeTableInput = {}
+  ): Promise<ClientWrapperDescribeTableOutput> => {
     return await this._ddbClient.send(
       new DescribeTableCommand({ TableName: this.tableName, ...args })
     );
@@ -348,7 +370,9 @@ export class DdbClientWrapper extends DdbClientArgParser {
    *
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html
    */
-  readonly createTable = async (args: CreateTableInput): Promise<CreateTableOutput> => {
+  readonly createTable = async (
+    args: ClientWrapperCreateTableInput
+  ): Promise<ClientWrapperCreateTableOutput> => {
     return await this._ddbClient.send(
       new CreateTableCommand({ TableName: this.tableName, ...args })
     );
@@ -359,7 +383,9 @@ export class DdbClientWrapper extends DdbClientArgParser {
    *
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTables.html
    */
-  readonly listTables = async (args: ListTablesInput = {}): Promise<ListTablesOutput> => {
+  readonly listTables = async (
+    args: ClientWrapperListTablesInput = {}
+  ): Promise<ClientWrapperListTablesOutput> => {
     return await this._ddbClient.send(new ListTablesCommand(args));
   };
 }
