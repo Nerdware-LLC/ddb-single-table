@@ -1,9 +1,11 @@
-import type { OmittedSdkParams } from "./OmittedSdkParams.js";
+import type { OmittedSdkParameters } from "./OmittedSdkParameters.js";
 import type { ToUnmarshalledSdkInput } from "./sdkTypeModifiers.js";
 import type {
-  NativeAttributeValue,
+  BaseItem,
   ItemKeys,
+  SupportedAttributeValueType,
   OverrideSharedProperties,
+  FixPartialUndefined,
 } from "../../types/index.js";
 import type {
   KeysAndAttributes,
@@ -19,18 +21,24 @@ import type {
 // UNMARSHALLED SDK PARAM TYPES:
 
 /**
- * An _**UNMARSHALLED**_ {@link KeysAndAttributes} object (omits {@link OmittedSdkParams}).
+ * An _**UNMARSHALLED**_ `ExpressionAttributeValues` object.
  */
-export type UnmarshalledKeysAndAttributes = OverrideSharedProperties<
-  Omit<KeysAndAttributes, OmittedSdkParams>,
-  { Keys: Array<ItemKeys> }
+export type UnmarshalledExpressionAttributeValues = {
+  [eavToken: string]: SupportedAttributeValueType;
+};
+
+/**
+ * An _**UNMARSHALLED**_ {@link KeysAndAttributes} object (omits {@link OmittedSdkParameters}).
+ */
+export type UnmarshalledKeysAndAttributes = FixPartialUndefined<
+  OverrideSharedProperties<Omit<KeysAndAttributes, OmittedSdkParameters>, { Keys: Array<ItemKeys> }>
 >;
 
 /**
  * An _**UNMARSHALLED**_ {@link WriteRequest} object for `BatchWriteItem` operations.
  */
 export type UnmarshalledBatchWriteRequest = {
-  PutRequest?: { Item: { [attrName: string]: NativeAttributeValue } };
+  PutRequest?: { Item: BaseItem };
   DeleteRequest?: { Key: ItemKeys };
 };
 
@@ -50,7 +58,6 @@ export type UnmarshalledTransactWriteItem = {
 /**
  * An _**UNMARSHALLED**_ {@link ItemCollectionMetrics} object.
  */
-export type UnmarshalledItemCollectionMetrics = OverrideSharedProperties<
-  ItemCollectionMetrics,
-  { ItemCollectionKey?: ItemKeys }
+export type UnmarshalledItemCollectionMetrics = FixPartialUndefined<
+  OverrideSharedProperties<ItemCollectionMetrics, { ItemCollectionKey?: ItemKeys }>
 >;

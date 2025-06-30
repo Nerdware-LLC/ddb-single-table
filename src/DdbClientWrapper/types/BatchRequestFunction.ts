@@ -16,8 +16,8 @@ export type GetRequest = NonNullable<
 export type SomeBatchRequestObject = GetRequest | WriteRequest;
 
 /**
- * A fn which takes an array of batch-request objects, submits them by invoking a DDB
- * batch operation command, and returns any `UnprocessedItems` or `UnprocessedKeys`.
+ * A function which takes an array of batch-request objects, submits them by invoking a
+ * DDB batch operation command, and returns any `UnprocessedItems` or `UnprocessedKeys`.
  * These functions are provided as arguments to the `handleBatchRequests` helper.
  *
  * @example

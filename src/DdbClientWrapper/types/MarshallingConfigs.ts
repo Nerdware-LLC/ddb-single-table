@@ -5,9 +5,9 @@ import type {
 import type { Simplify } from "type-fest";
 
 /**
- * A param for configuring the marshalling/unmarshalling behavior for attribute values.
+ * A parameter for configuring marshalling/unmarshalling behavior.
  */
-export type MarshallingConfigsParam = {
+export type MarshallingConfigsParameter = {
   /**
    * {@link MarshallingConfigs|Configs} for controlling the
    * marshalling/unmarshalling behavior for attribute values.

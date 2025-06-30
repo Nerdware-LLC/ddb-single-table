@@ -1,15 +1,16 @@
-import type { OmittedSdkParams } from "./OmittedSdkParams.js";
+import type { OmittedSdkParameters } from "./OmittedSdkParameters.js";
 import type {
-  UnmarshalledItemCollectionMetrics,
+  UnmarshalledExpressionAttributeValues,
   UnmarshalledKeysAndAttributes,
   UnmarshalledBatchWriteRequest,
   UnmarshalledTransactWriteItem,
+  UnmarshalledItemCollectionMetrics,
 } from "./unmarshalledSdkFieldTypes.js";
 import type {
+  BaseItem,
+  ItemKeys,
   OverrideSharedProperties,
   FixPartialUndefined,
-  NativeAttributeValue,
-  ItemKeys,
 } from "../../types/index.js";
 import type {
   AttributeValue,
@@ -49,12 +50,12 @@ type SdkParamsThatRequireMarshalling<SdkInput extends object> = {
     ItemKeys //                        external unmarshalled type
   >;
   Item: MarshalledSdkFieldMeta<
-    Record<string, AttributeValue>, //              internal marshalled type from SDK
-    { [attrName: string]: NativeAttributeValue } // external unmarshalled type
+    Record<string, AttributeValue>, // internal marshalled type from SDK
+    BaseItem //                        external unmarshalled type
   >;
   ExpressionAttributeValues?: MarshalledSdkFieldMeta<
-    Record<string, AttributeValue>, //      internal marshalled type from SDK
-    Record<string, NativeAttributeValue> // external unmarshalled type
+    Record<string, AttributeValue>, //       internal marshalled type from SDK
+    UnmarshalledExpressionAttributeValues // external unmarshalled type
   >;
   ExclusiveStartKey?: MarshalledSdkFieldMeta<
     Record<string, AttributeValue>, // internal marshalled type from SDK
@@ -75,45 +76,47 @@ type SdkParamsThatRequireMarshalling<SdkInput extends object> = {
       : Record<string, Record<keyof KeysAndAttributes, any>> extends SdkInput["RequestItems"]
         ? // BatchGetItem RequestItems:
           MarshalledSdkFieldMeta<
-            { [tableName: string]: KeysAndAttributes }, //            internal marshalled type from SDK
-            { [tableName: string]: UnmarshalledKeysAndAttributes } // external unmarshalled type
+            { [tableName: string]: FixPartialUndefined<KeysAndAttributes> }, // internal marshalled type from SDK
+            { [tableName: string]: UnmarshalledKeysAndAttributes } //           external unmarshalled type
           >
         : never
     : never;
 };
 
 /**
- * Union of all SDK params that must be MARSHALLED before they can be used to create an SDK Command instance.
+ * Union of all SDK parameters that must be MARSHALLED before they can be used to create an SDK Command instance.
  */
-export type SdkParamThatRequiresMarshalling = Simplify<keyof SdkParamsThatRequireMarshalling<any>>;
+export type SdkParameterThatRequiresMarshalling = Simplify<
+  keyof SdkParamsThatRequireMarshalling<any>
+>;
 
 /**
  * ### SDK RESPONSE-FIELDS THAT REQUIRE UNMARSHALLING
  *
  * This type is a dictionary of SDK response-fields that must be **UNMARSHALLED** after an SDK
  * Command has been executed. Each response-field is mapped to a {@link MarshalledSdkFieldMeta}
- * type that defines its **MARSHALLED** and **UNMARSHALLED** types.
+ * type that defines its respective **MARSHALLED** and **UNMARSHALLED** types.
  */
 type SdkResponseFieldsThatRequireUnmarshalling<SdkOutput extends object> = {
   Item?: MarshalledSdkFieldMeta<
-    Record<string, AttributeValue>, //              internal marshalled type from SDK
-    { [attrName: string]: NativeAttributeValue } // external unmarshalled type
+    Record<string, AttributeValue>, // internal marshalled type from SDK
+    BaseItem //                        external unmarshalled type
   >;
   Items?: MarshalledSdkFieldMeta<
-    Array<Record<string, AttributeValue>>, //              internal marshalled type from SDK
-    Array<{ [attrName: string]: NativeAttributeValue }> // external unmarshalled type
+    Array<Record<string, AttributeValue>>, // internal marshalled type from SDK
+    Array<BaseItem> //                        external unmarshalled type
   >;
   Attributes?: MarshalledSdkFieldMeta<
-    Record<string, AttributeValue>, //              internal marshalled type from SDK
-    { [attrName: string]: NativeAttributeValue } // external unmarshalled type
+    Record<string, AttributeValue>, // internal marshalled type from SDK
+    BaseItem //                        external unmarshalled type
   >;
   LastEvaluatedKey?: MarshalledSdkFieldMeta<
     Record<string, AttributeValue>, // internal marshalled type from SDK
     ItemKeys //                        external unmarshalled type
   >;
   Responses?: MarshalledSdkFieldMeta<
-    { [tableName: string]: Array<Record<string, AttributeValue>> }, //              internal marshalled type from SDK
-    { [tableName: string]: Array<{ [attrName: string]: NativeAttributeValue }> } // external unmarshalled type
+    { [tableName: string]: Array<Record<string, AttributeValue>> }, // internal marshalled type from SDK
+    { [tableName: string]: Array<BaseItem> } //                        external unmarshalled type
   >;
   UnprocessedKeys?: MarshalledSdkFieldMeta<
     { [tableName: string]: KeysAndAttributes }, //            internal marshalled type from SDK
@@ -152,7 +155,7 @@ export type SdkResponseFieldThatRequiresUnmarshalling = Simplify<
 /**
  * This generic takes a ddb client Command input or output type and modifies it as follows:
  * - Replaces _**marshalled**_ types with _**unmarshalled**_ types, and vice versa
- * - Removes all {@link OmittedSdkParams|deprecated legacy parameters}
+ * - Removes all {@link OmittedSdkParameters|deprecated legacy parameters}
  * - Fixes the partiality of the resultant type by removing `undefined` from required fields
  */
 type ModifySdkType<
@@ -161,7 +164,7 @@ type ModifySdkType<
   DictType extends keyof MarshalledSdkFieldMeta,
 > = FixPartialUndefined<
   OverrideSharedProperties<
-    Omit<SdkType, OmittedSdkParams>,
+    Omit<SdkType, OmittedSdkParameters>,
     {
       [Field in keyof BaseFieldsDict]: Exclude<BaseFieldsDict[Field], undefined>[DictType];
     }

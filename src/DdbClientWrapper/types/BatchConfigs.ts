@@ -1,7 +1,7 @@
 /**
- * A param for controlling batch-operation behavior.
+ * A parameter for controlling batch-operation behavior.
  */
-export type BatchConfigsParam = {
+export type BatchConfigsParameter = {
   /** {@link BatchConfigs|Configs} for controlling batch-operation behavior. */
   batchConfigs?: BatchConfigs;
 };
