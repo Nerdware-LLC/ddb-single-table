@@ -1,9 +1,9 @@
-import type { TableCreateTableParameters } from "./TableCreateTableParameters.js";
+import type { CreateTableParameters } from "./CreateTableParameters.js";
 
 /**
- * Params which govern the behavior of the `table.ensureTableIsActive()` method.
+ * Parameters which govern the behavior of the `table.ensureTableIsActive()` method.
  */
-export type EnsureTableIsActiveParams = {
+export type EnsureTableIsActiveParameters = {
   /** The max number of attempts that should be made to connect to the table (default: 20). */
   maxRetries?: number;
   /** The number of seconds to wait in between connection attempts (default: 1). */
@@ -16,5 +16,5 @@ export type EnsureTableIsActiveParams = {
    * or `false` to disable table creation. If the table does not exist and this parameter is not
    * provided or is `false`, the function will throw an error.
    */
-  createIfNotExists?: boolean | TableCreateTableParameters;
+  createIfNotExists?: boolean | CreateTableParameters;
 };
