@@ -28,13 +28,13 @@ export interface ModelSchemaOptions {
    */
   readonly transformItem?: {
     /** Fn to modify entire Item before `validate` fn is called. */
-    readonly toDB?: (item: BaseItem) => BaseItem;
+    readonly toDB?: (item: any) => BaseItem;
     /** Fn to modify entire Item returned from DDB client. */
-    readonly fromDB?: (item: BaseItem) => BaseItem;
+    readonly fromDB?: (item: any) => BaseItem;
   };
 
   /**
    * Item-level custom validation function.
    */
-  readonly validateItem?: (item: BaseItem) => boolean;
+  readonly validateItem?: (item: any) => boolean;
 }
