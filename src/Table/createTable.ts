@@ -1,20 +1,20 @@
 import { BillingMode } from "@aws-sdk/client-dynamodb";
 import { DdbSingleTableError } from "../utils/errors.js";
-import type { TableInstance, TableCreateTableParameters } from "./types/index.js";
-import type { CreateTableInput } from "../DdbClientWrapper/types/index.js";
+import type { TableInstance, CreateTableParameters } from "./types/index.js";
+import type { ClientWrapperCreateTableInput } from "../DdbClientWrapper/types/index.js";
 import type { TableKeysSchemaType } from "../Schema/types/index.js";
 
 /**
- * [`CreateTable`][ddb-docs-create-table] operation wrapper which uses the provided
- * `tableKeysSchema` to form the `CreateTable` arguments listed below. All other `CreateTable`
- * arguments can be provided to this method.
+ * [`CreateTable`][create-table-docs] operation wrapper which uses the provided `tableKeysSchema`
+ * to form the `CreateTable` arguments listed below. All other `CreateTable` arguments can be
+ * provided to this method.
  *
  * - `AttributeDefinitions`
  * - `KeySchema`
  * - `GlobalSecondaryIndexes`
  * - `LocalSecondaryIndexes`
  *
- * [ddb-docs-create-table]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html
+ * [create-table-docs]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html
  *
  * @param createTableArgs `CreateTable` arguments to pass to the AWS SDK.
  * @returns The response from the `CreateTable` operation.
@@ -22,7 +22,7 @@ import type { TableKeysSchemaType } from "../Schema/types/index.js";
  */
 export const createTable = async function <const TableKeysSchema extends TableKeysSchemaType>(
   this: TableInstance<TableKeysSchema>,
-  createTableArgs: TableCreateTableParameters = {}
+  createTableArgs: CreateTableParameters = {}
 ) {
   // If createTableArgs were provided, provide some minor early validation:
   if (
@@ -35,10 +35,10 @@ export const createTable = async function <const TableKeysSchema extends TableKe
     );
   }
 
-  const AttributeDefinitions: CreateTableInput["AttributeDefinitions"] = [];
-  const KeySchema: CreateTableInput["KeySchema"] = [];
-  const GlobalSecondaryIndexes: CreateTableInput["GlobalSecondaryIndexes"] = [];
-  const LocalSecondaryIndexes: CreateTableInput["LocalSecondaryIndexes"] = [];
+  const AttributeDefinitions: ClientWrapperCreateTableInput["AttributeDefinitions"] = [];
+  const KeySchema: ClientWrapperCreateTableInput["KeySchema"] = [];
+  const GlobalSecondaryIndexes: ClientWrapperCreateTableInput["GlobalSecondaryIndexes"] = [];
+  const LocalSecondaryIndexes: ClientWrapperCreateTableInput["LocalSecondaryIndexes"] = [];
 
   // Make `CreateTable` args from the `tableKeysSchema` provided to the `Table` constructor
   for (const keyAttrName in this.tableKeysSchema) {
