@@ -10,14 +10,15 @@ import {
   BatchStatementErrorCodeEnum as BatchErrorCode,
   type BatchStatementError,
 } from "@aws-sdk/client-dynamodb";
-import { isString } from "@nerdware/ts-type-safety-utils";
 import { mockClient } from "aws-sdk-client-mock";
 import * as batchRequestsModule from "../DdbClientWrapper/handleBatchRequests.js";
 import * as whereQueryModule from "../Expressions/WhereQuery/index.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { Table } from "../Table/Table.js";
+import { isValidIso8601DatetimeString } from "../utils/index.js";
 import { Model } from "./Model.js";
-import type { NativeValueWriteRequest } from "../DdbClientWrapper/types/index.js";
+import type { BatchGetItemsOpts, BatchWriteItemsOpts } from "./types/index.js";
+import type { UnmarshalledBatchWriteRequest } from "../DdbClientWrapper/types/index.js";
 import type { ItemTypeFromSchema } from "../types/index.js";
 import type { Except } from "type-fest";
 
@@ -104,7 +105,7 @@ describe("Model", () => {
     mockItems,
     /** Mock items' keys for batch methods like `batchGetItems` which only use the items' keys */
     mockItemsKeys,
-    /** Unaliased _marshalled_ mock items for mocking resolved values of _ddbClient responses */
+    /** Unaliased _marshalled_ mock items for mocking resolved values of ddb client responses */
     unaliasedMockItems,
     unaliasedMockItemsKeys,
   } = [
@@ -125,6 +126,7 @@ describe("Model", () => {
       accum.mockItemsKeys.push({ id, handle });
       accum.unaliasedMockItems.push(unaliasedItem);
       accum.unaliasedMockItemsKeys.push(unaliasedKeys);
+
       return accum;
     },
     {
@@ -141,10 +143,6 @@ describe("Model", () => {
   const unaliasedMockItem = unaliasedMockItems[0];
   const unaliasedMockItemKeys = unaliasedMockItemsKeys[0];
 
-  const isValidIso8601String = (val: unknown): boolean => {
-    return isString(val) && !!Date.parse(val) && new Date(val).toISOString() === val;
-  };
-
   describe("new Model()", () => {
     test("returns a Model instance with expected properties when provided valid arguments", () => {
       // Assert instance is of correct type and has expected property values:
@@ -160,7 +158,7 @@ describe("Model", () => {
     });
   });
 
-  describe("Model.getItem()", () => {
+  describe("model.getItem()", () => {
     test(`calls IO-Actions and "ddbClient.getItem" and returns mockItem when called with valid arguments`, async () => {
       // Arrange ddbClient to return unaliasedMockItem
       mockDdbClient
@@ -190,16 +188,18 @@ describe("Model", () => {
       expect(spies.processItemAttributesFromDB).toHaveBeenCalledExactlyOnceWith(unaliasedMockItem);
       expect(spies.processItemAttributesFromDB).toHaveReturnedWith(mockItem);
     });
+
     test(`returns undefined when called with valid arguments but nothing is returned`, async () => {
       const result = await mockModel.getItem(mockItemKeys);
       expect(result).toBeUndefined();
     });
+
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       await expect(mockModel.getItem({} as MockItem)).rejects.toThrowError(/required .* "id"/i);
     });
   });
 
-  describe("Model.batchGetItems()", () => {
+  describe("model.batchGetItems()", () => {
     test(`calls IO-Actions and "ddbClient.batchGetItems" and returns mockItems when called with valid arguments`, async () => {
       /*
         Arrange ddbClient to mock the following three responses:
@@ -243,8 +243,10 @@ describe("Model", () => {
       };
 
       // Arrange opts for `batchGetItems`
-      const batchGetItemsOpts = {
-        exponentialBackoffConfigs: { initialDelay: 0 }, // <-- Disables the retry-delay for testing
+      const batchGetItemsOpts: BatchGetItemsOpts = {
+        batchConfigs: {
+          retryConfigs: { disableDelay: true },
+        },
       };
 
       const result = await mockModel.batchGetItems(mockItemsKeys, batchGetItemsOpts);
@@ -258,15 +260,14 @@ describe("Model", () => {
       // Assert `batchGetItems` was called once with expected args
       expect(spies.clientBatchGetItems).toHaveBeenCalledExactlyOnceWith({
         RequestItems: { [mockTableName]: { Keys: unaliasedMockItemsKeys } },
-        exponentialBackoffConfigs: batchGetItemsOpts.exponentialBackoffConfigs,
+        batchConfigs: batchGetItemsOpts.batchConfigs,
       });
 
       // Assert `handleBatchRequests` was called with expected args
       expect(spies.handleBatchRequests).toHaveBeenCalledExactlyOnceWith(
         expect.any(Function), // <-- submitBatchGetItemRequest
         unaliasedMockItemsKeys.map((keys) => mockModel.ddb.marshall(keys)),
-        100, // <-- chunkSize
-        batchGetItemsOpts.exponentialBackoffConfigs
+        { chunkSize: 100, ...batchGetItemsOpts.batchConfigs }
       );
 
       // Assert `processItemAttributes.fromDB` was called
@@ -283,9 +284,11 @@ describe("Model", () => {
       const result = await mockModel.batchGetItems(mockItemsKeys);
       expect(result).toBeUndefined();
     });
+
     test(`throws an ItemInputError when called with an invalid "primaryKeys" argument`, async () => {
       await expect(mockModel.batchGetItems(null as any)).rejects.toThrowError(/primaryKeys/);
     });
+
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       const invalidMockItemsKeys = [{ id: "USER-X" }, ...mockItemsKeys];
       await expect(mockModel.batchGetItems(invalidMockItemsKeys as any)).rejects.toThrowError(
@@ -294,13 +297,14 @@ describe("Model", () => {
     });
   });
 
-  describe("Model.createItem()", () => {
+  describe("model.createItem()", () => {
     /* The createItem method uses PutCommand, the ReturnValues for which can only be "NONE" or
     "ALL_OLD", so the DDB API won't ever return anything when PutCommand is used to create a new
     item. However, PutCommand can also be used to make updates to existing items, so to ensure
     the createItem method never overwrites an existing item, the function should always provide a
     `ConditionExpression` of `attribute_not_exists( <tableHashKey> )`. The following tests assess
     whether the method achieves these expected behaviors. */
+
     test(`calls IO-Actions and "ddbClient.putItem" with an "attribute_not_exists" ConditionExpression when called with valid arguments`, async () => {
       // Arrange spies
       const spies = {
@@ -309,49 +313,38 @@ describe("Model", () => {
         processItemAttributesFromDB: vi.spyOn(mockModel.processItemAttributes, "fromDB"),
       };
 
+      // Arrange expected values
+      const expectedMockItem = {
+        ...mockItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      };
+      const expectedUnaliasedMockItem = {
+        ...unaliasedMockItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      };
+
       const result = await mockModel.createItem(mockItem);
 
       // Assert the result
-      expect(result).toStrictEqual({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(result).toStrictEqual(expectedMockItem);
 
       // Assert `processItemAttributes.toDB` was called with the `item` and `createdAt` key
-      expect(spies.processItemAttributesToDB).toHaveBeenCalledExactlyOnceWith({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
-      expect(spies.processItemAttributesToDB).toHaveReturnedWith({
-        ...unaliasedMockItem,
-        createdAt: expect.toSatisfy(isValidIso8601String),
-        updatedAt: expect.toSatisfy(isValidIso8601String),
-      });
+      expect(spies.processItemAttributesToDB).toHaveBeenCalledExactlyOnceWith(expectedMockItem);
+      expect(spies.processItemAttributesToDB).toHaveReturnedWith(expectedUnaliasedMockItem);
 
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledExactlyOnceWith({
-        Item: {
-          ...unaliasedMockItem,
-          createdAt: expect.toSatisfy(isValidIso8601String),
-          updatedAt: expect.toSatisfy(isValidIso8601String),
-        },
+        Item: expectedUnaliasedMockItem,
         ConditionExpression: "attribute_not_exists(pk)",
       });
 
       // Assert `processItemAttributes.fromDB` was called and returned the expected result
-      expect(spies.processItemAttributesFromDB).toHaveBeenCalledExactlyOnceWith({
-        ...unaliasedMockItem,
-        createdAt: expect.toSatisfy(isValidIso8601String),
-        updatedAt: expect.toSatisfy(isValidIso8601String),
-      });
-      expect(spies.processItemAttributesFromDB).toHaveReturnedWith({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(spies.processItemAttributesFromDB).toHaveBeenCalledExactlyOnceWith(expectedUnaliasedMockItem); // prettier-ignore
+      expect(spies.processItemAttributesFromDB).toHaveReturnedWith(expectedMockItem);
     });
+
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       await expect(mockModel.createItem({} as any)).rejects.toThrowError(
         /A value is required for MockModel property "id"/i
@@ -359,7 +352,7 @@ describe("Model", () => {
     });
   });
 
-  describe("Model.upsertItem()", () => {
+  describe("model.upsertItem()", () => {
     test(`calls IO-Actions and "ddbClient.putItem" when called with valid arguments`, async () => {
       // Arrange spies
       const spies = {
@@ -368,48 +361,37 @@ describe("Model", () => {
         processItemAttributesFromDB: vi.spyOn(mockModel.processItemAttributes, "fromDB"),
       };
 
+      // Arrange expected values
+      const expectedMockItem = {
+        ...mockItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      };
+      const expectedUnaliasedMockItem = {
+        ...unaliasedMockItem,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      };
+
       const result = await mockModel.upsertItem(mockItem);
 
       // Assert the result
-      expect(result).toStrictEqual({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(result).toStrictEqual(expectedMockItem);
 
       // Assert `processItemAttributes.toDB` was called with the `item`
-      expect(spies.processItemAttributesToDB).toHaveBeenCalledExactlyOnceWith({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
-      expect(spies.processItemAttributesToDB).toHaveReturnedWith({
-        ...unaliasedMockItem,
-        createdAt: expect.toSatisfy(isValidIso8601String),
-        updatedAt: expect.toSatisfy(isValidIso8601String),
-      });
+      expect(spies.processItemAttributesToDB).toHaveBeenCalledExactlyOnceWith(expectedMockItem);
+      expect(spies.processItemAttributesToDB).toHaveReturnedWith(expectedUnaliasedMockItem);
 
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledExactlyOnceWith({
-        Item: {
-          ...unaliasedMockItem,
-          createdAt: expect.toSatisfy(isValidIso8601String),
-          updatedAt: expect.toSatisfy(isValidIso8601String),
-        },
+        Item: expectedUnaliasedMockItem,
       });
 
       // Assert `processItemAttributes.fromDB` was called and returned the expected result
-      expect(spies.processItemAttributesFromDB).toHaveBeenCalledExactlyOnceWith({
-        ...unaliasedMockItem,
-        createdAt: expect.toSatisfy(isValidIso8601String),
-        updatedAt: expect.toSatisfy(isValidIso8601String),
-      });
-      expect(spies.processItemAttributesFromDB).toHaveReturnedWith({
-        ...mockItem,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(spies.processItemAttributesFromDB).toHaveBeenCalledExactlyOnceWith(expectedUnaliasedMockItem); // prettier-ignore
+      expect(spies.processItemAttributesFromDB).toHaveReturnedWith(expectedMockItem);
     });
+
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       await expect(mockModel.upsertItem({} as any)).rejects.toThrowError(
         /A value is required for MockModel property "id"/i
@@ -417,15 +399,15 @@ describe("Model", () => {
     });
   });
 
-  describe("Model.batchUpsertItems()", () => {
+  describe("model.batchUpsertItems()", () => {
     test(`calls IO-Actions and "ddbClient.batchWriteItems" and returns "upsertItems" when called with valid arguments`, async () => {
       // Arrange expected BatchWriteItem PutRequest objects
       const expectedMockBatchWriteReqs = unaliasedMockItems.map((item) => ({
         PutRequest: {
           Item: {
             ...item,
-            createdAt: expect.toSatisfy(isValidIso8601String),
-            updatedAt: expect.toSatisfy(isValidIso8601String),
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
           },
         },
       }));
@@ -442,7 +424,9 @@ describe("Model", () => {
       mockDdbClient
         .on(BatchWriteItemCommand)
         .resolvesOnce({
-          UnprocessedItems: { [mockTableName]: [mockModel.ddb.marshall(unprocessedItem)] },
+          UnprocessedItems: {
+            [mockTableName]: [mockModel.ddb.marshallAndConvertDates(unprocessedItem)],
+          },
         })
         .resolvesOnce({});
 
@@ -456,8 +440,10 @@ describe("Model", () => {
       };
 
       // Arrange opts for `batchUpsertItems`
-      const batchUpsertItemsOpts = {
-        exponentialBackoffConfigs: { initialDelay: 0 }, // <-- Disables the retry-delay for testing
+      const batchUpsertItemsOpts: BatchWriteItemsOpts = {
+        batchConfigs: {
+          retryConfigs: { disableDelay: true },
+        },
       };
 
       const result = await mockModel.batchUpsertItems(mockItems, batchUpsertItemsOpts);
@@ -482,7 +468,7 @@ describe("Model", () => {
       // Assert `batchWriteItems` was called with expected args
       expect(spies.clientBatchWriteItems).toHaveBeenCalledExactlyOnceWith({
         RequestItems: { [mockTableName]: expectedMockBatchWriteReqs },
-        exponentialBackoffConfigs: batchUpsertItemsOpts.exponentialBackoffConfigs,
+        batchConfigs: batchUpsertItemsOpts.batchConfigs,
       });
 
       // Assert `handleBatchRequests` was called with expected args
@@ -497,14 +483,13 @@ describe("Model", () => {
             PutRequest: {
               Item: {
                 ...mockModel.ddb.marshall(itemWithoutTimestamps),
-                createdAt: { S: expect.toSatisfy(isValidIso8601String) },
-                updatedAt: { S: expect.toSatisfy(isValidIso8601String) },
+                createdAt: { S: expect.toSatisfy(isValidIso8601DatetimeString) },
+                updatedAt: { S: expect.toSatisfy(isValidIso8601DatetimeString) },
               },
             },
           })
         ),
-        100, // <-- chunkSize
-        batchUpsertItemsOpts.exponentialBackoffConfigs
+        { chunkSize: 25, ...batchUpsertItemsOpts.batchConfigs }
       );
 
       // Assert `processItemAttributes.fromDB` args and returned values
@@ -512,16 +497,18 @@ describe("Model", () => {
         expectedMockBatchWriteReqs.length
       );
     });
+
     test(`returns an empty array when called with valid arguments but nothing is returned`, async () => {
       const result = await mockModel.batchUpsertItems([]);
       expect(result).toStrictEqual([]);
     });
+
     test(`throws an error when called with an invalid "items" argument`, async () => {
-      await expect(mockModel.batchUpsertItems(null as any)).rejects.toThrow();
+      await expect(mockModel.batchUpsertItems(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("Model.updateItem()", () => {
+  describe("model.updateItem()", () => {
     // Mock values shared by multiple `updateItem()` tests:
     const mockUpdatedHandle = "@NEW_HANDLE";
     const mockUpdatedItem = { ...mockItem, handle: mockUpdatedHandle };
@@ -560,14 +547,14 @@ describe("Model", () => {
         ExpressionAttributeNames: { "#sk": "sk", "#updatedAt": "updatedAt" },
         ExpressionAttributeValues: {
           ":sk": mockUpdatedHandle,
-          ":updatedAt": expect.toSatisfy(isValidIso8601String),
+          ":updatedAt": expect.any(Date),
         },
         ReturnValues: "ALL_NEW",
       });
     });
   });
 
-  describe("Model.deleteItem()", () => {
+  describe("model.deleteItem()", () => {
     test(`calls IO-Actions and "ddbClient.deleteItem" and returns item attributes when called with valid arguments`, async () => {
       // Arrange ddbClient to return unaliasedMockItem
       mockDdbClient
@@ -590,12 +577,13 @@ describe("Model", () => {
         ReturnValues: "ALL_OLD",
       });
     });
+
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       await expect(mockModel.deleteItem({} as any)).rejects.toThrowError(/required .* "id"/i);
     });
   });
 
-  describe("Model.batchDeleteItems()", () => {
+  describe("model.batchDeleteItems()", () => {
     test(`calls IO-Actions and "ddbClient.batchWriteItems" and returns "deleteItems" when called with valid arguments`, async () => {
       // Arrange BatchWriteItem request objects
       const expectedMockBatchWriteReqs = unaliasedMockItemsKeys.map((keys) => ({
@@ -614,7 +602,9 @@ describe("Model", () => {
       mockDdbClient
         .on(BatchWriteItemCommand)
         .resolvesOnce({
-          UnprocessedItems: { [mockTableName]: [mockModel.ddb.marshall(unprocessedItem)] },
+          UnprocessedItems: {
+            [mockTableName]: [mockModel.ddb.marshallAndConvertDates(unprocessedItem)],
+          },
         })
         .resolvesOnce({});
 
@@ -627,8 +617,10 @@ describe("Model", () => {
       };
 
       // Arrange opts for `batchDeleteItems`
-      const batchDeleteItemsOpts = {
-        exponentialBackoffConfigs: { initialDelay: 0 }, // <-- Disables the retry-delay for testing
+      const batchDeleteItemsOpts: BatchWriteItemsOpts = {
+        batchConfigs: {
+          retryConfigs: { disableDelay: true },
+        },
       };
 
       const result = await mockModel.batchDeleteItems(mockItemsKeys, batchDeleteItemsOpts);
@@ -645,7 +637,7 @@ describe("Model", () => {
       // Assert `batchGetItems` was called twice with expected args
       expect(spies.clientBatchWriteItems).toHaveBeenCalledExactlyOnceWith({
         RequestItems: { [mockTableName]: expectedMockBatchWriteReqs },
-        exponentialBackoffConfigs: batchDeleteItemsOpts.exponentialBackoffConfigs,
+        batchConfigs: batchDeleteItemsOpts.batchConfigs,
       });
 
       // Assert `handleBatchRequests` was called with expected args
@@ -656,29 +648,30 @@ describe("Model", () => {
             Key: mockModel.ddb.marshall(Key),
           },
         })),
-        100, // <-- chunkSize
-        batchDeleteItemsOpts.exponentialBackoffConfigs
+        { chunkSize: 25, ...batchDeleteItemsOpts.batchConfigs }
       );
     });
+
     test(`returns an empty array when called with valid arguments but nothing is returned`, async () => {
       const result = await mockModel.batchDeleteItems([]);
       expect(result).toStrictEqual([]);
     });
+
     test(`throws an error when called with an invalid "primaryKeys" argument`, async () => {
       await expect(mockModel.batchDeleteItems(null as any)).rejects.toThrow();
     });
   });
 
-  describe("Model.batchUpsertAndDeleteItems()", () => {
+  describe("model.batchUpsertAndDeleteItems()", () => {
     test(`calls IO-Actions and "ddbClient.batchWriteItems" and returns "upsertItems" when called with valid arguments`, async () => {
       // Arrange BatchWriteItem request objects
-      const expectedMockBatchWriteReqs: Array<NativeValueWriteRequest> = [
+      const expectedMockBatchWriteReqs: Array<UnmarshalledBatchWriteRequest> = [
         ...unaliasedMockItems.map((item) => ({
           PutRequest: {
             Item: {
               ...item,
-              createdAt: expect.toSatisfy(isValidIso8601String),
-              updatedAt: expect.toSatisfy(isValidIso8601String),
+              createdAt: expect.any(Date),
+              updatedAt: expect.any(Date),
             },
           },
         })),
@@ -692,15 +685,22 @@ describe("Model", () => {
           - Second call:
             `UnprocessedItems`:  <undefined>
       */
+      const operationTimestamp = new Date();
+
       const unprocessedItem = {
         ...unaliasedMockItems[0],
-        createdAt: new Date().toISOString(),
+        createdAt: operationTimestamp,
+        updatedAt: operationTimestamp,
       };
 
       mockDdbClient
         .on(BatchWriteItemCommand)
         .resolvesOnce({
-          UnprocessedItems: { [mockTableName]: [mockModel.ddb.marshall(unprocessedItem)] },
+          UnprocessedItems: {
+            [mockTableName]: [
+              { PutRequest: { Item: mockModel.ddb.marshallAndConvertDates(unprocessedItem) } },
+            ],
+          },
         })
         .resolvesOnce({});
 
@@ -714,8 +714,10 @@ describe("Model", () => {
       };
 
       // Arrange opts for `batchUpsertAndDeleteItems`
-      const batchUpsertAndDeleteItemsOpts = {
-        exponentialBackoffConfigs: { initialDelay: 0 }, // <-- Disables the retry-delay for testing
+      const batchUpsertAndDeleteItemsOpts: BatchWriteItemsOpts = {
+        batchConfigs: {
+          retryConfigs: { disableDelay: true },
+        },
       };
 
       const result = await mockModel.batchUpsertAndDeleteItems(
@@ -747,7 +749,7 @@ describe("Model", () => {
       // Assert `batchGetItems` was called twice with expected args
       expect(spies.clientBatchWriteItems).toHaveBeenCalledExactlyOnceWith({
         RequestItems: { [mockTableName]: expectedMockBatchWriteReqs },
-        exponentialBackoffConfigs: batchUpsertAndDeleteItemsOpts.exponentialBackoffConfigs,
+        batchConfigs: batchUpsertAndDeleteItemsOpts.batchConfigs,
       });
 
       // Assert `handleBatchRequests` was called with expected args
@@ -763,8 +765,8 @@ describe("Model", () => {
                   data: PutRequest.Item.data,
                   profile: PutRequest.Item.profile,
                 }),
-                createdAt: { S: expect.toSatisfy(isValidIso8601String) },
-                updatedAt: { S: expect.toSatisfy(isValidIso8601String) },
+                createdAt: { S: expect.toSatisfy(isValidIso8601DatetimeString) },
+                updatedAt: { S: expect.toSatisfy(isValidIso8601DatetimeString) },
               },
             },
           }),
@@ -774,13 +776,65 @@ describe("Model", () => {
             },
           }),
         })),
-        100, // <-- chunkSize
-        batchUpsertAndDeleteItemsOpts.exponentialBackoffConfigs
+        { chunkSize: 25, ...batchUpsertAndDeleteItemsOpts.batchConfigs }
       );
 
-      // Assert `processItemAttributes.fromDB` args and returned values
-      expect(spies.processItemAttributesFromDB).toHaveBeenCalledTimes(unaliasedMockItems.length);
+      // Assert `processItemAttributes.fromDB` was called for each `upsertItem` and `deleteItem` (6 total)
+      expect(spies.processItemAttributesFromDB).toHaveBeenCalledTimes(
+        unaliasedMockItems.length + unaliasedMockItemsKeys.length
+      );
     });
+
+    test("returns only processed items when some items are left unprocessed", async () => {
+      // Arrange to have one upsert and one delete unprocessed
+      const operationTimestamp = new Date();
+
+      const unprocessedItem = {
+        ...unaliasedMockItems[0],
+        createdAt: operationTimestamp,
+        updatedAt: operationTimestamp,
+      };
+
+      // Arrange ddbClient to always return `UnprocessedItems` for this test
+      mockDdbClient.on(BatchWriteItemCommand).resolves({
+        UnprocessedItems: {
+          [mockTableName]: [
+            { PutRequest: { Item: mockModel.ddb.marshallAndConvertDates(unprocessedItem) } },
+            { DeleteRequest: { Key: mockModel.ddb.marshall(unaliasedMockItemsKeys[0]) } },
+          ],
+        },
+      });
+
+      // Arrange opts for `batchUpsertAndDeleteItems`
+      const batchUpsertAndDeleteItemsOpts: BatchWriteItemsOpts = {
+        batchConfigs: {
+          retryConfigs: { disableDelay: true, maxRetries: 0 }, // Disable retries for this test
+        },
+      };
+
+      const result = await mockModel.batchUpsertAndDeleteItems(
+        {
+          upsertItems: mockItems,
+          deleteItems: mockItemsKeys,
+        },
+        batchUpsertAndDeleteItemsOpts
+      );
+
+      // Assert the result (arrayContaining because the order of the items is not guaranteed)
+      expect(result).toStrictEqual({
+        upsertItems: expect.arrayContaining(
+          // Exclude the unprocessed PutRequest's item:
+          mockItems
+            .filter((item) => item.id !== mockItems[0].id)
+            .map((item) => ({ ...item, createdAt: expect.any(Date), updatedAt: expect.any(Date) }))
+        ),
+        deleteItems: expect.arrayContaining(
+          // Exclude the unprocessed DeleteRequest's keys:
+          mockItemsKeys.filter((keys) => keys.id !== mockItemsKeys[0].id)
+        ),
+      });
+    });
+
     test(`returns empty arrays when called with valid arguments but nothing is returned`, async () => {
       const result = await mockModel.batchUpsertAndDeleteItems({
         upsertItems: [],
@@ -788,12 +842,13 @@ describe("Model", () => {
       });
       expect(result).toStrictEqual({ upsertItems: [], deleteItems: [] });
     });
+
     test(`throws an error when called with an invalid argument`, async () => {
       await expect(mockModel.batchUpsertAndDeleteItems({})).rejects.toThrow();
     });
   });
 
-  describe("Model.query()", () => {
+  describe("model.query()", () => {
     test(`calls IO-Actions and "ddbClient.query" when called with valid WhereQuery arguments`, async () => {
       // Arrange ddbClient to return unaliasedMockItem
       mockDdbClient
@@ -834,6 +889,7 @@ describe("Model", () => {
         Limit: 1,
       });
     });
+
     test(`does not call WhereQuery fn when called with an explicit KeyConditionExpression`, async () => {
       // Arrange ddbClient to return unaliasedMockItem
       mockDdbClient
@@ -869,13 +925,14 @@ describe("Model", () => {
         Limit: 1,
       });
     });
+
     test(`returns an empty array when called with valid arguments but nothing is returned`, async () => {
       const result = await mockModel.query({ KeyConditionExpression: "foo = foo" });
       expect(result).toStrictEqual([]);
     });
   });
 
-  describe("Model.scan()", () => {
+  describe("model.scan()", () => {
     test(`calls IO-Actions and "ddbClient.scan" when called with valid arguments`, async () => {
       // Arrange ddbClient to return unaliasedMockItems
       mockDdbClient
@@ -895,6 +952,7 @@ describe("Model", () => {
       // Assert the ddbClient.scan args
       expect(spies.clientScan).toHaveBeenCalledExactlyOnceWith({});
     });
+
     test(`returns an empty array when called with valid arguments but nothing is returned`, async () => {
       const result = await mockModel.scan();
       expect(result).toStrictEqual([]);
