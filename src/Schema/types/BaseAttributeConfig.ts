@@ -17,9 +17,12 @@ export type SchemaSupportedTypeStringLiteral =
 /**
  * Union of supported types for {@link BaseAttributeConfig.default|schema `default` configs}.
  */
-export type AttributeDefault =
-  | SupportedAttributeValueType
-  | ((item: any) => SupportedAttributeValueType);
+export type AttributeDefault = SupportedAttributeValueType | AttributeFunctionDefault;
+
+/**
+ * A function to use for an attribute's {@link BaseAttributeConfig.default|schema `default` config}.
+ */
+export type AttributeFunctionDefault = (item: any) => SupportedAttributeValueType;
 
 /**
  * Base attribute configs common to all attribute types.
