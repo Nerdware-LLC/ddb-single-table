@@ -1,6 +1,6 @@
 import { isValidIso8601DatetimeString } from "./isValidIso8601DatetimeString.js";
 
-describe("isValidIso8601DatetimeString", () => {
+describe("isValidIso8601DatetimeString()", () => {
   /////////////////////////////////////////////////////////////////////////////
   // POSITIVE TEST CASES:
 

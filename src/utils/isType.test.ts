@@ -1,7 +1,7 @@
 import { isType, isNumber, isTuple, isEnumMember } from "./isType.js";
 
 describe("isType", () => {
-  describe("isType.string", () => {
+  describe("isType.string()", () => {
     test("returns true when called with a string", () => {
       expect(isType.string("foo")).toBe(true);
       expect(isType.string(``)).toBe(true);
@@ -27,7 +27,7 @@ describe("isType", () => {
       expect(isType.string(() => "")).toBe(false);
     });
   });
-  describe("isType.number", () => {
+  describe("isType.number()", () => {
     test("returns true when called with a valid number", () => {
       expect(isType.number(0)).toBe(true);
       expect(isType.number(123)).toBe(true);
@@ -65,7 +65,7 @@ describe("isType", () => {
       expect(isType.number(() => "")).toBe(false);
     });
   });
-  describe("isType.boolean", () => {
+  describe("isType.boolean()", () => {
     test("returns true when called with a boolean", () => {
       expect(isType.boolean(true)).toBe(true);
       expect(isType.boolean(false)).toBe(true);
@@ -90,7 +90,7 @@ describe("isType", () => {
       expect(isType.boolean(() => "")).toBe(false);
     });
   });
-  describe("isType.Buffer", () => {
+  describe("isType.Buffer()", () => {
     test("returns true when called with a Buffer", () => {
       expect(isType.Buffer(Buffer.from("foo"))).toBe(true);
       expect(isType.Buffer(Buffer.from(""))).toBe(true);
@@ -115,7 +115,7 @@ describe("isType", () => {
       expect(isType.Buffer(() => "")).toBe(false);
     });
   });
-  describe("isType.Date", () => {
+  describe("isType.Date()", () => {
     test("returns true when called with a Date", () => {
       expect(isType.Date(new Date())).toBe(true);
       expect(isType.Date(new Date(2020, 1, 1))).toBe(true);
@@ -143,7 +143,7 @@ describe("isType", () => {
       expect(isType.Date(() => "")).toBe(false);
     });
   });
-  describe("isType.array", () => {
+  describe("isType.array()", () => {
     test("returns true when called with an array", () => {
       expect(isType.array([])).toBe(true);
       expect(isType.array(Array(0))).toBe(true);
@@ -169,7 +169,7 @@ describe("isType", () => {
       expect(isType.array(() => "")).toBe(false);
     });
   });
-  describe("isType.map", () => {
+  describe("isType.map()", () => {
     test("returns true when called with a record-like object", () => {
       expect(isType.map({})).toBe(true);
       expect(isType.map(Object.create(null))).toBe(true);
@@ -195,7 +195,7 @@ describe("isType", () => {
       expect(isType.map(() => "")).toBe(false);
     });
   });
-  describe("isType.tuple", () => {
+  describe("isType.tuple()", () => {
     test("returns true when called with a tuple", () => {
       expect(isType.tuple([], [])).toBe(true);
       expect(isType.tuple([""], [""])).toBe(true);
@@ -227,7 +227,7 @@ describe("isType", () => {
       expect(isType.tuple(() => "", [])).toBe(false);
     });
   });
-  describe("isType.enum", () => {
+  describe("isType.enum()", () => {
     test("returns true when called with a valid enum", () => {
       expect(isType.enum("a", ["a", "b", "c"])).toBe(true);
       expect(isType.enum("", [""])).toBe(true);
@@ -261,7 +261,7 @@ describe("isType", () => {
 
 // INDIVIDUAL TYPE GUARD FUNCTIONS:
 
-describe("isNumber", () => {
+describe("isNumber()", () => {
   test("returns true when called with a valid number", () => {
     expect(isNumber(0)).toBe(true);
     expect(isNumber(123)).toBe(true);
@@ -300,7 +300,7 @@ describe("isNumber", () => {
   });
 });
 
-describe("isTuple", () => {
+describe("isTuple()", () => {
   test("returns true when called with a tuple", () => {
     expect(isTuple([], [])).toBe(true);
     expect(isTuple([""], [""])).toBe(true);
@@ -333,7 +333,7 @@ describe("isTuple", () => {
   });
 });
 
-describe("isEnumMember", () => {
+describe("isEnumMember()", () => {
   test("returns true when called with a valid enum", () => {
     expect(isEnumMember("a", ["a", "b", "c"])).toBe(true);
     expect(isEnumMember("", [""])).toBe(true);

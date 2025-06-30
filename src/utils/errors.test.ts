@@ -99,7 +99,7 @@ describe("InvalidExpressionError", () => {
   });
 });
 
-describe("getAttrErrID", () => {
+describe("getAttrErrID()", () => {
   // prettier-ignore
   test("returns a string with the correct format", () => {
     expect(getAttrErrID("MyModel", "pk", {})).toBe(`MyModel property "pk"`);
@@ -109,7 +109,7 @@ describe("getAttrErrID", () => {
   });
 });
 
-describe("stringifyNestedSchema", () => {
+describe("stringifyNestedSchema()", () => {
   test("returns a string with the correct format", () => {
     const schema: ModelSchemaNestedAttributes = {
       nestedAttr: {

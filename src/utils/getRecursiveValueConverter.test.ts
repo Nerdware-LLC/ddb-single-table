@@ -1,6 +1,6 @@
 import { getRecursiveValueConverter } from "./getRecursiveValueConverter.js";
 
-describe("getRecursiveValueConverter", () => {
+describe("getRecursiveValueConverter()", () => {
   test("returns falsy values as-is", () => {
     const converter = getRecursiveValueConverter(() => undefined);
 
