@@ -18,11 +18,21 @@
   "vsicons.associations.files": [
     // https://github.com/vscode-icons/vscode-icons/blob/master/src/iconsManifest/supportedExtensions.ts
     {
+      "icon": "tsconfig",
+      "extensions": [],
+      "filenamesGlob": ["tsconfig", "tsconfig.build-cjs", "tsconfig.build-esm"],
+      "extensionsGlob": ["json"],
+      "filename": true,
+      "format": "svg"
+    },
+    {
       "icon": "vitest",
-      /* The below configs get the vitest icon applied to the setup-file, but this does
-        not conform to documented usage, and frankly I don't know why it works. */
-      "extensions": ["vitest.setup.ts"],
-      "filename": ["vitest.setup.ts"]
+      "filenamesGlob": ["vitest.config", "vitest.setup"],
+      "extensions": [],
+      "extensionsGlob": ["ts"],
+      "filename": true,
+      "languages": ["vitestsnapshot"],
+      "format": "svg"
     }
   ]
 }
