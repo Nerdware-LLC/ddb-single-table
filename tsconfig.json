@@ -1,7 +1,7 @@
 {
   // This base tsconfig is used for development of the project's src files.
 
-  "include": ["src", "__mocks__", "./*"],
+  "include": ["src", "./*"],
 
   "compilerOptions": {
     "allowJs": true,
@@ -21,6 +21,7 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noUnusedLocals": true,
+    "pretty": true,
     "resolveJsonModule": true,
     "skipLibCheck": false,
     "strict": true,
