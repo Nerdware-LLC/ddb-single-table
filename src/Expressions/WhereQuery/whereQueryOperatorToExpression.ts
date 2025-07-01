@@ -1,25 +1,22 @@
-import type { WhereQueryOperator } from "./types.js";
+import type { WhereQueryOperator } from "./types/index.js";
 
 /**
- * A dict of `WhereQuery` operator methods, each of which returns a string
+ * A dictionary of `WhereQuery` operator methods, each of which returns a string
  * in the operator's respective format for DynamoDB expressions.
- *
- * - `namesKey` is a key of ExpressionAttributeNames
- * - `valuesKeys` is a tuple of 1-2 keys of ExpressionAttributeValues
- *   - `between` operations require 2 EAV keys
- *   - all other operations require 1 EAV key
  */
-export const WHERE_QUERY_OPERATOR_TO_EXPRESSION = {
-  eq: (namesKey: string, valuesKeys: string[]) => `${namesKey} = ${valuesKeys[0]}`,
-  lt: (namesKey: string, valuesKeys: string[]) => `${namesKey} < ${valuesKeys[0]}`,
-  lte: (namesKey: string, valuesKeys: string[]) => `${namesKey} <= ${valuesKeys[0]}`,
-  gt: (namesKey: string, valuesKeys: string[]) => `${namesKey} > ${valuesKeys[0]}`,
-  gte: (namesKey: string, valuesKeys: string[]) => `${namesKey} >= ${valuesKeys[0]}`,
-  beginsWith: (namesKey: string, valuesKeys: string[]) =>
-    `begins_with( ${namesKey}, ${valuesKeys[0]} )`,
-  between: (namesKey: string, valuesKeys: string[]) =>
-    `${namesKey} BETWEEN ${valuesKeys[0]} AND ${valuesKeys[1]}`,
-} as const satisfies Record<
-  WhereQueryOperator,
-  (namesKey: string, valuesKeys: Array<string>) => string
->;
+export const WHERE_QUERY_OPERATOR_TO_EXPRESSION: {
+  readonly [Operator in WhereQueryOperator]: (
+    /** A key of `ExpressionAttributeNames` */
+    eanKey: string,
+    /** A tuple of 1-2 keys of `ExpressionAttributeValues` */
+    eavKeys: Operator extends "between" ? [string, string] : [string]
+  ) => string;
+} = {
+  eq: (eanKey, eavKeys) => `${eanKey} = ${eavKeys[0]}`,
+  lt: (eanKey, eavKeys) => `${eanKey} < ${eavKeys[0]}`,
+  lte: (eanKey, eavKeys) => `${eanKey} <= ${eavKeys[0]}`,
+  gt: (eanKey, eavKeys) => `${eanKey} > ${eavKeys[0]}`,
+  gte: (eanKey, eavKeys) => `${eanKey} >= ${eavKeys[0]}`,
+  beginsWith: (eanKey, eavKeys) => `begins_with( ${eanKey}, ${eavKeys[0]} )`,
+  between: (eanKey, eavKeys) => `${eanKey} BETWEEN ${eavKeys[0]} AND ${eavKeys[1]}`,
+};

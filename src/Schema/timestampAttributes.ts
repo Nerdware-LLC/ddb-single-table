@@ -1,5 +1,6 @@
-import { isDate, isString } from "@nerdware/ts-type-safety-utils";
-import type { ModelSchemaNestedMap, ModelSchemaAttributeConfig } from "./types/index.js";
+import { isDate } from "@nerdware/ts-type-safety-utils";
+import { isValidIso8601DatetimeString } from "../utils/index.js";
+import type { ModelSchemaAttributeConfig } from "./types/index.js";
 import type { TimestampAttributes } from "../types/TimestampAttributes.js";
 
 /**
@@ -9,9 +10,7 @@ export const BASE_TIMESTAMP_ATTRIBUTE_CONFIG = {
   type: "Date",
   required: true,
   default: () => new Date(),
-  validate: (value: NonNullable<unknown>) => {
-    return isDate(value) || (isString(value) && !isNaN(Date.parse(value)));
-  },
+  validate: (value) => isDate(value) || isValidIso8601DatetimeString(value),
 } as const satisfies ModelSchemaAttributeConfig;
 
 /**
@@ -28,5 +27,4 @@ export const TIMESTAMP_ATTRIBUTES = {
       toDB: () => new Date(),
     },
   },
-} as const satisfies ModelSchemaNestedMap
-  & Record<keyof TimestampAttributes, ModelSchemaAttributeConfig>;
+} as const satisfies Record<keyof TimestampAttributes, ModelSchemaAttributeConfig>;

@@ -1,17 +1,16 @@
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { Model } from "../Model/Model.js";
 import { TableKeysSchema } from "../Schema/TableKeysSchema.js";
-import { DEFAULT_MARSHALLING_CONFIGS } from "../utils/index.js";
 import { createTable } from "./createTable.js";
 import { ensureTableIsActive } from "./ensureTableIsActive.js";
-import type { TableConstructorParams, TableKeysAndIndexes, TableLogFn } from "./types/index.js";
+import type { TableConstructorParameters, TableKeysAndIndexes, TableLogFn } from "./types/index.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
 } from "../Schema/types/index.js";
-import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../types/index.js";
+import type { UnknownItem, ItemCreationParameters, ItemTypeFromSchema } from "../types/index.js";
 
 /**
  * `Table` provides an easy-to-use API for managing your DynamoDB table and the
@@ -19,10 +18,10 @@ import type { BaseItem, ItemCreationParameters, ItemTypeFromSchema } from "../ty
  */
 export class Table<const TKSchema extends TableKeysSchemaType> implements TableKeysAndIndexes {
   // STATIC PROPERTIES:
-  static readonly DEFAULT_MARSHALLING_CONFIGS = DEFAULT_MARSHALLING_CONFIGS;
+  static readonly DEFAULT_MARSHALLING_CONFIGS = DdbClientWrapper.DEFAULT_MARSHALLING_CONFIGS;
 
   // INSTANCE PROPERTIES:
-  readonly tableName: TableConstructorParams<TKSchema>["tableName"];
+  readonly tableName: TableConstructorParameters<TKSchema>["tableName"];
   readonly tableKeysSchema: TKSchema;
   readonly tableHashKey: TableKeysAndIndexes["tableHashKey"];
   readonly tableRangeKey?: TableKeysAndIndexes["tableRangeKey"];
@@ -38,7 +37,7 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
     ddbClient,
     marshallingConfigs,
     logger = console.info,
-  }: TableConstructorParams<TKSchema>) {
+  }: TableConstructorParameters<TKSchema>) {
     // Validate the TableKeysSchema and obtain the table's keys+indexes
     const { tableHashKey, tableRangeKey, indexes } = TableKeysSchema.validate(tableKeysSchema);
 
@@ -112,17 +111,17 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
    *     // When using the bare Model constructor, table properties like
    *     // `"tableName"`, `"tableHashKey"`, `"tableRangeKey"`, etc., must
    *     // be explicitly provided. An easy way to do this is to simply
-   *     // spread a table instance object as is shown here.
+   *     // spread a table instance object as shown here.
    *   }
    * );
    * ```
    */
   readonly createModel = <
     const ModelSchema extends ModelSchemaType<TKSchema>,
-    const ItemType extends BaseItem = ItemTypeFromSchema<
+    const ItemType extends UnknownItem = ItemTypeFromSchema<
       MergeModelAndTableKeysSchema<TKSchema, ModelSchema>
     >,
-    const ItemCreationParams extends BaseItem = ItemCreationParameters<
+    const ItemCreationParams extends UnknownItem = ItemCreationParameters<
       MergeModelAndTableKeysSchema<TKSchema, ModelSchema>
     >,
   >(

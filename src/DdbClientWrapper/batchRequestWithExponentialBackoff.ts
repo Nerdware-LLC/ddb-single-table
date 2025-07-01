@@ -1,6 +1,10 @@
-import { isString, isArray, safeJsonStringify } from "@nerdware/ts-type-safety-utils";
+import { isString, isArray } from "@nerdware/ts-type-safety-utils";
 import { DdbSingleTableError } from "../utils/errors.js";
-import type { BatchRequestFunction, BatchRetryExponentialBackoffConfigs } from "./types/index.js";
+import type {
+  BatchRequestFunction,
+  SomeBatchRequestObject,
+  BatchRetryConfigs,
+} from "./types/index.js";
 import type {
   BatchStatementError,
   BatchStatementErrorCodeEnum as BatchErrorCode,
@@ -34,27 +38,30 @@ import type {
  *
  * @param submitBatchRequest A fn which invokes a DDB batch operation and returns any `UnprocessedItems`/`UnprocessedKeys`.
  * @param batchRequestObjects The array of request objects to submit via the batch operation.
- * @param exponentialBackoffConfigs Configs for the exponential backoff retry strategy.
+ * @param retryConfigs Configs for the retry strategy.
  * @param attemptNumber The current attempt number.
  */
 export const batchRequestWithExponentialBackoff = async <
-  BatchRequestObjectType extends object = Record<string, unknown>,
-  BatchFn extends
-    BatchRequestFunction<BatchRequestObjectType> = BatchRequestFunction<BatchRequestObjectType>,
+  BatchRequestObj extends SomeBatchRequestObject,
+  BatchFn extends BatchRequestFunction<BatchRequestObj> = BatchRequestFunction<BatchRequestObj>,
 >(
   submitBatchRequest: BatchFn,
-  batchRequestObjects: Array<BatchRequestObjectType>,
-  {
+  batchRequestObjects: Array<BatchRequestObj>,
+  retryConfigs: BatchRetryConfigs = {},
+  numPreviousRetries = 0
+): Promise<Array<BatchRequestObj> | undefined> => {
+  const {
+    disableDelay = false,
     initialDelay = 100,
-    timeMultiplier = 2, // By default, double the delay each time
+    timeMultiplier = 2,
+    useJitter = false,
     maxRetries = 10,
     maxDelay = 3500,
-    useJitter = false,
-  }: BatchRetryExponentialBackoffConfigs = {},
-  numPreviousRetries = 0
-): Promise<void> => {
+    shouldThrowOnConstraintViolation = false,
+  } = retryConfigs;
+
   // Init variable to hold UnprocessedItems/UnprocessedKeys
-  let unprocessedRequestObjects: Array<BatchRequestObjectType> | undefined;
+  let unprocessedRequestObjects: Array<BatchRequestObj> | undefined;
 
   try {
     // Submit the batch request
@@ -70,16 +77,18 @@ export const batchRequestWithExponentialBackoff = async <
   if (isArray(unprocessedRequestObjects) && unprocessedRequestObjects.length > 0) {
     // Determine the next `numPreviousRetries` and the delay before the next attempt
     const retryCount = numPreviousRetries + 1;
-    // The delay is calculated as: initialDelay * timeMultiplier^retryCount milliseconds
-    let delay = initialDelay * timeMultiplier ** retryCount;
+    // If not disabled, the delay = initialDelay * timeMultiplier^retryCount milliseconds
+    let delay = disableDelay ? 0 : initialDelay * timeMultiplier ** retryCount;
 
-    // If the next attempt would exceed maxRetries OR maxDelay, throw an error.
+    // If the next attempt would exceed maxRetries OR maxDelay, stop retrying
     if (retryCount > maxRetries || delay > maxDelay) {
-      throw new DdbSingleTableError(
-        `After several attempts, ${unprocessedRequestObjects.length} batch requests were `
-          + `still unable to be processed due to insufficient provisioned throughput: `
-          + safeJsonStringify(unprocessedRequestObjects)
-      );
+      if (shouldThrowOnConstraintViolation)
+        throw new DdbSingleTableError(
+          `After ${numPreviousRetries} attempts, ${unprocessedRequestObjects.length} batch requests `
+            + `were still unable to be processed due to insufficient provisioned throughput.`
+        );
+
+      return unprocessedRequestObjects;
     }
 
     // Apply "randomness" to the delay if `useJitter` is true
@@ -91,10 +100,10 @@ export const batchRequestWithExponentialBackoff = async <
     });
 
     // Recursive retries
-    await batchRequestWithExponentialBackoff(
+    return await batchRequestWithExponentialBackoff(
       submitBatchRequest,
       unprocessedRequestObjects,
-      { initialDelay, timeMultiplier, maxRetries, maxDelay, useJitter },
+      retryConfigs,
       retryCount
     );
   }

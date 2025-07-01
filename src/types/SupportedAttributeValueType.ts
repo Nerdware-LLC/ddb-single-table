@@ -8,4 +8,5 @@ export type SupportedAttributeValueType =
   | NativeAttributeValue
   | Date
   | BaseItem
-  | Array<SupportedAttributeValueType>;
+  | Array<SupportedAttributeValueType>
+  | ReadonlyArray<SupportedAttributeValueType>;

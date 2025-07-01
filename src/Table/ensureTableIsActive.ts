@@ -1,7 +1,7 @@
 import { TableStatus, ResourceNotFoundException } from "@aws-sdk/client-dynamodb";
 import { isError, isPlainObject } from "@nerdware/ts-type-safety-utils";
 import { DdbSingleTableError, DdbConnectionError } from "../utils/errors.js";
-import type { TableInstance, EnsureTableIsActiveParams } from "./types/index.js";
+import type { TableInstance, EnsureTableIsActiveParameters } from "./types/index.js";
 import type { TableKeysSchemaType } from "../Schema/types/index.js";
 
 /**
@@ -28,7 +28,7 @@ export const ensureTableIsActive = async function <
     frequency: frequencySeconds = 1,
     maxRetries = 20,
     createIfNotExists = false,
-  }: EnsureTableIsActiveParams = {}
+  }: EnsureTableIsActiveParameters = {}
 ): Promise<void> {
   // Get timeout and frequency in milliseconds for use in setTimeout calls
   const timeoutMilliseconds = timeoutSeconds * 1000;

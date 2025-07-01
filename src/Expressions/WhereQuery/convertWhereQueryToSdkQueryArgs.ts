@@ -1,22 +1,21 @@
 import { isPlainObject } from "@nerdware/ts-type-safety-utils";
 import { InvalidExpressionError } from "../../utils/index.js";
-import { getValidatedComparisonValues } from "./getValidatedComparisonValues.js";
+import { getNormalizedComparisonMeta } from "./getNormalizedComparisonMeta.js";
 import { WHERE_QUERY_OPERATOR_TO_EXPRESSION } from "./whereQueryOperatorToExpression.js";
-import type { WhereQueryComparisonObject } from "./types.js";
-import type { QueryInput } from "../../DdbClientWrapper/types/index.js";
-import type { BaseItem } from "../../types/index.js";
+import type { WhereQueryParameter } from "./types/index.js";
+import type { ClientWrapperQueryInput } from "../../DdbClientWrapper/types/index.js";
+import type { BaseItem, UnknownItem } from "../../types/index.js";
 
 /**
- * This function converts `WhereQuery` objects into the following `QueryCommand`
- * arguments:
+ * This function converts `WhereQuery` objects into the following `QueryCommand` arguments:
  *
  * - `KeyConditionExpression`
  * - `ExpressionAttributeNames`
  * - `ExpressionAttributeValues`
  */
-export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = BaseItem>({
+export const convertWhereQueryToSdkQueryArgs = <ItemParams extends UnknownItem = BaseItem>({
   where,
-}: WhereQueryParams<ItemParams>) => {
+}: WhereQueryParameter<ItemParams>) => {
   // Ensure `where` is a plain Record-like object
   if (!isPlainObject(where)) {
     throw new InvalidExpressionError({
@@ -42,48 +41,40 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = Ba
   // Process whereQuery to derive the KCE, EAN, and EAV:
 
   let KeyConditionExpression = "";
-  const ExpressionAttributeNames: QueryInput["ExpressionAttributeNames"] = {};
-  const ExpressionAttributeValues: QueryInput["ExpressionAttributeValues"] = {};
+  const ExpressionAttributeNames: ClientWrapperQueryInput["ExpressionAttributeNames"] = {};
+  const ExpressionAttributeValues: ClientWrapperQueryInput["ExpressionAttributeValues"] = {};
 
   for (let i = 0; i < whereQueryKeys.length; i++) {
     const attrName = whereQueryKeys[i];
-    const value = where[attrName];
+    const whereQueryComparison = where[attrName]!; // Non-null assertion since we know the key exists
 
     // Get the operator and comparand to use in the expression
-    const { operator, comparand } = getValidatedComparisonValues(attrName, value);
-
-    // Get the keys for ExpressionAttribute{Names,Values}
-    const attrNamesToken = `#${attrName}`;
-    const attrValuesToken = `:${attrName}`;
+    const { operator, comparand } = getNormalizedComparisonMeta(attrName, whereQueryComparison);
 
     // Update ExpressionAttributeNames
-    ExpressionAttributeNames[attrNamesToken] = attrName;
-    // Update ExpressionAttributeValues
-    const eavKeysAdded: Array<string> = [];
-    // For "between" operators, the comparand is an array, so we need to add 2 EAV
+    const eanToken = `#${attrName}`;
+    ExpressionAttributeNames[eanToken] = attrName;
+
+    // Update ExpressionAttributeValues, and get the KCE clause
+    let kceClause: string;
     if (operator === "between") {
-      const [lowerBoundOperand, upperBoundOperand] = comparand;
-      const lowerBoundEavToken = `${attrValuesToken}LowerBound`;
-      const upperBoundEavToken = `${attrValuesToken}UpperBound`;
-      ExpressionAttributeValues[lowerBoundEavToken] = lowerBoundOperand;
-      ExpressionAttributeValues[upperBoundEavToken] = upperBoundOperand;
-      eavKeysAdded.push(lowerBoundEavToken, upperBoundEavToken);
+      // For "between", the comparand is an array, so we need to add 2 KV-pairs to EAV
+      const [lowerBoundComparand, upperBoundComparand] = comparand;
+      const lowerBoundEavToken = `:${attrName}LowerBound`;
+      const upperBoundEavToken = `:${attrName}UpperBound`;
+      ExpressionAttributeValues[lowerBoundEavToken] = lowerBoundComparand;
+      ExpressionAttributeValues[upperBoundEavToken] = upperBoundComparand;
+      kceClause = WHERE_QUERY_OPERATOR_TO_EXPRESSION[operator](eanToken, [
+        lowerBoundEavToken,
+        upperBoundEavToken,
+      ]);
     } else {
-      ExpressionAttributeValues[attrValuesToken] = comparand;
-      eavKeysAdded.push(attrValuesToken);
+      const eavToken = `:${attrName}`;
+      ExpressionAttributeValues[eavToken] = comparand;
+      kceClause = WHERE_QUERY_OPERATOR_TO_EXPRESSION[operator](eanToken, [eavToken]);
     }
-
-    // Get the KCE clause
-    const keyConditionExpressionClause = WHERE_QUERY_OPERATOR_TO_EXPRESSION[operator](
-      attrNamesToken,
-      eavKeysAdded
-    );
-
-    // Add the clause to the accum
-    KeyConditionExpression +=
-      KeyConditionExpression.length === 0
-        ? keyConditionExpressionClause
-        : ` AND ${keyConditionExpressionClause}`;
+    // Update the KeyConditionExpression
+    KeyConditionExpression += KeyConditionExpression.length === 0 ? kceClause : ` AND ${kceClause}`;
   }
 
   // If neither are equality clauses, throw an error (KCE requires at least 1 equality clause)
@@ -101,38 +92,4 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends BaseItem = Ba
     ExpressionAttributeNames,
     ExpressionAttributeValues,
   };
-};
-
-/**
- * The `WhereQuery` param for {@link convertWhereQueryToSdkQueryArgs}.
- */
-export type WhereQueryParams<ItemParams extends BaseItem = BaseItem> = {
-  /**
-   * `WhereQuery` is a flexible, dev-friendly syntax used to build `QueryCommand` args:
-   * - `KeyConditionExpression`
-   * - `ExpressionAttributeNames`
-   * - `ExpressionAttributeValues`
-   *
-   * ```ts
-   * // The `where` argument in this query contains 2 WhereQueryComparisonObjects:
-   * const queryResults = await PersonModel.query({
-   *   where: {
-   *     name: { eq: "Foo" }, // "name = Foo"
-   *     age: {
-   *       between: [ 15, 30 ] // "age BETWEEN 15 AND 30"
-   *     },
-   *   }
-   * });
-   * ```
-   */
-  where?: ItemWhereQuery<ItemParams>;
-};
-
-/**
- * Keys of attribute names to {@link WhereQueryComparisonObject|WhereQuery objects}
- * or string/number primitive values. If primitives are provided, they are treated
- * as {@link WhereQueryComparisonObject.eq|eq} WhereQuery expressions.
- */
-export type ItemWhereQuery<ItemParams extends BaseItem = BaseItem> = {
-  [AttrName in keyof ItemParams]?: string | number | WhereQueryComparisonObject;
 };

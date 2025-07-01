@@ -1,7 +1,8 @@
+import { isObjectLike, isDate, isBuffer, isArray } from "@nerdware/ts-type-safety-utils";
 import { buildAttrPathTokens } from "./buildAttrPathTokens.js";
-import type { GenerateUpdateExpressionOpts } from "./types.js";
-import type { UpdateItemInput } from "../../DdbClientWrapper/types/index.js";
-import type { NativeAttributeValue } from "../../types/index.js";
+import type { GenerateUpdateExpressionOpts } from "./types/index.js";
+import type { ClientWrapperUpdateItemInput } from "../../DdbClientWrapper/types/index.js";
+import type { UnknownItem, SupportedAttributeValueType } from "../../types/index.js";
 
 /**
  * This function uses the provided `itemAttributes` to generate the following `updateItem` args:
@@ -18,13 +19,13 @@ import type { NativeAttributeValue } from "../../types/index.js";
  *   added to the `"SET"` clause.
  */
 export const generateUpdateExpression = (
-  itemAttributes: { [attrName: string]: NativeAttributeValue },
+  itemAttributes: UnknownItem,
   { nullHandling }: GenerateUpdateExpressionOpts = {}
 ): {
   [Key in
     | "UpdateExpression"
     | "ExpressionAttributeNames"
-    | "ExpressionAttributeValues"]: NonNullable<UpdateItemInput[Key]>;
+    | "ExpressionAttributeValues"]: NonNullable<ClientWrapperUpdateItemInput[Key]>;
 } => {
   const shouldAddToRemoveClause =
     nullHandling !== "SET"
@@ -33,16 +34,16 @@ export const generateUpdateExpression = (
 
   const updateExpressionClauses: Record<"SET" | "REMOVE", Array<string>> = { SET: [], REMOVE: [] };
   const ExpressionAttributeNames: Record<string, string> = {};
-  const ExpressionAttributeValues: Record<string, NativeAttributeValue> = {};
+  const ExpressionAttributeValues: Record<string, SupportedAttributeValueType> = {};
 
-  const recurse = (value: NativeAttributeValue, path: Array<string | number>) => {
+  const recurse = (value: unknown, path: Array<string | number>) => {
     if (
-      typeof value === "object"
-      && value !== null
-      && !(value instanceof Set)
-      && !Buffer.isBuffer(value)
+      isObjectLike(value)
+      && !isDate(value)
+      && !isBuffer(value)
+      && !(value instanceof Set) //
     ) {
-      if (Array.isArray(value)) {
+      if (isArray(value)) {
         value.forEach((arrayElement, index) => {
           recurse(arrayElement, [...path, index]);
         });
@@ -59,7 +60,7 @@ export const generateUpdateExpression = (
         updateExpressionClauses.REMOVE.push(namePath);
       } else {
         updateExpressionClauses.SET.push(`${namePath} = ${valueToken}`);
-        ExpressionAttributeValues[valueToken] = value;
+        ExpressionAttributeValues[valueToken] = value as SupportedAttributeValueType;
       }
     }
   };

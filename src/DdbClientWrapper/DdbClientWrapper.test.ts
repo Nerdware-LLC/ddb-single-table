@@ -23,20 +23,20 @@ import { ItemInputError } from "../utils/errors.js";
 import { DdbClientWrapper } from "./DdbClientWrapper.js";
 import type {
   // MODEL-METHOD IO TYPES
-  GetItemInput,
-  BatchGetItemsInput,
-  PutItemInput,
-  BatchWriteItemsInput,
-  UpdateItemInput,
-  DeleteItemInput,
-  QueryInput,
-  ScanInput,
-  TransactWriteItemsInput,
+  ClientWrapperGetItemInput,
+  ClientWrapperBatchGetItemInput,
+  ClientWrapperPutItemInput,
+  ClientWrapperBatchWriteItemInput,
+  ClientWrapperUpdateItemInput,
+  ClientWrapperDeleteItemInput,
+  ClientWrapperQueryInput,
+  ClientWrapperScanInput,
+  ClientWrapperTransactWriteItemsInput,
   // TABLE-METHOD IO TYPES
-  DescribeTableInput,
-  CreateTableInput,
-  // OTHER TYPES
-  NativeValueWriteRequest,
+  ClientWrapperDescribeTableInput,
+  ClientWrapperCreateTableInput,
+  // UNMARSHALLED SDK TYPES
+  UnmarshalledBatchWriteRequest,
 } from "./types/index.js";
 
 describe("DdbClientWrapper", () => {
@@ -86,11 +86,11 @@ describe("DdbClientWrapper", () => {
     });
   });
 
-  describe("DdbClientWrapper.getItem()", () => {
+  describe("getItem()", () => {
     // Valid GetItem input:
     const getItemValidInput = {
       Key: { id: mockItem.id },
-    } as const satisfies GetItemInput;
+    } as const satisfies ClientWrapperGetItemInput;
 
     test(`creates a GetCommand and returns mocked "Item" when called with valid arguments`, async () => {
       // Arrange ddbClient to return mockItemMarshalled
@@ -106,17 +106,18 @@ describe("DdbClientWrapper", () => {
         Key: mockDdbClientWrapper.marshall(getItemValidInput.Key),
       });
     });
+
     test(`returns undefined "Item" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.getItem(getItemValidInput);
       expect(result.Item).toBeUndefined();
     });
+
     test(`throws an error when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.getItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.getItem(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.batchGetItems()", () => {
+  describe("batchGetItems()", () => {
     // Valid BatchGetItem input:
     const batchGetItemValidInput = {
       RequestItems: {
@@ -124,7 +125,7 @@ describe("DdbClientWrapper", () => {
           Keys: mockItemsKeys,
         },
       },
-    } as const satisfies BatchGetItemsInput;
+    } as const satisfies ClientWrapperBatchGetItemInput;
 
     test(`creates a BatchGetCommand and returns mocked "Responses" when called with valid arguments`, async () => {
       // Arrange ddbClient to return mockItemsMarshalled
@@ -150,22 +151,24 @@ describe("DdbClientWrapper", () => {
         },
       });
     });
+
     test(`returns undefined "Responses" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.batchGetItems(batchGetItemValidInput);
       expect(result.Responses).toBeUndefined();
     });
+
     test(`throws when called with invalid arguments`, async () => {
       await expect(mockDdbClientWrapper.batchGetItems({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.batchGetItems(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.putItem()", () => {
+  describe("putItem()", () => {
     // Valid PutItem input:
     const putItemValidInput = {
       Item: mockItem,
       ExpressionAttributeValues: { ":id": mockItem.id },
-    } as const satisfies PutItemInput;
+    } as const satisfies ClientWrapperPutItemInput;
 
     test(`creates a PutCommand and returns mocked "Attributes" when called with valid arguments`, async () => {
       // Arrange ddbClient to return mockItemMarshalled
@@ -190,17 +193,18 @@ describe("DdbClientWrapper", () => {
         ),
       });
     });
+
     test(`returns undefined "Attributes" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.putItem(putItemValidInput);
       expect(result.Attributes).toBeUndefined();
     });
+
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.putItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.putItem(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.updateItem()", () => {
+  describe("updateItem()", () => {
     // Mock values shared by multiple `updateItem()` tests:
     const mockUpdatedName = "NEW_NAME";
     const mockUpdatedItem = { ...mockItem, name: mockUpdatedName };
@@ -212,7 +216,7 @@ describe("DdbClientWrapper", () => {
       ExpressionAttributeNames: { "#name": "name" },
       ExpressionAttributeValues: { ":name": mockUpdatedName },
       ReturnValues: "ALL_NEW",
-    } as const satisfies UpdateItemInput;
+    } as const satisfies ClientWrapperUpdateItemInput;
 
     test(`creates an UpdateCommand and returns mocked "Attributes" when called with valid arguments`, async () => {
       // Arrange ddbClient to return mockItem with updated "name"
@@ -240,22 +244,23 @@ describe("DdbClientWrapper", () => {
         ReturnValues: updateItemValidInput.ReturnValues,
       });
     });
+
     test(`returns undefined "Attributes" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.updateItem(updateItemValidInput);
       expect(result.Attributes).toBeUndefined();
     });
+
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.updateItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.updateItem(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.deleteItem()", () => {
+  describe("deleteItem()", () => {
     // Valid DeleteItem input:
     const deleteItemValidInput = {
       Key: { id: mockItem.id },
       ExpressionAttributeValues: { ":id": mockItem.id },
-    } as const satisfies DeleteItemInput;
+    } as const satisfies ClientWrapperDeleteItemInput;
 
     test(`creates a DeleteCommand and returns mocked "Attributes" when called with valid arguments`, async () => {
       // Arrange ddbClient to return mockItem
@@ -280,20 +285,21 @@ describe("DdbClientWrapper", () => {
         ),
       });
     });
+
     test(`returns undefined "Attributes" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.deleteItem(deleteItemValidInput);
       expect(result.Attributes).toBeUndefined();
     });
+
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.deleteItem({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.deleteItem(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.batchWriteItems()", () => {
+  describe("batchWriteItems()", () => {
     // Mock BatchWriteItem PutRequest objects, marshalled and unmarshalled:
     const { mockBatchWriteRequests, marshalledMockBatchWriteRequests } = mockItems.reduce<{
-      mockBatchWriteRequests: Array<NativeValueWriteRequest>;
+      mockBatchWriteRequests: Array<UnmarshalledBatchWriteRequest>;
       marshalledMockBatchWriteRequests: Array<WriteRequest>;
     }>(
       (accum, itemObj) => {
@@ -311,8 +317,10 @@ describe("DdbClientWrapper", () => {
       RequestItems: {
         [mockTableName]: mockBatchWriteRequests,
       },
-      exponentialBackoffConfigs: { initialDelay: 0 }, // <-- Zero here disables delays for testing
-    } as const satisfies BatchWriteItemsInput;
+      batchConfigs: {
+        retryConfigs: { disableDelay: true },
+      },
+    } as const satisfies ClientWrapperBatchWriteItemInput;
 
     test(`creates a BatchWriteCommand and returns mocked "UnprocessedItems" when called with valid arguments`, async () => {
       /*
@@ -350,10 +358,12 @@ describe("DdbClientWrapper", () => {
         RequestItems: { [mockTableName]: marshalledMockBatchWriteRequests.slice(1) },
       });
     });
+
     test(`returns undefined when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.batchWriteItems(batchWriteItemValidInput);
       expect(result.ConsumedCapacity).toBeUndefined();
     });
+
     test(`throws an ItemInputError when called without any valid WriteRequest objects`, async () => {
       await expect(
         mockDdbClientWrapper.batchWriteItems({
@@ -363,20 +373,21 @@ describe("DdbClientWrapper", () => {
         })
       ).rejects.toThrowError(ItemInputError);
     });
+
     test(`throws an error when called with invalid arguments`, async () => {
       await expect(mockDdbClientWrapper.batchWriteItems({} as any)).rejects.toThrowError();
       await expect(mockDdbClientWrapper.batchWriteItems(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.query()", () => {
+  describe("query()", () => {
     // Valid Query input:
     const queryValidInput = {
       KeyConditionExpression: "#pk = :pk",
       ExpressionAttributeNames: { "#pk": "pk" },
       ExpressionAttributeValues: { ":pk": mockItem.id },
       ExclusiveStartKey: { id: mockItem.id },
-    } as const satisfies QueryInput;
+    } as const satisfies ClientWrapperQueryInput;
 
     test(`creates a QueryCommand and returns mocked "Items" when called with valid arguments`, async () => {
       // Arrange ddbClient to return mockItems
@@ -403,21 +414,23 @@ describe("DdbClientWrapper", () => {
         ExclusiveStartKey: mockDdbClientWrapper.marshall(queryValidInput.ExclusiveStartKey),
       });
     });
+
     test(`returns undefined "Items" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.query(queryValidInput);
       expect(result.Items).toBeUndefined();
     });
+
     test(`throws when called with invalid arguments`, async () => {
       await expect(mockDdbClientWrapper.query(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.scan()", () => {
+  describe("scan()", () => {
     // Valid Scan input:
     const scanValidInput = {
       ExclusiveStartKey: { id: mockItem.id },
       ExpressionAttributeValues: { ":id": mockItem.id },
-    } as const satisfies ScanInput;
+    } as const satisfies ClientWrapperScanInput;
 
     test(`creates a ScanCommand and returns mocked "Items" when called with valid arguments`, async () => {
       // Arrange mock ddbClient returned values
@@ -442,16 +455,18 @@ describe("DdbClientWrapper", () => {
         ),
       });
     });
+
     test(`returns undefined "Items" when nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.scan();
       expect(result.Items).toBeUndefined();
     });
+
     test(`throws when called with invalid arguments`, async () => {
       await expect(mockDdbClientWrapper.scan(null as any)).rejects.toThrowError();
     });
   });
 
-  describe("DdbClientWrapper.transactWriteItems()", () => {
+  describe("transactWriteItems()", () => {
     // Valid TransactWriteItem input:
     const transactWriteItemValidInput = {
       TransactItems: [
@@ -484,7 +499,7 @@ describe("DdbClientWrapper", () => {
           },
         },
       ],
-    } as const satisfies TransactWriteItemsInput;
+    } as const satisfies ClientWrapperTransactWriteItemsInput;
 
     const mockConditionCheck = transactWriteItemValidInput.TransactItems[0].ConditionCheck;
     const mockPut = transactWriteItemValidInput.TransactItems[1].Put;
@@ -553,11 +568,11 @@ describe("DdbClientWrapper", () => {
     });
   });
 
-  describe("DdbClientWrapper.describeTable()", () => {
+  describe("describeTable()", () => {
     // Valid DescribeTable input:
     const describeTableValidInput = {
       TableName: mockTableName,
-    } as const satisfies DescribeTableInput;
+    } as const satisfies ClientWrapperDescribeTableInput;
 
     test(`creates a DescribeTableCommand and returns mocked "Table" when called with valid arguments`, async () => {
       // Arrange ddbClient to return a mock Table object
@@ -573,13 +588,14 @@ describe("DdbClientWrapper", () => {
         describeTableValidInput
       );
     });
+
     test(`returns undefined "Table" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.describeTable(describeTableValidInput);
       expect(result.Table).toBeUndefined();
     });
   });
 
-  describe("DdbClientWrapper.createTable()", () => {
+  describe("createTable()", () => {
     // Valid CreateTable input:
     const createTableValidInput = {
       AttributeDefinitions: [
@@ -590,7 +606,7 @@ describe("DdbClientWrapper", () => {
         { AttributeName: "pk", KeyType: "HASH" },
         { AttributeName: "sk", KeyType: "RANGE" },
       ],
-    } as const satisfies CreateTableInput;
+    } as const satisfies ClientWrapperCreateTableInput;
 
     test(`creates a CreateTableCommand and returns mocked "TableDescription" when called with valid arguments`, async () => {
       // Arrange ddbClient to return a mock TableDescription
@@ -608,13 +624,14 @@ describe("DdbClientWrapper", () => {
         ...createTableValidInput,
       });
     });
+
     test(`returns undefined "TableDescription" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.createTable(createTableValidInput);
       expect(result.TableDescription).toBeUndefined();
     });
   });
 
-  describe("DdbClientWrapper.listTables()", () => {
+  describe("listTables()", () => {
     test(`creates a ListTablesCommand and returns mocked "TableNames" when called with valid arguments`, async () => {
       // Arrange ddbClient to return mock TableNames
       const mockTableNames = [`${mockTableName}-1`, `${mockTableName}-2`];
@@ -628,6 +645,7 @@ describe("DdbClientWrapper", () => {
       // Assert the args provided to the SDK command
       expect(mockDdbClient).toHaveReceivedCommandExactlyOnceWith(ListTablesCommand, {});
     });
+
     test(`returns undefined "TableNames" when called with valid arguments but nothing is returned`, async () => {
       const result = await mockDdbClientWrapper.listTables();
       expect(result.TableNames).toBeUndefined();

@@ -17,9 +17,12 @@ export type SchemaSupportedTypeStringLiteral =
 /**
  * Union of supported types for {@link BaseAttributeConfig.default|schema `default` configs}.
  */
-export type AttributeDefault =
-  | SupportedAttributeValueType
-  | ((item: any) => SupportedAttributeValueType);
+export type AttributeDefault = SupportedAttributeValueType | AttributeFunctionDefault;
+
+/**
+ * A function to use for an attribute's {@link BaseAttributeConfig.default|schema `default` config}.
+ */
+export type AttributeFunctionDefault = (item: any) => SupportedAttributeValueType;
 
 /**
  * Base attribute configs common to all attribute types.
@@ -114,9 +117,9 @@ export interface BaseAttributeConfig {
    */
   readonly transformValue?: {
     /** Fn to modify value before `validate` fn is called; use for normalization. */
-    readonly toDB?: (inputValue: any) => unknown;
+    readonly toDB?: (inputValue: any) => SupportedAttributeValueType;
     /** Fn to modify value returned from DDB client; use to format/prettify values. */
-    readonly fromDB?: (dbValue: any) => unknown;
+    readonly fromDB?: (dbValue: any) => SupportedAttributeValueType;
   };
 
   /**

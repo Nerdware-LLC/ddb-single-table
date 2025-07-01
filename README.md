@@ -303,7 +303,10 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and more. <br>
 
 ## 🧙‍♂️ Data IO Order of Operations
 
-When any Model method is invoked, it begins a request-response cycle in which DDB-ST applies a series of transformations and validations to ensure that the data conforms to the schema defined for the Model. DDB-ST collectively refers to these transformations and validations as _"**IO-Actions**"_, and they are categorized into two groups: `toDB` and `fromDB`. The `toDB` actions are applied to Model-method arguments before they're passed off to the underlying AWS SDK, while the `fromDB` actions are applied to all values returned from the AWS SDK before they're returned to the caller.
+When any Model method is invoked, it begins a request-response cycle in which DDB-ST applies a series of transformations and validations to ensure that the data conforms to the schema defined for the Model. DDB-ST collectively refers to these transformations and validations as _"**IO-Actions**"_, and they are categorized into two groups — `toDB` and `fromDB`:
+
+- `toDB` actions are applied to Model-method arguments before they're passed off to the underlying AWS SDK.
+- `fromDB` actions are applied to all values returned from the AWS SDK before they're returned to the caller.
 
 The `toDB` and `fromDB` flows both have a specific order in which **IO-Actions** are applied.
 
@@ -321,17 +324,15 @@ The `toDB` and `fromDB` flows both have a specific order in which **IO-Actions**
 |   5   | [**`Type Checking`**](#type)                      | Checks properties for conformance with their `"type"`. |                      |
 |   6   | [**`Attribute Validation`**](#validate)           | Validates individual item properties.                  |                      |
 |   7   | [**`Item Validation`**](#validateitem)            | Validates an item in its entirety.                     | `updateItem`         |
-|   8   | [**`Convert JS Types`**](#type)                   | Converts JS types into DynamoDB types.                 |                      |
-|   9   | [**`"Required" Checks`**](#required)              | Checks for `"required"` and `"nullable"` attributes.   | `updateItem`         |
+|   8   | [**`"Required" Checks`**](#required)              | Checks for `"required"` and `"nullable"` attributes.   | `updateItem`         |
 
 ### `fromDB`
 
 | Order | IO-Action                                           | Description                                        |
 | :---: | :-------------------------------------------------- | :------------------------------------------------- |
-|   1   | [**`Convert JS Types`**](#type)                     | Converts DynamoDB types into JS types.             |
-|   2   | [**`Attribute fromDB Modifiers`**](#transformvalue) | Runs your `transformValue.fromDB` functions.       |
-|   3   | [**`Item fromDB Modifier`**](#transformitem)        | Runs your `transformItem.fromDB` function.         |
-|   4   | [**`Alias Mapping`**](#alias)                       | Replaces attribute names with attribute _aliases_. |
+|   1   | [**`Attribute fromDB Modifiers`**](#transformvalue) | Runs your `transformValue.fromDB` functions.       |
+|   2   | [**`Item fromDB Modifier`**](#transformitem)        | Runs your `transformItem.fromDB` function.         |
+|   3   | [**`Alias Mapping`**](#alias)                       | Replaces attribute names with attribute _aliases_. |
 
 ## 📖 Schema API
 
@@ -580,12 +581,10 @@ Optional default value to apply. This can be configured as either a straight-for
 > With the exception of `updateItem` calls, an attribute's value is set to this `default` if the initial value provided to the Model method is `undefined` or `null`.
 
 - ##### When using a primitive-value `default`
-
   - The primitive's type must match the attribute's `type`, otherwise the Model's
     constructor will throw an error.
 
 - ##### When using a function `default`
-
   - The function is called with the entire item-object provided to the Model method _**with
     UNALIASED keys**_, and the attribute value is set to the function's returned value.
   - _This package does not validate functional `default`s._
@@ -808,7 +807,6 @@ DDB-ST models provide a high-level API for batching CRUD operations that handles
 1. First request: no delay
 2. Second request: delay `initialDelay` milliseconds (_default:_ 100)
 3. All subsequent request delays are equal to the previous delay multiplied by the `timeMultiplier` (_default:_ 2), until either:
-
    - The `maxRetries` limit is reached (_default:_ 10), or
    - The `maxDelay` limit is reached (_default:_ 3500, or 3.5 seconds)
 
@@ -833,6 +831,7 @@ DDB-ST models provide a high-level API for batching CRUD operations that handles
 **A:** DDB-ST provides a wrapper around the DynamoDB client:
 
 - To simplify client usage, the wrapper handles all marshalling and unmarshalling of data to/from DynamoDB types.
+- The wrapper also handles conversion of JS `Date` objects to/from ISO-8601 datetime strings.
 - To ensure client resources like socket connections are cleaned up, a listener is attached to the process "exit" event which calls the client's `destroy()` method.
 
 ### Q: _What version of the AWS SDK does DDB-ST use?_<!-- omit in toc -->

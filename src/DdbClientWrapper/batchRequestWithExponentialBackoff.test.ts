@@ -4,11 +4,16 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { DdbSingleTableError } from "../utils/errors.js";
 import { batchRequestWithExponentialBackoff } from "./batchRequestWithExponentialBackoff.js";
+import type { WriteRequest } from "./types/index.js";
 
 describe("batchRequestWithExponentialBackoff()", () => {
   const mockSubmitBatchRequest = vi.fn();
 
-  const mockBatchRequestObjects = [{ id: 1 }, { id: 2 }, { id: 3 }];
+  const mockBatchRequestObjects: Array<WriteRequest> = [1, 2, 3].map((num) =>
+    num % 2 === 0
+      ? { PutRequest: { Item: { id: { N: `${num}` } } } }
+      : { DeleteRequest: { Key: { id: { N: `${num}` } } } }
+  );
 
   const getDdbBatchError = (errCode: keyof typeof BatchErrorCode): Error & BatchStatementError => {
     return Object.defineProperty(new Error(errCode), "Code", { value: errCode });
@@ -35,7 +40,7 @@ describe("batchRequestWithExponentialBackoff()", () => {
 
     await expect(
       batchRequestWithExponentialBackoff(mockSubmitBatchRequest, mockBatchRequestObjects, {
-        initialDelay: 0, // <-- Zero here eliminates all delays for testing
+        disableDelay: true,
       })
     ).resolves.not.toThrow();
 
@@ -44,15 +49,34 @@ describe("batchRequestWithExponentialBackoff()", () => {
     expect(mockSubmitBatchRequest).toHaveBeenNthCalledWith(2, unprocessedItems);
   });
 
-  test("throws an error after exceeding maxRetries", async () => {
+  test(`returns unprocessed request objects after exceeding maxRetries if "shouldThrowOnConstraintViolation" is false`, async () => {
+    // Arrange the mock fn to always return unprocessed items until maxRetries is reached
+    mockSubmitBatchRequest.mockResolvedValue(mockBatchRequestObjects);
+
+    const result = await batchRequestWithExponentialBackoff(
+      mockSubmitBatchRequest,
+      mockBatchRequestObjects,
+      {
+        maxRetries: 3,
+        disableDelay: true,
+        shouldThrowOnConstraintViolation: false,
+      }
+    );
+
+    // Assert that the fn returned the unprocessed request objects
+    expect(result).toStrictEqual(mockBatchRequestObjects);
+    expect(mockSubmitBatchRequest).toHaveBeenCalledTimes(4); // 1 initial + 3 retries
+  });
+
+  test(`throws an error after exceeding maxRetries if "shouldThrowOnConstraintViolation" is true`, async () => {
     // Arrange the mock fn to always return unprocessed items until maxRetries is reached
     mockSubmitBatchRequest.mockResolvedValue(mockBatchRequestObjects);
 
     await expect(
       batchRequestWithExponentialBackoff(mockSubmitBatchRequest, mockBatchRequestObjects, {
         maxRetries: 3,
-        maxDelay: Number.POSITIVE_INFINITY, // Set a long maxDelay to trigger the maxRetries condition
-        initialDelay: 0, // <-- Zero here eliminates the delay between retries
+        disableDelay: true,
+        shouldThrowOnConstraintViolation: true,
       })
     ).rejects.toThrow(DdbSingleTableError);
 
@@ -94,10 +118,8 @@ describe("batchRequestWithExponentialBackoff()", () => {
     const batchError = getDdbBatchError("AccessDenied");
     mockSubmitBatchRequest.mockRejectedValueOnce(batchError);
 
-    const batchRequestObjects = [{ id: 1 }];
-
     await expect(
-      batchRequestWithExponentialBackoff(mockSubmitBatchRequest, batchRequestObjects)
+      batchRequestWithExponentialBackoff(mockSubmitBatchRequest, mockBatchRequestObjects)
     ).rejects.toThrow(batchError);
 
     expect(mockSubmitBatchRequest).toHaveBeenCalledTimes(1);
@@ -111,7 +133,7 @@ describe("batchRequestWithExponentialBackoff()", () => {
 
     await expect(
       batchRequestWithExponentialBackoff(mockSubmitBatchRequest, mockBatchRequestObjects, {
-        initialDelay: 0, // <-- Zero here eliminates all delays for testing
+        disableDelay: true,
       })
     ).resolves.not.toThrow();
 

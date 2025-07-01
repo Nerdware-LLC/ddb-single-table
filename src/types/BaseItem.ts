@@ -1,6 +1,8 @@
+import type { SupportedAttributeValueType } from "./SupportedAttributeValueType.js";
+
 /**
- * An interface representing an Item with supported value types.
+ * A non-generic base Item-type with supported value types.
  */
 export interface BaseItem {
-  [key: string]: unknown;
+  [attrName: string]: SupportedAttributeValueType;
 }

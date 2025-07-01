@@ -136,7 +136,7 @@ type PickRequiredAttrs<
  * This generic gets the type from an individual attribute config from a Model schema.
  */
 // prettier-ignore
-type AttrValue<
+export type AttrValue<
   T extends BaseAttributeConfig,
   Opts extends ItemTypeOpts,
   NestDepth extends NestDepthMax32,

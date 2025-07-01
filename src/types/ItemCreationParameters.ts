@@ -67,5 +67,6 @@ export type ItemCreationParameters<
     optionalIfDefault: true;
     nullableIfOptional: false;
     autoAddTimestamps: false;
+    convertDatesToStrings: false;
   },
 > = ItemTypeFromSchema<T, Opts>;

@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# [3.0.0-next.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.0.0-next.1...v3.0.0-next.2) (2025-07-01)
+
+# [3.0.0-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.13.0...v3.0.0-next.1) (2025-07-01)
+
+
+### Bug Fixes
+
+* add `ReadonlyArray` type for ITFS compat ([84f70df](https://github.com/Nerdware-LLC/ddb-single-table/commit/84f70dfff8e3e671442b1820addc2437356070f7))
+* add checks for `Date` objects in `recurse` fn, update types ([7b24cd4](https://github.com/Nerdware-LLC/ddb-single-table/commit/7b24cd43c5488c51ebc5240520b87390ec9bec6b))
+* replace `NativeAttributeValue` w `SupportedAttributeValueType` for Dates ([4a0dd06](https://github.com/Nerdware-LLC/ddb-single-table/commit/4a0dd06243f40a9be85eb97e719736e4e7ca9b8d))
+* replace inline `string | number` w `AttrValue` generic for correct typing ([e9adeaa](https://github.com/Nerdware-LLC/ddb-single-table/commit/e9adeaa06c12490f3373dbd6edb7fe9028632f3d))
+* update named import for 'EnsureTableIsActiveParameters' ([bae628a](https://github.com/Nerdware-LLC/ddb-single-table/commit/bae628a09ea0512341126e29755a462399bca44c))
+
+
+### Code Refactoring
+
+* mv Date-conversion from Model IO-Action to `DdbClientFieldParser` ([d2a574c](https://github.com/Nerdware-LLC/ddb-single-table/commit/d2a574cc76ba576b159927e6f8dfd8dfe100a7a6))
+* update Model methods to use new `DdbClientWrapper` return values ([e8a7bb5](https://github.com/Nerdware-LLC/ddb-single-table/commit/e8a7bb5064699be6571d5ea948f96d4914a17dd3))
+
+
+### Features
+
+* add `getRecursiveValueConverter` ([38cc316](https://github.com/Nerdware-LLC/ddb-single-table/commit/38cc316487f82f7720fc2bcf41853c065c13cb5a))
+* add `isValidDatetimeString` ([33c97b3](https://github.com/Nerdware-LLC/ddb-single-table/commit/33c97b3abfddcaf301b333f51397fd9b6f67d2c0))
+* add `UnknownItem` type, update `BaseItem` to use `SupportedAttributeValueType` ([ffec182](https://github.com/Nerdware-LLC/ddb-single-table/commit/ffec1826576aefb5bb0faa1941d0ac9b5a678209))
+* add DdbClientArgParser for improved command argument handling and response parsing ([bdba380](https://github.com/Nerdware-LLC/ddb-single-table/commit/bdba380165321163295d6ae6d37b6e7f9a658dab))
+* add export of `Model/types/*` ([8e6b95f](https://github.com/Nerdware-LLC/ddb-single-table/commit/8e6b95f63067a4e121f73baff982c70567174637))
+* add FixPartialUndefined and OverrideSharedProperties types ([6a10d78](https://github.com/Nerdware-LLC/ddb-single-table/commit/6a10d78684cc9c189b0253a6b23dad2343b37042))
+* add type `AttributeFunctionDefault` ([77dd84e](https://github.com/Nerdware-LLC/ddb-single-table/commit/77dd84ea2a7dde3ad6fddd81e5f4eae34bfe1931))
+* rm export of NestDepth internal util types ([4fd364e](https://github.com/Nerdware-LLC/ddb-single-table/commit/4fd364e13d46f4d30784c6e4ad5dcc4994ece442))
+
+
+### Reverts
+
+* switch `transformItem` and `validateItem` param types back to `any` ([00b2525](https://github.com/Nerdware-LLC/ddb-single-table/commit/00b25253150b24132e57f4b515b39f46e298ad21))
+
+
+### BREAKING CHANGES
+
+* `schemaWithKeysOnly` has been rm'd, and batch methods filter unproc'd reqs.
+* Date-conversion has been moved from `Model` to `DdbClientFieldParser`.
+
 # [2.13.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v2.12.1...v2.13.0) (2025-06-15)
 
 
