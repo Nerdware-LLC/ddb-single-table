@@ -1,0 +1,6 @@
+**/dist/**/*
+**/coverage/**/*
+
+# Codegen'd files/dirs:
+**/*__generated__**
+**/CHANGELOG.md
