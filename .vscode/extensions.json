@@ -1,12 +1,28 @@
 {
   "recommendations": [
-    "bierner.markdown-preview-github-styles", // GitHub-flavored md previews
-    "christian-kohler.path-intellisense", //     Path auto-completion
-    "dbaeumer.vscode-eslint", //                 ESLint
+    // TypeScript
     "esbenp.prettier-vscode", //                 Prettier
+    "dbaeumer.vscode-eslint", //                 ESLint
+    "yoavbls.pretty-ts-errors", //               Pretty TS errors
+
+    // Markdown
+    "bierner.markdown-mermaid", //               MermaidJS charts in MD previews
+    "bierner.markdown-preview-github-styles", // GitHub-flavored MD previews
+    "davidanson.vscode-markdownlint", //         Markdown linting
+    "yzhang.markdown-all-in-one", //             MD previews, TOC, and more
+
+    // GitHub
+    "github.copilot", //                         GitHub Copilot
+    "github.copilot-chat", //                    GitHub Copilot Chat
+    "github.vscode-github-actions", //           GitHub Actions
+    "github.vscode-pull-request-github", //      GitHub Pull Requests
+
+    // Miscellaneous
+    "christian-kohler.path-intellisense", //     Path auto-completion
+    "editorconfig.editorconfig", //              EditorConfig support
+    "gruntfuggly.todo-tree", //                  Todo/Fixme lists
     "redhat.vscode-yaml", //                     YAML lang server
-    "vscode-icons-team.vscode-icons", //         vscode-icons
-    "yoavbls.pretty-ts-errors" //                Pretty TS errors❤️
+    "vscode-icons-team.vscode-icons" //          vscode-icons
   ],
   "unwantedRecommendations": []
 }
