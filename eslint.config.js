@@ -1,50 +1,79 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import eslintJS from "@eslint/js";
 import stylisticPlugin from "@stylistic/eslint-plugin";
 import vitestPlugin from "@vitest/eslint-plugin";
+import { defineConfig } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
-import importPlugin from "eslint-plugin-import-x";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
+import {
+  importX as importXPlugin,
+  createNodeResolver,
+} from "eslint-plugin-import-x";
 import jsdocPlugin from "eslint-plugin-jsdoc";
 import nodePlugin from "eslint-plugin-n";
 import globals from "globals";
 import tsEslint from "typescript-eslint";
 
-export default tsEslint.config(
-  ///////////////////////////////////////////////////////////////////
+// Shared constants:
+const PARSED_EXTENSIONS = [".ts", ".js"];
+
+export default defineConfig(
+  /////////////////////////////////////////////////////////////////////////////
+  // GLOBAL CONFIGS
+  {
+    name: "global/ignores",
+    ignores: ["**/node_modules/", "**/coverage/", "**/dist/"],
+  },
+  {
+    name: "global/languageOptions",
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      parser: tsEslint.parser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    name: "global/linterOptions",
+    linterOptions: {
+      reportUnusedDisableDirectives: true,
+    },
+  },
+  {
+    name: "global/plugins",
+    plugins: {
+      "@stylistic": stylisticPlugin,
+      "@typescript-eslint": tsEslint.plugin,
+      "import-x": importXPlugin,
+      "jsdoc": jsdocPlugin,
+      "n": nodePlugin,
+      "vitest": vitestPlugin,
+    },
+    settings: {
+      ...importXPlugin.configs.typescript.settings,
+      "import-x/extensions": PARSED_EXTENSIONS,
+      "import-x/parsers": {
+        "@typescript-eslint/parser": PARSED_EXTENSIONS,
+      },
+      "import-x/resolver-next": [
+        createTypeScriptImportResolver({ alwaysTryTypes: true }),
+        createNodeResolver({ extensions: PARSED_EXTENSIONS }),
+      ],
+      "n": {
+        // Runtime nodejs version !== dev nodejs version
+        version: ">=22.19.0",
+      },
+    },
+  },
+  /////////////////////////////////////////////////////////////////////////////
   // ALL FILES
   {
     name: "files:all/base",
     files: ["src/**/*.[tj]s", "./*.[tj]s"],
-    linterOptions: { reportUnusedDisableDirectives: true },
     languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
       globals: globals.node,
-      parser: tsEslint.parser,
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
-        /* Note: use `tsconfigRootDir: import.meta.dirname` once "engines.node"
-          gets bumped to ">=22.0.0" (NodeJS v20 will reach EOL on April 30, 2026). */
-      },
-    },
-    plugins: {
-      "@stylistic": stylisticPlugin,
-      "@typescript-eslint": tsEslint.plugin,
-      "import-x": importPlugin,
-      "jsdoc": jsdocPlugin,
-      "n": nodePlugin,
-    },
-    settings: {
-      "import-x/extensions": [".ts", ".js"],
-      "import-x/parsers": {
-        "@typescript-eslint/parser": [".ts", ".js"],
-      },
-      "import-x/resolver": {
-        node: { extensions: [".ts", ".js"] },
-        typescript: { project: ["tsconfig.json"] },
-      },
     },
     rules: {
       // MERGE PRESETS:
@@ -52,7 +81,8 @@ export default tsEslint.config(
         { semi: true, quotes: "double", arrowParens: true, braceStyle: "1tbs" } // prettier-ignore
       ).rules,
       ...eslintJS.configs.recommended.rules,
-      ...importPlugin.configs.recommended.rules,
+      ...importXPlugin.configs.recommended.rules,
+      ...importXPlugin.configs.typescript.rules,
       ...nodePlugin.configs["flat/recommended-module"].rules,
       ...jsdocPlugin.configs["flat/recommended-typescript"].rules,
       ...[
@@ -83,7 +113,7 @@ export default tsEslint.config(
       "import-x/order": [
         "warn",
         {
-          "groups": ["builtin", "external", "internal", "parent", "sibling", "type"], // prettier-ignore
+          "groups": ["builtin", "external", "internal", "parent", ["index", "sibling"], "type"], // prettier-ignore
           "alphabetize": { order: "asc", orderImportKind: "desc" },
           "newlines-between": "never",
         },
@@ -145,6 +175,7 @@ export default tsEslint.config(
           ignoreRestSiblings: false,
         },
       ],
+      "@typescript-eslint/no-useless-default-assignment": "off",
       "@typescript-eslint/only-throw-error": "off", // Disabled due to false positives for Error-like objects/subclasses
       "@typescript-eslint/prefer-for-of": "off", //    Allow basic for-loops for performance
       "@typescript-eslint/prefer-nullish-coalescing": [
@@ -169,7 +200,7 @@ export default tsEslint.config(
       ...eslintConfigPrettier.rules,
     },
   },
-  ///////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
   // TOOLING CONFIG FILES
   {
     name: "files:tooling-config-files",
@@ -178,7 +209,7 @@ export default tsEslint.config(
       "n/no-process-env": "off",
     },
   },
-  ///////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
   // TEST FILES
   {
     name: "files:tests-and-mocks",
@@ -186,12 +217,10 @@ export default tsEslint.config(
     languageOptions: {
       globals: vitestPlugin.environments.env.globals,
     },
-    plugins: {
-      vitest: vitestPlugin,
-    },
     rules: {
       ...vitestPlugin.configs.recommended.rules,
       "vitest/consistent-test-it": ["error", { fn: "test" }],
+      "vitest/no-conditional-expect": "off",
       "vitest/no-disabled-tests": "warn",
       "vitest/no-focused-tests": ["warn", { fixable: false }],
       "vitest/prefer-lowercase-title": ["error", { ignore: ["describe"] }],
@@ -202,5 +231,5 @@ export default tsEslint.config(
       "@typescript-eslint/no-unsafe-assignment": "off",
     },
   }
-  ///////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
 );

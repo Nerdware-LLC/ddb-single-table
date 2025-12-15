@@ -18,7 +18,7 @@ import type { TableKeysSchemaType } from "../Schema/types/index.js";
  *
  * @param createTableArgs `CreateTable` arguments to pass to the AWS SDK.
  * @returns The response from the `CreateTable` operation.
- * @throws `DdbSingleTableError` if `BillingMode` is "PAY_PER_REQUEST" and `ProvisionedThroughput` is provided.
+ * @throws {DdbSingleTableError} if `BillingMode` is "PAY_PER_REQUEST" and `ProvisionedThroughput` is provided.
  */
 export const createTable = async function <const TableKeysSchema extends TableKeysSchemaType>(
   this: TableInstance<TableKeysSchema>,
