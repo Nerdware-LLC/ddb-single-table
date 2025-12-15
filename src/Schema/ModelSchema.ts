@@ -41,7 +41,7 @@ export class ModelSchema extends BaseSchema {
    * @param modelSchema - The schema to validate.
    * @param name - A name to identify the schema in any error messages.
    * @returns An object specifying the Model's alias maps.
-   * @throws `SchemaValidationError` if the provided ModelSchema is invalid.
+   * @throws {SchemaValidationError} if the provided ModelSchema is invalid.
    */
   static readonly validate = (
     modelSchema: ModelSchemaType,

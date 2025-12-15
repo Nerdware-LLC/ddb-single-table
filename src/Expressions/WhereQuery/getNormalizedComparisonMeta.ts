@@ -18,7 +18,7 @@ type ComparisonMetaObject = ValueOf<{
  * comparison `operator` and `comparand` to use in the `KeyConditionExpression`.
  *
  * @returns An {@link ComparisonMetaObject} containing the `operator` and `comparand` for the given `WhereQuery` comparison.
- * @throws `InvalidExpressionError` if the args are invalid.
+ * @throws {InvalidExpressionError} if the args are invalid.
  */
 export const getNormalizedComparisonMeta = (
   attrName: keyof ItemWhereQuery,

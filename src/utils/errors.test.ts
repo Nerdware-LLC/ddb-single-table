@@ -62,7 +62,6 @@ describe("errors", () => {
     test("returns a string containing the name and message properties when calling the toString method", () => {
       const errorMessage = "Test error message";
       const error = new ErrorClass(errorMessage);
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       expect(error.toString()).toBe(`${name}: ${errorMessage}`);
     });
   });

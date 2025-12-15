@@ -2,8 +2,9 @@ import { isArray, isPlainObject, isUndefined } from "@nerdware/ts-type-safety-ut
 import type { SupportedAttributeValueType, BaseItem } from "../types/index.js";
 
 /**
- * A fn that converts a value from one type to another. If no conversion is applied,
- * it should return `undefined`. @see {@link getRecursiveValueConverter}
+ * A fn that converts a value from one type to another.
+ * If no conversion is applied, it should return `undefined`.
+ * @see {@link getRecursiveValueConverter}
  */
 export type ValueConverterFn<
   Result extends SupportedAttributeValueType = SupportedAttributeValueType,

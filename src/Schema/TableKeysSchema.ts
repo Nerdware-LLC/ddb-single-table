@@ -35,7 +35,7 @@ export class TableKeysSchema extends BaseSchema {
    * @param tableKeysSchema - The schema to validate.
    * @param name - The `name` specified in the {@link SchemaMetadata|schema's metadata}.
    * @returns A {@link TableKeysAndIndexes} object.
-   * @throws A {@link SchemaValidationError} if the provided TableKeysSchema is invalid.
+   * @throws {SchemaValidationError} if the provided TableKeysSchema is invalid.
    */
   static readonly validate = <const S extends TableKeysSchemaType>(
     tableKeysSchema: S,
@@ -178,7 +178,7 @@ export class TableKeysSchema extends BaseSchema {
    *
    * @param tableKeysSchema - The TableKeysSchema to merge into the ModelSchema.
    * @param modelSchema - The ModelSchema to merge the TableKeysSchema into.
-   * @throws `SchemaValidationError` if the provided ModelSchema contains invalid key/index attribute configs.
+   * @throws {SchemaValidationError} if the provided ModelSchema contains invalid key/index attribute configs.
    */
   static readonly getMergedModelSchema = <
     const TableKeysSchema extends TableKeysSchemaType,

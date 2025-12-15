@@ -8,7 +8,7 @@ import type { BaseItem } from "../types/index.js";
  * - `toDB`: replaces "alias" keys with attribute names
  * - `fromDB`: replaces attribute names with "alias" keys
  *
- * @throws If an attribute is not defined in the schema, and `allowUnknownAttributes` is not `true`.
+ * @throws {ItemInputError} If an attribute is not defined in the schema, and `allowUnknownAttributes` is not `true`.
  */
 export const aliasMapping: IOAction = function (
   this,

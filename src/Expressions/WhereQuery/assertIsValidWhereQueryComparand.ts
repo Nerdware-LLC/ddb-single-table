@@ -6,7 +6,7 @@ import type { WhereQueryOperator, WhereQueryComparand } from "./types/index.js";
  *
  * @param operator The WhereQuery expression operator.
  * @param comparandValue The value to check.
- * @throws `InvalidExpressionError` if the value is not a valid comparand for the operator.
+ * @throws {InvalidExpressionError} if the value is not a valid comparand for the operator.
  */
 export function assertIsValidWhereQueryComparand<Operator extends WhereQueryOperator>(
   operator: Operator,
