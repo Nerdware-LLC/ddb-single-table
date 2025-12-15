@@ -33,13 +33,13 @@ jobs:
       id-token: write #     to enable use of OIDC for npm provenance
       issues: write #       to be able to comment on released issues
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          node-version-file: .nvmrc
 
       - name: Install Dependencies
         run: npm ci --include=dev
