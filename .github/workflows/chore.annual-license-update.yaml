@@ -1,0 +1,43 @@
+name: 📝 Annual License Update Workflow
+
+on:
+  # This workflow runs on Jan 1st every year.
+  schedule:
+    - cron: "0 0 1 1 *"
+
+jobs:
+  update-license:
+    name: 📝 Update License File
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # to checkout the code and update the LICENSE file
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+
+      - name: Configure Git User
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Update Copyright Date Range in LICENSE
+        run: |
+          function log_error_and_exit() {
+              local problem_description="$1"
+              printf '%s\n' '🚨LICENSE UPDATE FAILED🚨' "ERROR: $problem_description."
+              exit 1
+          }
+
+          year=$( date +%Y )
+
+          sed -i -E "s/(Copyright © [0-9]{4})-[0-9]{4}(.*)/\1-$year\2/" ./LICENSE ||
+              log_error_and_exit 'sed command exited with non-zero exit code'
+
+          git add ./LICENSE
+
+          git commit -m "chore(license): update copyright date range to include $year" ||
+              log_error_and_exit 'git commit command exited with non-zero exit code'
+
+          echo '✅ License Copyright date range successfully updated.'
