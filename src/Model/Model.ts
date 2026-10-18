@@ -91,8 +91,7 @@ export class Model<
   const Schema extends ModelSchemaType,
   ItemType extends UnknownItem = ItemTypeFromSchema<Schema>,
   ItemCreationParams extends UnknownItem = ItemCreationParameters<Schema>,
-> implements TableKeysAndIndexes
-{
+> implements TableKeysAndIndexes {
   // INSTANCE PROPERTIES:
   readonly modelName: string;
   readonly schema: Schema;

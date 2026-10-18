@@ -21,5 +21,4 @@ export type SdkCommandParametersInternallyHandledByArgParser = "TableName";
  * Union of SDK command-parameter names which are removed from command-input types.
  */
 export type OmittedSdkParameters =
-  | DeprecatedSdkCommandParameters
-  | SdkCommandParametersInternallyHandledByArgParser;
+  DeprecatedSdkCommandParameters | SdkCommandParametersInternallyHandledByArgParser;

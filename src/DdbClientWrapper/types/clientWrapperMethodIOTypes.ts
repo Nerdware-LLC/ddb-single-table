@@ -89,6 +89,7 @@ export type ClientWrapperTransactWriteItemsOutput = UnmarshalledTransactWriteIte
 
 /** Input params for `DdbClientWrapper` methods which implement the `DescribeTable` command. */
 export type ClientWrapperDescribeTableInput =
+  // eslint-disable-next-line @typescript-eslint/no-generated-empty-object-type -- TableName is supplied by the wrapper, leaving no caller-provided fields.
   ModifySdkInputForClientWrapper<SDKDescribeTableCmdInput>;
 /** Output from `DdbClientWrapper` methods which implement the `DescribeTable` command. */
 export type ClientWrapperDescribeTableOutput = SDKDescribeTableCmdOutput;

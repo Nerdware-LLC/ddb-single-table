@@ -22,10 +22,9 @@ export const generateUpdateExpression = (
   itemAttributes: UnknownItem,
   { nullHandling }: GenerateUpdateExpressionOpts = {}
 ): {
-  [Key in
-    | "UpdateExpression"
-    | "ExpressionAttributeNames"
-    | "ExpressionAttributeValues"]: NonNullable<ClientWrapperUpdateItemInput[Key]>;
+  [
+    Key in "UpdateExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
+  ]: NonNullable<ClientWrapperUpdateItemInput[Key]>;
 } => {
   const shouldAddToRemoveClause =
     nullHandling !== "SET"

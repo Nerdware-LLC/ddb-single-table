@@ -10,6 +10,7 @@ import { hasKey } from "@nerdware/ts-type-safety-utils";
 export const hasDefinedProperty = <Obj extends Record<PropertyKey, any>, Key extends PropertyKey>(
   obj: Obj,
   key: Key
+  // eslint-disable-next-line @typescript-eslint/no-generated-empty-object-type -- Intentionally allow any non-nullish value, including primitives.
 ): obj is Obj & Record<Key, NonNullable<unknown>> => {
   return hasKey(obj, key) && obj[key] !== null && obj[key] !== undefined;
 };

@@ -29,10 +29,7 @@ import type { Except } from "type-fest";
  *   the `DdbClientWrapper`, the Model class will not support custom `ReturnValues` at this time.
  */
 type SdkCommandParametersInternallyHandledByModel =
-  | "Key"
-  | "Item"
-  | "RequestItems"
-  | "ReturnValues";
+  "Key" | "Item" | "RequestItems" | "ReturnValues";
 
 /**
  * This internal generic util takes a `DdbClientWrapper` input type `<T>` and

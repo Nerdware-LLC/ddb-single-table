@@ -19,8 +19,4 @@ export type NativeAttributeValue =
  * A union of {@link NativeAttributeValue} types that can be used as a key in a DynamoDB table.
  */
 export type NativeKeyAttributeValue =
-  | string
-  | number
-  | bigint
-  | NumberValue
-  | NativeAttributeBinary;
+  string | number | bigint | NumberValue | NativeAttributeBinary;

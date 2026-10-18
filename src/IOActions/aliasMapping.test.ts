@@ -28,7 +28,7 @@ describe("IOAction: aliasMapping", () => {
       age: { type: "number" },
       email: { type: "string" },
     },
-    schemaEntries: [] as any, // empty, bc aliasMapping doesn't use schemaEntries
+    schemaEntries: [], // empty, bc aliasMapping doesn't use schemaEntries
     schemaOptions: {
       allowUnknownAttributes: false,
     },

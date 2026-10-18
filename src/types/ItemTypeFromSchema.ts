@@ -9,7 +9,7 @@ import type {
   ModelSchemaNestedMap,
   ModelSchemaNestedArray,
 } from "../Schema/types/index.js";
-import type { ConditionalPick, ConditionalExcept, Simplify } from "type-fest";
+import type { ConditionalKeys, Simplify } from "type-fest";
 
 /**
  * This generic creates an Item type from the provided Model schema.
@@ -105,7 +105,7 @@ type SchemaMapRequiredAttrs<
   NestDepth extends NestDepthMax32,
 > = Simplify<{
   // prettier-ignore
-  -readonly [K in keyof PickRequiredAttrs<T, Opts> as AttrAliasOrName<T, K, Opts>]-?: AttrValue<T[K], Opts, NestDepth>;
+  -readonly [K in keyof T as K extends RequiredAttrKeys<T, Opts> ? AttrAliasOrName<T, K, Opts> : never]-?: AttrValue<T[K], Opts, NestDepth>;
 }>;
 
 /**
@@ -122,15 +122,18 @@ type SchemaMapOptionalAttrs<
 }>;
 
 /**
- * Picks required attributes from schema type `<T>`. If `Opts.optionalIfDefault` is true,
+ * Selects required attribute keys from schema type `<T>`. If `Opts.optionalIfDefault` is true,
  * then all attribute configs that specify a `default` are also optional.
  */
-type PickRequiredAttrs<
+type RequiredAttrKeys<
   T extends Record<string, BaseAttributeConfig>,
   Opts extends { optionalIfDefault?: boolean },
 > = Opts["optionalIfDefault"] extends true
-  ? ConditionalExcept<ConditionalPick<T, { required: true }>, { default: AttributeDefault }>
-  : ConditionalPick<T, { required: true }>;
+  ? Exclude<
+      ConditionalKeys<T, { required: true }>,
+      ConditionalKeys<T, { default: AttributeDefault }>
+    >
+  : ConditionalKeys<T, { required: true }>;
 
 /**
  * This generic gets the type from an individual attribute config from a Model schema.

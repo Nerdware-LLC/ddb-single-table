@@ -4,15 +4,7 @@ import type { SupportedAttributeValueType } from "../../types/index.js";
  * Union of {@link SupportedAttributeValueType|attr value types} represented as string literals.
  */
 export type SchemaSupportedTypeStringLiteral =
-  | "string"
-  | "number"
-  | "boolean"
-  | "Buffer"
-  | "Date"
-  | "map"
-  | "array"
-  | "tuple"
-  | "enum";
+  "string" | "number" | "boolean" | "Buffer" | "Date" | "map" | "array" | "tuple" | "enum";
 
 /**
  * Union of supported types for {@link BaseAttributeConfig.default|schema `default` configs}.
