@@ -78,7 +78,7 @@ export default defineConfig(
     rules: {
       // MERGE PRESETS:
       ...stylisticPlugin.configs.customize(
-        { semi: true, quotes: "double", arrowParens: true, braceStyle: "1tbs" } // prettier-ignore
+        { semi: true, quotes: "double", arrowParens: true, braceStyle: "1tbs" } //
       ).rules,
       ...eslintJS.configs.recommended.rules,
       ...importXPlugin.configs.recommended.rules,
@@ -87,7 +87,7 @@ export default defineConfig(
       ...jsdocPlugin.configs["flat/recommended-typescript"].rules,
       ...[
         ...tsEslint.configs.strictTypeChecked,
-        ...tsEslint.configs.stylisticTypeChecked, // prettier-ignore
+        ...tsEslint.configs.stylisticTypeChecked, //
       ].reduce((accum, config) => ({ ...accum, ...config.rules }), {}),
 
       // RULE CUSTOMIZATIONS:
@@ -101,10 +101,7 @@ export default defineConfig(
       "prefer-object-has-own": "error",
       "prefer-promise-reject-errors": "error",
 
-      /* RULES: import-x (eslint-plugin-import-x)
-      As recommended by typescript-eslint, the following import-x rules are disabled because they
-      degrade performance and TypeScript provides the same checks as part of standard type checking.
-      https://typescript-eslint.io/troubleshooting/typed-linting/performance#eslint-plugin-import */
+      // RULES — import-x (no plugin rules that require import resolution, they're slow & TS covers imports)
       "import-x/default": "off",
       "import-x/named": "off",
       "import-x/namespace": "off",

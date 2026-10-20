@@ -119,11 +119,10 @@ describe("IOAction: checkRequired", () => {
                     ...mockCtx.schema.books.schema[0].schema.author.schema.publisher,
                     schema: {
                       ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema,
-                      // prettier-ignore
                       address: {
-                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address,
+                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address, // prettier-ignore
                         schema: {
-                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema,
+                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema, // prettier-ignore
                           MISSING_ATTR: { type: "string", required: true },
                         },
                       },
@@ -167,11 +166,10 @@ describe("IOAction: checkRequired", () => {
                     ...mockCtx.schema.books.schema[0].schema.author.schema.publisher,
                     schema: {
                       ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema,
-                      // prettier-ignore
                       address: {
-                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address,
+                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address, // prettier-ignore
                         schema: {
-                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema,
+                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema, // prettier-ignore
                           NON_NULL_ATTR: { type: "string", nullable: false },
                         },
                       },
