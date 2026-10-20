@@ -104,8 +104,9 @@ type SchemaMapRequiredAttrs<
   Opts extends ItemTypeOpts,
   NestDepth extends NestDepthMax32,
 > = Simplify<{
-  // prettier-ignore
-  -readonly [K in keyof PickRequiredAttrs<T, Opts> as AttrAliasOrName<T, K, Opts>]-?: AttrValue<T[K], Opts, NestDepth>;
+  -readonly [
+    K in keyof PickRequiredAttrs<T, Opts> as K extends keyof T ? AttrAliasOrName<T, K, Opts> : never
+  ]-?: K extends keyof T ? AttrValue<T[K], Opts, NestDepth> : never;
 }>;
 
 /**
