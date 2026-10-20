@@ -166,9 +166,9 @@ describe("convertWhereQueryToSdkQueryArgs()", () => {
   // destructive test case: "where" value is not an object with enumerable properties
   test(`throws an InvalidExpressionError when "where" value is not an object with enumerable properties`, () => {
     [undefined, null, [], true, NaN, 10].forEach((invalidWhereValue) => {
-      expect(() =>
-        convertWhereQueryToSdkQueryArgs({ where: invalidWhereValue as any })
-      ).toThrowError(/Invalid "where" value .* object with enumerable properties/is);
+      expect(
+        () => convertWhereQueryToSdkQueryArgs({ where: invalidWhereValue as any }) //
+      ).toThrow(/Invalid "where" value .* object with enumerable properties/is);
       // Regex note: the "s" flag allows . to match newline characters
     });
   });
@@ -183,7 +183,7 @@ describe("convertWhereQueryToSdkQueryArgs()", () => {
           height: { gt: 60 }, // <-- 3rd entry
         },
       })
-    ).toThrowError(/the WhereQuery object contains more than two keys/i);
+    ).toThrow(/the WhereQuery object contains more than two keys/i);
   });
 
   // destructive test case: no "eq" expression
@@ -195,11 +195,9 @@ describe("convertWhereQueryToSdkQueryArgs()", () => {
           age: { between: [15, 30] },
         },
       })
-    ).toThrowError(/KeyConditionExpressions must include an equality check/i);
-    expect(() =>
-      convertWhereQueryToSdkQueryArgs({
-        where: {},
-      })
-    ).toThrowError(/KeyConditionExpressions must include an equality check/i);
+    ).toThrow(/KeyConditionExpressions must include an equality check/i);
+    expect(
+      () => convertWhereQueryToSdkQueryArgs({ where: {} }) //
+    ).toThrow(/KeyConditionExpressions must include an equality check/i);
   });
 });

@@ -145,7 +145,7 @@ describe("IOAction: checkRequired", () => {
 
     expect(() =>
       checkRequired.call(mockThis, mockItem, contextWithAddressMISSING_ATTR as any)
-    ).toThrowError(`A value is required for MockModel property "MISSING_ATTR".`);
+    ).toThrow(`A value is required for MockModel property "MISSING_ATTR".`);
   });
 
   test(`throws an ItemInputError when a non-"nullable" field is null`, () => {
@@ -214,6 +214,6 @@ describe("IOAction: checkRequired", () => {
         },
         contextWithAddressNON_NULL_ATTR as any
       )
-    ).toThrowError(`A non-null value is required for MockModel property "NON_NULL_ATTR".`);
+    ).toThrow(`A non-null value is required for MockModel property "NON_NULL_ATTR".`);
   });
 });

@@ -22,7 +22,7 @@ describe("ModelSchema", () => {
         enumAttr: { type: "enum", oneOf: ["value1", "value2"] },
       };
 
-      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrowError();
+      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrow();
     });
 
     test("validates a ModelSchemaType with optional attributes", () => {
@@ -31,23 +31,23 @@ describe("ModelSchema", () => {
         optionalAttr: { type: "number" },
       };
 
-      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrowError();
+      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrow();
     });
 
     test("throws a SchemaValidationError when an attribute specifies isHashKey, isRangeKey, or an index", () => {
       expect(() =>
         ModelSchema.validate({ attr: { type: "string", isHashKey: true } } as any, METADATA)
-      ).toThrowError(
+      ).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" includes an "isHashKey" config, which is only valid in the TableKeysSchema.`
       );
       expect(() =>
         ModelSchema.validate({ attr: { type: "string", isRangeKey: true } } as any, METADATA)
-      ).toThrowError(
+      ).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" includes an "isRangeKey" config, which is only valid in the TableKeysSchema.`
       );
       expect(() =>
         ModelSchema.validate({ attr: { type: "string", index: {} } } as any, METADATA)
-      ).toThrowError(
+      ).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" includes an "index" config, which is only valid in the TableKeysSchema.`
       );
     });
@@ -61,7 +61,7 @@ describe("ModelSchema", () => {
           } as any,
           METADATA
         )
-      ).toThrowError(`${ERR_MSG_PREFIX} the ModelSchema contains duplicate alias "attrAlias".`);
+      ).toThrow(`${ERR_MSG_PREFIX} the ModelSchema contains duplicate alias "attrAlias".`);
     });
   });
 

@@ -195,7 +195,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.getItem({} as MockItem)).rejects.toThrowError(/required .* "id"/i);
+      await expect(mockModel.getItem({} as MockItem)).rejects.toThrow(/required .* "id"/i);
     });
   });
 
@@ -286,12 +286,12 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with an invalid "primaryKeys" argument`, async () => {
-      await expect(mockModel.batchGetItems(null as any)).rejects.toThrowError(/primaryKeys/);
+      await expect(mockModel.batchGetItems(null as any)).rejects.toThrow(/primaryKeys/);
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       const invalidMockItemsKeys = [{ id: "USER-X" }, ...mockItemsKeys];
-      await expect(mockModel.batchGetItems(invalidMockItemsKeys as any)).rejects.toThrowError(
+      await expect(mockModel.batchGetItems(invalidMockItemsKeys as any)).rejects.toThrow(
         /required .* "handle"/i
       );
     });
@@ -346,7 +346,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.createItem({} as any)).rejects.toThrowError(
+      await expect(mockModel.createItem({} as any)).rejects.toThrow(
         /A value is required for MockModel property "id"/i
       );
     });
@@ -393,7 +393,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.upsertItem({} as any)).rejects.toThrowError(
+      await expect(mockModel.upsertItem({} as any)).rejects.toThrow(
         /A value is required for MockModel property "id"/i
       );
     });
@@ -504,7 +504,7 @@ describe("Model", () => {
     });
 
     test(`throws an error when called with an invalid "items" argument`, async () => {
-      await expect(mockModel.batchUpsertItems(null as any)).rejects.toThrowError();
+      await expect(mockModel.batchUpsertItems(null as any)).rejects.toThrow();
     });
   });
 
@@ -579,7 +579,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.deleteItem({} as any)).rejects.toThrowError(/required .* "id"/i);
+      await expect(mockModel.deleteItem({} as any)).rejects.toThrow(/required .* "id"/i);
     });
   });
 

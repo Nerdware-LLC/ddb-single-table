@@ -73,7 +73,7 @@ describe("Table", () => {
         return Promise.resolve({ Table: { TableStatus: TableStatus.ACTIVE } });
       });
 
-      await expect(mockTable.ensureTableIsActive({ timeout: timeoutSeconds })).rejects.toThrowError(
+      await expect(mockTable.ensureTableIsActive({ timeout: timeoutSeconds })).rejects.toThrow(
         new DdbSingleTableError(
           `ensureTableIsActive has timed out after ${timeoutSeconds} seconds.`
         )
@@ -160,7 +160,7 @@ describe("Table", () => {
             },
           },
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         new DdbSingleTableError(
           `Invalid "createTable" args: "ProvisionedThroughput" should not be `
             + `provided when "BillingMode" is "${BillingMode.PAY_PER_REQUEST}".`
@@ -183,7 +183,7 @@ describe("Table", () => {
         code: DdbConnectionError.NODE_ERROR_CODES.ECONNREFUSED,
       } satisfies Partial<NodeJS.ErrnoException> as any);
 
-      await expect(mockTable.ensureTableIsActive()).rejects.toThrowError(DdbConnectionError);
+      await expect(mockTable.ensureTableIsActive()).rejects.toThrow(DdbConnectionError);
 
       expect(mockTable.isTableActive).toBe(false);
       expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
@@ -201,7 +201,7 @@ describe("Table", () => {
 
       mockDdbClient.on(DescribeTableCommand).rejectsOnce("FOO_ERROR");
 
-      await expect(mockTable.ensureTableIsActive()).rejects.toThrowError("FOO_ERROR");
+      await expect(mockTable.ensureTableIsActive()).rejects.toThrow("FOO_ERROR");
 
       expect(mockTable.isTableActive).toBe(false);
       expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
@@ -221,7 +221,7 @@ describe("Table", () => {
         .on(DescribeTableCommand)
         .rejectsOnce(new ResourceNotFoundException({ message: "", $metadata: {} }));
 
-      await expect(mockTable.ensureTableIsActive()).rejects.toThrowError(
+      await expect(mockTable.ensureTableIsActive()).rejects.toThrow(
         `Table "MockTable" not found. To have the table created automatically when `
           + `DynamoDB returns a "ResourceNotFoundException", set "createIfNotExists" to true.`
       );

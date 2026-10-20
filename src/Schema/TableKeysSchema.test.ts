@@ -54,7 +54,7 @@ describe("TableKeysSchema", () => {
     });
 
     test("validates a valid TableKeysSchemaType with all supported types and attributes", () => {
-      expect(() => TableKeysSchema.validate(VALID_TABLE_KEYS_SCHEMA)).not.toThrowError();
+      expect(() => TableKeysSchema.validate(VALID_TABLE_KEYS_SCHEMA)).not.toThrow();
     });
 
     test("throws a SchemaValidationError when a key attribute does not specify isHashKey, isRangeKey, nor an index", () => {
@@ -63,7 +63,7 @@ describe("TableKeysSchema", () => {
         attr: { type: "string", required: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" is not configured as a key or index.`
       );
     });
@@ -74,7 +74,7 @@ describe("TableKeysSchema", () => {
         attr: { type: "Date", required: true, isHashKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" has an invalid "type" (must be "string", "number", or "Buffer").`
       );
     });
@@ -85,7 +85,7 @@ describe("TableKeysSchema", () => {
         attr: { type: "string", required: false, isHashKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" is not "required".`
       );
     });
@@ -96,7 +96,7 @@ describe("TableKeysSchema", () => {
         secondHashKey: { type: "string", required: true, isHashKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} multiple table hash keys ("firstHashKey" and "secondHashKey").`
       );
     });
@@ -108,7 +108,7 @@ describe("TableKeysSchema", () => {
         secondRangeKey: { type: "string", required: true, isRangeKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} multiple table range keys ("firstRangeKey" and "secondRangeKey").`
       );
     });
@@ -123,7 +123,7 @@ describe("TableKeysSchema", () => {
         },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} the index for attribute "attr" is missing a "name".`
       );
     });
@@ -145,13 +145,13 @@ describe("TableKeysSchema", () => {
         },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} multiple indexes with the same name ("${DUPE_INDEX_NAME}").`
       );
     });
 
     test(`throws a SchemaValidationError when the schema does not specify table hash-key`, () => {
-      expect(() => TableKeysSchema.validate({ sk: VALID_TABLE_KEYS_SCHEMA.sk })).toThrowError(
+      expect(() => TableKeysSchema.validate({ sk: VALID_TABLE_KEYS_SCHEMA.sk })).toThrow(
         `${ERR_MSG_PREFIX} the schema does not contain a hash key (must specify exactly one attribute with "isHashKey: true").`
       );
     });
@@ -185,7 +185,7 @@ describe("TableKeysSchema", () => {
             pk: { type: "number", required: true }, // <-- conflicting "type"
           },
         })
-      ).toThrowError(
+      ).toThrow(
         `ModelSchema is invalid: the "type" config in the ModelSchema for key attribute "pk" does not match the TableKeysSchema.`
       );
 
@@ -196,7 +196,7 @@ describe("TableKeysSchema", () => {
             pk: { type: "string", required: false }, // <-- conflicting "required"
           },
         })
-      ).toThrowError(
+      ).toThrow(
         `ModelSchema is invalid: the "required" config in the ModelSchema for key attribute "pk" does not match the TableKeysSchema.`
       );
     });

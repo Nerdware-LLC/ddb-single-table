@@ -16,7 +16,7 @@ describe("getNormalizedComparisonMeta()", () => {
     [undefined, null, [], {}, true, NaN].forEach((invalidValue) => {
       expect(
         () => getNormalizedComparisonMeta("mockAttrName", invalidValue as any) //
-      ).toThrowError(InvalidExpressionError);
+      ).toThrow(InvalidExpressionError);
     });
   });
 
@@ -35,7 +35,7 @@ describe("getNormalizedComparisonMeta()", () => {
         [undefined, null, [], {}, true, NaN].forEach((invalidValue) => {
           expect(() =>
             getNormalizedComparisonMeta("attr", { [operatorToTest]: invalidValue } as any)
-          ).toThrowError(InvalidExpressionError);
+          ).toThrow(InvalidExpressionError);
         });
       });
     }
@@ -50,7 +50,7 @@ describe("getNormalizedComparisonMeta()", () => {
     [undefined, null, [], {}, true, NaN, 10].forEach((invalidValue) => {
       expect(() =>
         getNormalizedComparisonMeta("attr", { beginsWith: invalidValue as any })
-      ).toThrowError(InvalidExpressionError);
+      ).toThrow(InvalidExpressionError);
     });
   });
 
@@ -76,13 +76,13 @@ describe("getNormalizedComparisonMeta()", () => {
       ].forEach((invalidComparand) => {
         expect(() =>
           getNormalizedComparisonMeta("attr", { between: invalidComparand as any })
-        ).toThrowError(InvalidExpressionError);
+        ).toThrow(InvalidExpressionError);
       });
     });
   });
   test(`throws an InvalidExpressionError for a "between" expression with valid values that are not the same type`, () => {
-    expect(() => getNormalizedComparisonMeta("attr", { between: ["a", 1] as any })).toThrowError(InvalidExpressionError); // prettier-ignore
-    expect(() => getNormalizedComparisonMeta("attr", { between: [1, "a"] as any })).toThrowError(InvalidExpressionError); // prettier-ignore
+    expect(() => getNormalizedComparisonMeta("attr", { between: ["a", 1] as any })).toThrow(InvalidExpressionError); // prettier-ignore
+    expect(() => getNormalizedComparisonMeta("attr", { between: [1, "a"] as any })).toThrow(InvalidExpressionError); // prettier-ignore
   });
 
   // destructive test case: multiple operators
@@ -97,7 +97,7 @@ describe("getNormalizedComparisonMeta()", () => {
     ].forEach((comparisonObject) => {
       expect(() =>
         getNormalizedComparisonMeta("attr", { ...comparisonObject, eq: "value" } as any)
-      ).toThrowError(/contains more than one operator/i);
+      ).toThrow(/contains more than one operator/i);
     });
   });
 
@@ -106,7 +106,7 @@ describe("getNormalizedComparisonMeta()", () => {
     ["BAD", "EQ", "begins_with", ""].forEach((nonOperatorValue) => {
       expect(() =>
         getNormalizedComparisonMeta("attr", { [nonOperatorValue]: "value" } as any)
-      ).toThrowError(/invalid comparison operator/i);
+      ).toThrow(/invalid comparison operator/i);
     });
   });
 });

@@ -85,7 +85,7 @@ describe("Table", () => {
               sortKey: { type: "string" }, //      missing `isSortKey` and `required`
             } as any,
           })
-      ).toThrowError(SchemaValidationError);
+      ).toThrow(SchemaValidationError);
       expect(
         () =>
           new Table({
@@ -101,7 +101,7 @@ describe("Table", () => {
               },
             },
           })
-      ).toThrowError(SchemaValidationError);
+      ).toThrow(SchemaValidationError);
     });
   });
 

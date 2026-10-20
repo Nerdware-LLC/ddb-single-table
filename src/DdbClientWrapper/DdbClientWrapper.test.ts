@@ -113,7 +113,7 @@ describe("DdbClientWrapper", () => {
     });
 
     test(`throws an error when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.getItem(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.getItem(null as any)).rejects.toThrow();
     });
   });
 
@@ -158,8 +158,8 @@ describe("DdbClientWrapper", () => {
     });
 
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.batchGetItems({} as any)).rejects.toThrowError();
-      await expect(mockDdbClientWrapper.batchGetItems(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.batchGetItems({} as any)).rejects.toThrow();
+      await expect(mockDdbClientWrapper.batchGetItems(null as any)).rejects.toThrow();
     });
   });
 
@@ -200,7 +200,7 @@ describe("DdbClientWrapper", () => {
     });
 
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.putItem(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.putItem(null as any)).rejects.toThrow();
     });
   });
 
@@ -251,7 +251,7 @@ describe("DdbClientWrapper", () => {
     });
 
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.updateItem(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.updateItem(null as any)).rejects.toThrow();
     });
   });
 
@@ -292,7 +292,7 @@ describe("DdbClientWrapper", () => {
     });
 
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.deleteItem(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.deleteItem(null as any)).rejects.toThrow();
     });
   });
 
@@ -371,12 +371,12 @@ describe("DdbClientWrapper", () => {
             [mockTableName]: [{}],
           },
         })
-      ).rejects.toThrowError(ItemInputError);
+      ).rejects.toThrow(ItemInputError);
     });
 
     test(`throws an error when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.batchWriteItems({} as any)).rejects.toThrowError();
-      await expect(mockDdbClientWrapper.batchWriteItems(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.batchWriteItems({} as any)).rejects.toThrow();
+      await expect(mockDdbClientWrapper.batchWriteItems(null as any)).rejects.toThrow();
     });
   });
 
@@ -421,7 +421,7 @@ describe("DdbClientWrapper", () => {
     });
 
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.query(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.query(null as any)).rejects.toThrow();
     });
   });
 
@@ -462,7 +462,7 @@ describe("DdbClientWrapper", () => {
     });
 
     test(`throws when called with invalid arguments`, async () => {
-      await expect(mockDdbClientWrapper.scan(null as any)).rejects.toThrowError();
+      await expect(mockDdbClientWrapper.scan(null as any)).rejects.toThrow();
     });
   });
 
