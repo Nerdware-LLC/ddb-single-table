@@ -23,6 +23,8 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Update Copyright Date Range in LICENSE
+        env:
+          TARGET_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -eE  # <-- EXIT ON ERROR, ENSURE 'ERR' trap IS INHERITED IN SUBSHELLS
 
@@ -36,9 +38,13 @@ jobs:
           trap log_cmd_failure_and_exit ERR
 
           year=$( date +%Y )
-          sed -i -E "s/(Copyright © [0-9]{4})(–[0-9]{4})?(.*)/\1–$year\3/" ./LICENSE
+          sed -i -E "s/(Copyright © [0-9]{4})([-–][0-9]{4})?(.*)/\1–$year\3/" ./LICENSE
           git add ./LICENSE
-          git commit -m "chore(license): update copyright date range to include $year"
-          git push
 
-          echo '✅ License Copyright date range successfully updated.'
+          if git diff --cached --quiet; then
+            echo 'License Copyright date range is already current.'
+          else
+            git commit -m "chore(license): update copyright date range to include $year"
+            git push origin "HEAD:$TARGET_BRANCH"
+            echo '✅ License Copyright date range successfully updated.'
+          fi
