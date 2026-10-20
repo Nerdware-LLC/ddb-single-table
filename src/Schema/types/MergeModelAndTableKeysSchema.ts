@@ -16,7 +16,9 @@ export type MergeModelAndTableKeysSchema<
     ? TableKeysSchema[K] extends KeyAttributeConfig // <-- K is in TableKeysSchema
       ? K extends keyof ModelSchema
         ? ModelSchema[K] extends SetOptional<ModelSchemaAttributeConfig, "type" | "required">
-          ? TableKeysSchema[K] & ModelSchema[K]
+          ? Omit<TableKeysSchema[K], keyof ModelSchema[K]>
+              & ModelSchema[K]
+              & Pick<TableKeysSchema[K], "type" | "required">
           : never
         : TableKeysSchema[K]
       : never

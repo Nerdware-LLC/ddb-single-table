@@ -30,9 +30,12 @@ export class BaseSchema {
    * @param schemaType - The type of schema being validated ("TableKeysSchema" or "ModelSchema").
    * @param name - A name to identify the schema in any error messages (defaults to "schemaType" if not provided).
    */
-  static readonly validateAttributeTypes = <const S extends TableKeysSchemaType | ModelSchemaType>(
+  static readonly validateAttributeTypes = <
+    const S extends TableKeysSchemaType | ModelSchemaType<TableKeysSchemaType>,
+  >(
     schema: S,
-    { schemaType, name: schemaName = schemaType }: SchemaMetadata
+    { schemaType, name: schemaName = schemaType }: SchemaMetadata,
+    depth = 0
   ) => {
     // Ensure schema is a plain Record-like object
     if (!isPlainObject(schema)) {
@@ -66,7 +69,19 @@ export class BaseSchema {
       const attrName = schemaAttrNames[i] as string;
       const attrConfig = schema[schemaAttrNames[i]] as AnyValidAttributeConfig;
 
+      if (!isPlainObject(attrConfig))
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `attribute "${attrName}" must have an object configuration`,
+        });
+
       const { type, schema: nestedSchema, oneOf } = attrConfig;
+
+      if (depth > 0 && attrConfig.alias !== undefined)
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `nested attribute "${attrName}" cannot define an alias`,
+        });
 
       // Ensure "type" was provided
       if (!(type as unknown)) {
@@ -98,10 +113,39 @@ export class BaseSchema {
             problem: `attribute "${attrName}" is of type "${type}", but its nested "schema" is not an ${type === "map" ? "object" : "array"}`,
           });
         }
+
+        if (depth >= 32) {
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${attrName}" exceeds the maximum nesting depth of 32`,
+          });
+        }
+
+        if (Array.isArray(nestedSchema) && nestedSchema.length === 0) {
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `attribute "${attrName}" must define at least one element schema`,
+          });
+        }
+
+        const nested = Array.isArray(nestedSchema)
+          ? Object.fromEntries(nestedSchema.map((config, index) => [index, config]))
+          : nestedSchema;
+
+        BaseSchema.validateAttributeTypes(
+          nested as ModelSchemaType,
+          { schemaType, name: `${schemaName}.${attrName}` },
+          depth + 1
+        );
+
         // TYPE: "enum"
       } else if (type === "enum") {
         // ENUM TYPE: ensure "oneOf" is defined and is a non-empty array
-        if (!Array.isArray(oneOf) || oneOf.length === 0) {
+        if (
+          !Array.isArray(oneOf)
+          || oneOf.length === 0
+          || oneOf.some((value) => typeof value !== "string")
+        ) {
           throw new SchemaValidationError({
             schemaName,
             problem: `attribute "${attrName}" is of type "enum", but does not specify a valid "oneOf" array`,
@@ -121,7 +165,10 @@ export class BaseSchema {
         // If the default is not a function, ensure its type matches the attr's defined "type"
         const defaultValue = attrConfig.default;
 
-        if (typeof defaultValue !== "function" && !isType[type](defaultValue, oneOf)) {
+        if (
+          typeof defaultValue !== "function"
+          && !isType[type](defaultValue, oneOf ?? nestedSchema)
+        ) {
           throw new SchemaValidationError({
             schemaName,
             problem: `attribute "${attrName}" specifies a "default" value of type "${typeof defaultValue}", but the attribute's configured "type" is "${type}"`,

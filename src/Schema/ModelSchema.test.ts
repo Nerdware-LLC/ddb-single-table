@@ -1,3 +1,5 @@
+import { ioActions } from "../IOActions/IOActions.js";
+import { aliasMapping } from "../IOActions/aliasMapping.js";
 import { ModelSchema } from "./ModelSchema.js";
 import type { ModelSchemaType, ModelSchemaMetadata } from "./types/index.js";
 import type { TableKeysAndIndexes } from "../Table/types/index.js";
@@ -62,6 +64,40 @@ describe("ModelSchema", () => {
           METADATA
         )
       ).toThrow(`${ERR_MSG_PREFIX} the ModelSchema contains duplicate alias "attrAlias".`);
+    });
+
+    test("rejects alias namespace collisions and accepts prototype-like alias names", () => {
+      expect(() =>
+        ModelSchema.validate(
+          { a: { type: "string", alias: "b" }, b: { type: "string" } },
+          { name: "test" }
+        )
+      ).toThrow("conflicts");
+
+      const result = ModelSchema.validate(
+        { a: { type: "string", alias: "__proto__" } },
+        { name: "test" }
+      );
+
+      expect(Object.hasOwn(result.aliasesToAttributesMap, "__proto__")).toBe(true);
+      expect(result.aliasesToAttributesMap.__proto__).toBe("a");
+
+      const schema = { a: { type: "string", alias: "__proto__" } } as const;
+      const mapped = aliasMapping.call(
+        ioActions,
+        { a: "value" },
+        {
+          schema,
+          schemaEntries: Object.entries(schema),
+          aliasesMap: result.attributesToAliasesMap,
+          ioDirection: "fromDB",
+          schemaOptions: {},
+          modelName: "Audit",
+        }
+      );
+
+      expect(Object.hasOwn(mapped, "__proto__")).toBe(true);
+      expect(mapped.__proto__).toBe("value");
     });
   });
 

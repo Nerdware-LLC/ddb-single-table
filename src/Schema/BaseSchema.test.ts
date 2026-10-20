@@ -252,5 +252,18 @@ describe("BaseSchema", () => {
         `${ERR_MSG_PREFIX.M_SCHEMA} attribute "attr" specifies a "default" value of type "string", but the attribute's configured "type" is "enum".`
       );
     });
+
+    test("rejects invalid configs inside maps, arrays, and tuple positions", () => {
+      for (const schema of [
+        { value: { type: "map", schema: { child: { type: "invalid" } } } },
+        { value: { type: "array", schema: [] } },
+        { value: { type: "tuple", schema: [{ type: "string" }, { type: "enum", oneOf: [] }] } },
+        { value: { type: "map", schema: { child: null } } },
+      ]) {
+        expect(() =>
+          BaseSchema.validateAttributeTypes(schema as any, { schemaType: "ModelSchema" })
+        ).toThrow();
+      }
+    });
   });
 });

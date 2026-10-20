@@ -18,10 +18,22 @@ import type { SetOptional } from "type-fest";
  */
 export type ModelSchemaType<TableKeysSchema extends TableKeysSchemaType | undefined = undefined> =
   TableKeysSchema extends TableKeysSchemaType
-    ? { readonly [attrName: AttributeName]: ModelSchemaAttributeConfig } & {
+    ? {
+        readonly [attrName: AttributeName]: SetOptional<
+          ModelSchemaAttributeConfig,
+          "type" | "required"
+        >;
+      } & {
         readonly [KeyAttrName in keyof TableKeysSchema]?: SetOptional<
           ModelSchemaAttributeConfig,
           "type" | "required"
         >;
       }
     : { readonly [attrName: AttributeName]: ModelSchemaAttributeConfig };
+
+/**
+ * Validate non-key attributes when inferring a concrete model schema with inherited keys.
+ */
+export type ModelSchemaInput<TK extends TableKeysSchemaType, S> = S & {
+  [K in keyof S]: K extends keyof TK ? unknown : ModelSchemaAttributeConfig;
+};

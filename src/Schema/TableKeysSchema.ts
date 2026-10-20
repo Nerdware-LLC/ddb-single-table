@@ -126,12 +126,17 @@ export class TableKeysSchema extends BaseSchema {
           });
         }
 
-        indexes[index.name] = {
-          name: index.name,
-          type: index.global === true ? "GLOBAL" : "LOCAL",
-          indexPK: keyAttrName,
-          ...(index.rangeKey && { indexSK: index.rangeKey }),
-        };
+        Object.defineProperty(indexes, index.name, {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: {
+            name: index.name,
+            type: index.global !== false ? "GLOBAL" : "LOCAL",
+            indexPK: keyAttrName,
+            ...(index.rangeKey && { indexSK: index.rangeKey }),
+          },
+        });
       }
     }
 
@@ -141,6 +146,30 @@ export class TableKeysSchema extends BaseSchema {
         schemaName,
         problem: `the schema does not contain a hash key (must specify exactly one attribute with "isHashKey: true")`,
       });
+    }
+
+    for (const [name, config] of Object.entries(tableKeysSchema)) {
+      const index = config.index;
+      if (!index) continue;
+      if (index.rangeKey && !Object.hasOwn(tableKeysSchema, index.rangeKey)) {
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `index "${index.name}" references unknown range key "${index.rangeKey}"`,
+        });
+      }
+      if (
+        index.global === false
+        && (name !== tableHashKey
+          || !tableRangeKey
+          || !index.rangeKey
+          || index.rangeKey === tableRangeKey
+          || index.throughput)
+      ) {
+        throw new SchemaValidationError({
+          schemaName,
+          problem: `local index "${index.name}" must share the table hash key, use a distinct sort key, and omit throughput`,
+        });
+      }
     }
 
     return {
@@ -190,7 +219,9 @@ export class TableKeysSchema extends BaseSchema {
     tableKeysSchema: TableKeysSchema;
     modelSchema: ModelSchema;
   }): MergeModelAndTableKeysSchema<TableKeysSchema, ModelSchema> => {
-    const mergedModelSchema: Record<string, Record<string, any>> = { ...modelSchema };
+    const mergedModelSchema: Record<string, Record<string, any>> = Object.fromEntries(
+      Object.entries(modelSchema).map(([key, config]) => [key, { ...config }])
+    );
 
     for (const keyAttrName in tableKeysSchema) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -212,13 +243,24 @@ export class TableKeysSchema extends BaseSchema {
               }
             } else {
               // If ModelSchema contains `keyAttrName`, but NOT a mergeable config property, add it.
-              mergedModelSchema[keyAttrName][attrConfigName] = keyAttrConfig[attrConfigName];
+              // Missing invariant fields are supplied by the table config below.
             }
           }
         );
+        Object.defineProperty(mergedModelSchema, keyAttrName, {
+          value: { ...keyAttrConfig, ...mergedModelSchema[keyAttrName] },
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
       } else {
         // If ModelSchema does NOT contain keyAttrName, add it.
-        mergedModelSchema[keyAttrName] = keyAttrConfig;
+        Object.defineProperty(mergedModelSchema, keyAttrName, {
+          value: keyAttrConfig,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
       }
     }
 
