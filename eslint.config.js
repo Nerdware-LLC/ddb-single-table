@@ -71,7 +71,7 @@ export default defineConfig(
   // ALL FILES
   {
     name: "files:all/base",
-    files: ["src/**/*.[tj]s", "./*.[tj]s"],
+    files: ["src/**/*.ts", "./*.[tj]s"],
     languageOptions: {
       globals: globals.node,
     },
@@ -151,6 +151,7 @@ export default defineConfig(
         "error",
         { allowStaticOnly: true },
       ],
+      "@typescript-eslint/no-generated-empty-object-type": "off", // Unnecessarily strict
       "@typescript-eslint/no-inferrable-types": "off",
       "@typescript-eslint/no-misused-promises": [
         "error",
@@ -216,6 +217,10 @@ export default defineConfig(
     },
     rules: {
       ...vitestPlugin.configs.recommended.rules,
+      "vitest/expect-expect": [
+        "error",
+        { assertFunctionNames: ["expect", "assert", "expectTypeOf"] },
+      ],
       "vitest/consistent-test-it": ["error", { fn: "test" }],
       "vitest/no-conditional-expect": "off",
       "vitest/no-disabled-tests": "warn",
