@@ -4,10 +4,20 @@ on:
   pull_request:
     types: [opened, reopened, synchronize] # default PR types
     branches: [main, next]
-    paths: ["src/**/*", "package*.json"]
+    paths:
+      - "src/**/*"
+      - "package*.json"
+      - "scripts/**"
+      - "tsconfig*.json"
+      - ".nvmrc"
   push:
     branches: [main, next]
-    paths: ["src/**/*", "package*.json"]
+    paths:
+      - "src/**/*"
+      - "package*.json"
+      - "scripts/**"
+      - "tsconfig*.json"
+      - ".nvmrc"
   # This workflow can be manually triggered
   workflow_dispatch:
 
