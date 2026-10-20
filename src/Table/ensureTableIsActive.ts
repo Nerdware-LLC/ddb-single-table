@@ -5,19 +5,22 @@ import type { TableInstance, EnsureTableIsActiveParameters } from "./types/index
 import type { TableKeysSchemaType } from "../Schema/types/index.js";
 
 /**
- * This method of the `Table` class is used to check if a DynamoDB table is active and
- * ready for use.
+ * This `Table` class method is used to check if a DynamoDB table is active and ready for use.
  *
- * The function checks the DDB table's status using the Table instance's `describeTable`
- * method. If the method returns a `ResourceNotFoundException`, the table does not exist.
- * If the table does not exist and `createIfNotExists` is set to `true`, the function
- * creates the table using the Table instance's `createTable` method — this function then
- * continues the process of waiting for the table to become active.
+ * The function checks the DDB table's status using the Table instance's `describeTable` method.
+ * If the method returns a `ResourceNotFoundException`, the table does not exist. If the table
+ * does not exist and `createIfNotExists` is set to `true`, the function creates the table using
+ * the Table instance's `createTable` method — this function then continues the process of waiting
+ * for the table to become active.
  *
- * Regardless of whether the table initially existed or not, if it is not active, the
- * function tries to connect to it again after `frequency` number of seconds have passed
- * until either the table is active, or `maxRetries` number of attempts have been made,
- * or `timeout` number of seconds have passed.
+ * Regardless of whether the table initially existed or not, if it is not active, the function
+ * tries to connect to it again after `frequency` number of seconds have passed until either the
+ * table is active, or `maxRetries` number of attempts have been made, or `timeout` number of
+ * seconds have passed.
+ *
+ * The returned promise:
+ * - _rejects_ on timeout, exhausted attempts, or a request failure
+ * - _resolves_ only when ACTIVE
  */
 export const ensureTableIsActive = async function <
   const TableKeysSchema extends TableKeysSchemaType,
@@ -34,87 +37,93 @@ export const ensureTableIsActive = async function <
   const timeoutMilliseconds = timeoutSeconds * 1000;
   const frequencyMilliseconds = frequencySeconds * 1000;
 
-  // Start timeout timer that throws error if not cleared within the timeframe.
-  const timeoutTimerID = setTimeout(() => {
-    throw new DdbSingleTableError(
-      `ensureTableIsActive has timed out after ${timeoutSeconds} seconds.`
-    );
-  }, timeoutMilliseconds);
+  let timeoutTimerID: NodeJS.Timeout | undefined;
+  let pollingTimerID: NodeJS.Timeout | undefined;
 
-  // Local state var to ensure CreateTable isn't called more than once.
+  // Race each request and polling delay against the same operation-wide deadline.
+  // A timed-out request may still settle, but cannot resume polling or mark the table active.
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
+    timeoutTimerID = setTimeout(() => {
+      reject(
+        new DdbSingleTableError(
+          `ensureTableIsActive has timed out after ${timeoutSeconds} seconds.`
+        )
+      );
+    }, timeoutMilliseconds);
+  });
+
+  const withTimeout = <T>(operation: Promise<T>): Promise<T> => {
+    return Promise.race([timeoutPromise, operation]);
+  };
+
   let hasCreateTableBeenCalled = false;
 
-  // Try to get TableStatus, ensure it's ACTIVE.
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      // DescribeTable will throw if Table doesn't exist
-      const response = await this.describeTable();
+  try {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      let tableStatus: TableStatus | undefined;
 
-      const tableStatus = response.Table?.TableStatus;
+      try {
+        const response = await withTimeout(this.describeTable());
+        tableStatus = response.Table?.TableStatus;
 
-      if (tableStatus === TableStatus.ACTIVE) {
-        clearTimeout(timeoutTimerID);
-        this.isTableActive = true;
-        break;
+        if (tableStatus !== TableStatus.ACTIVE) {
+          this.logger(
+            `Table "${this.tableName}" is not ACTIVE. Current table status: ${tableStatus ?? "UNKNOWN"}`
+          );
+        }
+      } catch (err: unknown) {
+        if (!isError(err) && !isPlainObject(err)) throw err;
+
+        const { ECONNREFUSED } = DdbConnectionError.NODE_ERROR_CODES;
+
+        if ((err as NodeJS.ErrnoException).code === ECONNREFUSED) throw new DdbConnectionError(err);
+
+        if (err.name !== ResourceNotFoundException.name) throw err;
+
+        if (!createIfNotExists) {
+          throw new DdbSingleTableError(
+            `Table "${this.tableName}" not found. To have the table created automatically when `
+              + `DynamoDB returns a "ResourceNotFoundException", set "createIfNotExists" to true.`
+          );
+        }
+
+        this.logger(`Table "${this.tableName}" not found.`);
+
+        if (!hasCreateTableBeenCalled) {
+          this.logger(`Creating Table "${this.tableName}" ...`);
+          hasCreateTableBeenCalled = true;
+
+          const response = await withTimeout(
+            this.createTable(isPlainObject(createIfNotExists) ? createIfNotExists : undefined)
+          );
+          tableStatus = response.TableDescription?.TableStatus;
+
+          this.logger(
+            `CreateTable operation complete. Current table status: ${tableStatus ?? "UNKNOWN"}`
+          );
+        }
       }
 
-      this.logger(
-        `Table "${this.tableName}" is not ACTIVE. Current table status: ${tableStatus ?? "UNKNOWN"}`
-      );
+      if (tableStatus === TableStatus.ACTIVE) {
+        this.isTableActive = true;
+        return;
+      }
 
-      // Wait `frequencyMilliseconds`, then try again
-      await new Promise((resolve) => {
-        setTimeout(resolve, frequencyMilliseconds);
-      });
-    } catch (err: unknown) {
-      // Sanity type-check: ensure `err` is an object.
-      if (!isError(err) && !isPlainObject(err)) throw err;
-
-      // If err.code is "ECONNREFUSED", a connection could not be made to the provided endpoint.
-      if ((err as NodeJS.ErrnoException).code === DdbConnectionError.NODE_ERROR_CODES.ECONNREFUSED)
-        throw new DdbConnectionError(err);
-
-      // If `err` is a "ResourceNotFoundException", Table doesn't exist — see if it should be created.
-      if (err.name !== ResourceNotFoundException.name) throw err;
-
-      // If Table doesn't exist AND !createIfNotExists, throw error.
-      if (!createIfNotExists) {
-        throw new DdbSingleTableError(
-          `Table "${this.tableName}" not found. To have the table created automatically when `
-            + `DynamoDB returns a "ResourceNotFoundException", set "createIfNotExists" to true.`
+      // Wait between attempts, including while a newly created table is not yet visible.
+      if (attempt + 1 < maxRetries) {
+        await withTimeout(
+          new Promise<void>((resolve) => {
+            pollingTimerID = setTimeout(resolve, frequencyMilliseconds);
+          })
         );
       }
-
-      // Inform user the Table doesn't exist.
-      this.logger(`Table "${this.tableName}" not found.`);
-
-      // If createTable has already been called, continue the for-loop.
-      if (hasCreateTableBeenCalled === true) continue;
-
-      // Else attempt to create the Table.
-      this.logger(`Creating Table "${this.tableName}" ...`);
-
-      // Create the table (provide `createIfNotExists` if it's a `tableConfigs` object)
-      const response = await this.createTable(
-        isPlainObject(createIfNotExists) ? createIfNotExists : undefined
-      );
-
-      // Get the TableStatus from the response
-      const tableStatus = response.TableDescription?.TableStatus;
-
-      // Update this bool flag so ensure CreateTable is only ever called once.
-      hasCreateTableBeenCalled = true;
-
-      this.logger(
-        `CreateTable operation complete. Current table status: ${tableStatus ?? "UNKNOWN"}`
-      );
-
-      // TableStatus is possibly already ACTIVE if using ddb-local.
-      if (tableStatus === TableStatus.ACTIVE) {
-        clearTimeout(timeoutTimerID);
-        this.isTableActive = true;
-        break;
-      }
     }
+
+    throw new DdbSingleTableError(
+      `Table "${this.tableName}" did not become ACTIVE after ${maxRetries} attempts.`
+    );
+  } finally {
+    clearTimeout(timeoutTimerID);
+    clearTimeout(pollingTimerID);
   }
 };

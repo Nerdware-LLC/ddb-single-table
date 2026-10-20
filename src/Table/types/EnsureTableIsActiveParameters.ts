@@ -8,7 +8,7 @@ export type EnsureTableIsActiveParameters = {
   maxRetries?: number;
   /** The number of seconds to wait in between connection attempts (default: 1). */
   frequency?: number;
-  /** The number of seconds to wait until the fn throws a connection timeout error (default: 30). */
+  /** The number of seconds until the returned promise rejects with a timeout error (default: 30). */
   timeout?: number;
   /**
    * Whether the table should be created if it does not yet exist. This can be an object with
