@@ -22,10 +22,9 @@ export const generateUpdateExpression = (
   itemAttributes: UnknownItem,
   { nullHandling }: GenerateUpdateExpressionOpts = {}
 ): {
-  [Key in
-    | "UpdateExpression"
-    | "ExpressionAttributeNames"
-    | "ExpressionAttributeValues"]: NonNullable<ClientWrapperUpdateItemInput[Key]>;
+  [
+    Key in "UpdateExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
+  ]: NonNullable<ClientWrapperUpdateItemInput[Key]>;
 } => {
   const shouldAddToRemoveClause =
     nullHandling !== "SET"
@@ -35,6 +34,8 @@ export const generateUpdateExpression = (
   const updateExpressionClauses: Record<"SET" | "REMOVE", Array<string>> = { SET: [], REMOVE: [] };
   const ExpressionAttributeNames: Record<string, string> = {};
   const ExpressionAttributeValues: Record<string, SupportedAttributeValueType> = {};
+
+  let nextValueTokenIndex = 0;
 
   const recurse = (value: unknown, path: Array<string | number>) => {
     if (
@@ -54,7 +55,11 @@ export const generateUpdateExpression = (
         }
       }
     } else {
-      const { namePath, valueToken } = buildAttrPathTokens(path, ExpressionAttributeNames);
+      const { namePath, valueToken } = buildAttrPathTokens(
+        path,
+        ExpressionAttributeNames,
+        nextValueTokenIndex++
+      );
       // Derive and append the appropriate UpdateExpression clause
       if (shouldAddToRemoveClause(value)) {
         updateExpressionClauses.REMOVE.push(namePath);

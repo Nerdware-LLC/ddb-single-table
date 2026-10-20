@@ -543,11 +543,11 @@ describe("Model", () => {
       // Assert `updateItem` was called with expected args
       expect(spies.clientUpdateItem).toHaveBeenCalledExactlyOnceWith({
         Key: unaliasedMockItemKeys,
-        UpdateExpression: "SET #sk = :sk, #updatedAt = :updatedAt",
+        UpdateExpression: "SET #sk = :v0, #updatedAt = :v1",
         ExpressionAttributeNames: { "#sk": "sk", "#updatedAt": "updatedAt" },
         ExpressionAttributeValues: {
-          ":sk": mockUpdatedHandle,
-          ":updatedAt": expect.any(Date),
+          ":v0": mockUpdatedHandle,
+          ":v1": expect.any(Date),
         },
         ReturnValues: "ALL_NEW",
       });
