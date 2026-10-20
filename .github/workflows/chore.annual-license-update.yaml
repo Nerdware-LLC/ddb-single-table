@@ -13,7 +13,7 @@ jobs:
     permissions:
       contents: write # to checkout the code and update the LICENSE file
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
@@ -24,20 +24,21 @@ jobs:
 
       - name: Update Copyright Date Range in LICENSE
         run: |
-          function log_error_and_exit() {
-              local problem_description="$1"
-              printf '%s\n' '🚨LICENSE UPDATE FAILED🚨' "ERROR: $problem_description."
+          set -eE  # <-- EXIT ON ERROR, ENSURE 'ERR' trap IS INHERITED IN SUBSHELLS
+
+          function log_cmd_failure_and_exit() {
+              printf '%s\n' \
+                  '🚨LICENSE UPDATE FAILED🚨' \
+                  "ERROR: Command '$BASH_COMMAND' exited with non-zero exit code (LINENO: $LINENO)."
               exit 1
           }
 
+          trap log_cmd_failure_and_exit ERR
+
           year=$( date +%Y )
-
-          sed -i -E "s/(Copyright © [0-9]{4})-[0-9]{4}(.*)/\1-$year\2/" ./LICENSE ||
-              log_error_and_exit 'sed command exited with non-zero exit code'
-
+          sed -i -E "s/(Copyright © [0-9]{4})(–[0-9]{4})?(.*)/\1–$year\3/" ./LICENSE
           git add ./LICENSE
-
-          git commit -m "chore(license): update copyright date range to include $year" ||
-              log_error_and_exit 'git commit command exited with non-zero exit code'
+          git commit -m "chore(license): update copyright date range to include $year"
+          git push
 
           echo '✅ License Copyright date range successfully updated.'
