@@ -74,7 +74,8 @@ describe("ItemTypeToSchema", () => {
       Schema["records"]["schema"][0]["schema"]["deleted"]["nullable"]
     >().toEqualTypeOf<true>();
     expectTypeOf<Schema["tuple"]["type"]>().toEqualTypeOf<"tuple">();
-    expectTypeOf<Schema["tuple"]["schema"][0]["type"]>().toEqualTypeOf<"string" | "number">();
+    expectTypeOf<Schema["tuple"]["schema"][0]["type"]>().toEqualTypeOf<"string">();
+    expectTypeOf<Schema["tuple"]["schema"][1]["type"]>().toEqualTypeOf<"number">();
   });
 
   test("rejects any, never, and unsupported values instead of inferring broad schemas", () => {
@@ -102,12 +103,11 @@ describe("ItemTypeToSchema", () => {
     expectTypeOf<ItemTypeFromSchema<typeof _schema>>().toEqualTypeOf<Item>();
   });
 
-  test.todo("accepts a multi-value oneOf config for an item with a string literal union", () => {
+  test("accepts a multi-value oneOf config for an item with a string literal union", () => {
     type Schema = ItemTypeToSchema<{ status: "OPEN" | "CLOSED" }>;
 
     type EnumConfig = { type: "enum"; oneOf: ["OPEN", "CLOSED"]; required: true };
 
-    // @ts-expect-error String unions currently distribute into single-value enum configs.
     expectTypeOf<EnumConfig>().toExtend<Schema["status"]>();
   });
 });

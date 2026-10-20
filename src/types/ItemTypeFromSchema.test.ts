@@ -145,7 +145,7 @@ describe("ItemTypeFromSchema", () => {
       status?: "OPEN" | null;
       map?: { id: string } | null;
       list?: number[] | null;
-      tuple?: boolean[] | null;
+      tuple?: [boolean] | null;
       nonNullable?: string;
     }>();
   });
@@ -211,10 +211,9 @@ describe("ItemTypeFromSchema", () => {
       };
     }>;
 
-    // Tuple schemas currently produce arrays rather than fixed-length tuples.
     expectTypeOf<Item>().toEqualTypeOf<{
       list: Array<string | null>;
-      tuple: string[];
+      tuple: [string, string];
     }>();
   });
 
@@ -303,9 +302,7 @@ describe("ItemTypeFromSchema", () => {
     >().toBeNever();
   });
 
-  // Known gaps found while adding coverage. Keep the intended behavior visible without
-  // asserting the current incorrect result as the contract or changing production types.
-  test.todo("infers heterogeneous array and tuple schemas as unions instead of never[]", () => {
+  test("infers heterogeneous array and tuple schemas as unions instead of never[]", () => {
     type Schema = {
       list: {
         type: "array";
@@ -319,21 +316,19 @@ describe("ItemTypeFromSchema", () => {
       };
     };
 
-    // @ts-expect-error AttrValue does not distribute across heterogeneous element configs.
     expectTypeOf<ItemTypeFromSchema<Schema>>().toEqualTypeOf<{
       list: Array<string | number>;
-      tuple: Array<string | number>;
+      tuple: [string, number];
     }>();
   });
 
-  test.todo("infers empty array and tuple schemas as never[] instead of (string | null)[]", () => {
+  test("infers empty array elements as never and preserves empty tuple schemas", () => {
     type Schema = {
       list: { type: "array"; required: true; schema: readonly [] };
       tuple: { type: "tuple"; required: true; schema: readonly [] };
     };
 
-    // @ts-expect-error AttrValue<never, ...> incorrectly enters the nullable string branch.
-    expectTypeOf<ItemTypeFromSchema<Schema>>().toEqualTypeOf<{ list: never[]; tuple: never[] }>();
+    expectTypeOf<ItemTypeFromSchema<Schema>>().toEqualTypeOf<{ list: never[]; tuple: [] }>();
   });
 });
 

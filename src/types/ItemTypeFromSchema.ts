@@ -136,12 +136,26 @@ type PickRequiredAttrs<
 /**
  * This generic gets the type from an individual attribute config from a Model schema.
  */
-// prettier-ignore
 export type AttrValue<
   T extends BaseAttributeConfig,
   Opts extends ItemTypeOpts,
   NestDepth extends NestDepthMax32,
-> =
+> = [T] extends [never]
+  ? never
+  : T extends unknown
+    ? AttrValueForConfig<T, Opts, NestDepth>
+    : never;
+
+type TupleValues<
+  S extends ModelSchemaNestedArray,
+  O extends ItemTypeOpts,
+  D extends NestDepthMax32,
+> = {
+  -readonly [K in keyof S]: AttrValue<S[K], O, D>;
+};
+
+// prettier-ignore
+type AttrValueForConfig<T extends BaseAttributeConfig, Opts extends ItemTypeOpts, NestDepth extends NestDepthMax32> =
   T["type"] extends "string"
     ? CheckNullable<string, T>
   : T["type"] extends "number"
@@ -164,7 +178,9 @@ export type AttrValue<
         SchemaMapToItem<T["schema"], Opts, IterateNestDepthMax32<NestDepth>>,
         T
       >
-  : T extends { type: "array" | "tuple"; schema: ModelSchemaNestedArray }
+  : T extends { type: "tuple"; schema: ModelSchemaNestedArray }
+    ? CheckNullable<TupleValues<T["schema"], Opts, IterateNestDepthMax32<NestDepth>>, T>
+  : T extends { type: "array"; schema: ModelSchemaNestedArray }
     ? CheckNullable<
         Array<AttrValue<T["schema"][number], Opts, IterateNestDepthMax32<NestDepth>>>,
         T
