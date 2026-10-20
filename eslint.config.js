@@ -12,6 +12,7 @@ import jsdocPlugin from "eslint-plugin-jsdoc";
 import nodePlugin from "eslint-plugin-n";
 import globals from "globals";
 import tsEslint from "typescript-eslint";
+import pkgJson from "./package.json" with { type: "json" };
 
 // Shared constants:
 const PARSED_EXTENSIONS = [".ts", ".js"];
@@ -62,8 +63,7 @@ export default defineConfig(
         createNodeResolver({ extensions: PARSED_EXTENSIONS }),
       ],
       "n": {
-        // Runtime nodejs version !== dev nodejs version
-        version: ">=22.19.0",
+        version: pkgJson.devEngines.runtime.version,
       },
     },
   },
