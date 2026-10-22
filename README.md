@@ -840,8 +840,6 @@ for await (const user of UserModel.scanItems()) {
 }
 ```
 
-Continuation keys retain native, unaliased DynamoDB key names. `limit` / `Limit` remain evaluation limits per database request, rather than total iterator limits. Stopping an iterator prevents further page requests.
-
 ## ❓ FAQ
 
 ### Q: _Why "single-table-first"?_<!-- omit in toc -->
