@@ -1,9 +1,8 @@
 import { generateUpdateExpression } from "./generateUpdateExpression.js";
 
 describe("generateUpdateExpression()", () => {
-  test("returns an empty UpdateExpression when itemAttributes is an empty object", () => {
-    const result = generateUpdateExpression({});
-    expect(result.UpdateExpression).toBe("");
+  test("rejects an empty update", () => {
+    expect(() => generateUpdateExpression({})).toThrow("at least one attribute");
   });
 
   test("returns the expected values when called with truthy string/number/object attributes", () => {
@@ -144,5 +143,11 @@ describe("generateUpdateExpression()", () => {
     expect(first.ExpressionAttributeValues).toStrictEqual({ ":v0": 1 });
     expect(second.ExpressionAttributeValues).toStrictEqual({ ":v0": 2 });
     expect(first.UpdateExpression).toBe(second.UpdateExpression);
+  });
+
+  test("assigns empty maps and lists rather than dropping them", () => {
+    const result = generateUpdateExpression({ list: [], map: {}, label: "keep" });
+    expect(result.UpdateExpression).toBe("SET #list = :v0, #map = :v1, #label = :v2");
+    expect(result.ExpressionAttributeValues).toStrictEqual({ ":v0": [], ":v1": {}, ":v2": "keep" });
   });
 });

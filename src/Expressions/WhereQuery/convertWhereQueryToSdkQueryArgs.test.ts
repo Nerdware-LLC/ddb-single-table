@@ -200,4 +200,27 @@ describe("convertWhereQueryToSdkQueryArgs()", () => {
       () => convertWhereQueryToSdkQueryArgs({ where: {} }) //
     ).toThrow(/KeyConditionExpressions must include an equality check/i);
   });
+
+  test("preserves supplied bindings and generates valid placeholders for punctuation", () => {
+    const result = convertWhereQueryToSdkQueryArgs({
+      where: { "a-b": "one", "a b": { between: [1, 2] } },
+      ExpressionAttributeNames: { "#q": "existing" },
+      ExpressionAttributeValues: { ":q": "existing", ":qLower": 0 },
+    });
+
+    expect(result.ExpressionAttributeNames["#q"]).toBe("existing");
+    expect(result.ExpressionAttributeValues[":q"]).toBe("existing");
+    expect(Object.values(result.ExpressionAttributeValues)).toStrictEqual([
+      "existing",
+      0,
+      "one",
+      1,
+      2,
+    ]);
+
+    for (const token of Object.keys(result.ExpressionAttributeValues))
+      expect(token).toMatch(/^:[A-Za-z0-9]+$/);
+    for (const token of Object.keys(result.ExpressionAttributeNames))
+      expect(token).toMatch(/^#[A-Za-z0-9_]+$/);
+  });
 });
