@@ -1,3 +1,5 @@
+import { ioActions } from "../IOActions/IOActions.js";
+import { aliasMapping } from "../IOActions/aliasMapping.js";
 import { ModelSchema } from "./ModelSchema.js";
 import type { ModelSchemaType, ModelSchemaMetadata } from "./types/index.js";
 import type { TableKeysAndIndexes } from "../Table/types/index.js";
@@ -22,7 +24,7 @@ describe("ModelSchema", () => {
         enumAttr: { type: "enum", oneOf: ["value1", "value2"] },
       };
 
-      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrowError();
+      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrow();
     });
 
     test("validates a ModelSchemaType with optional attributes", () => {
@@ -31,23 +33,23 @@ describe("ModelSchema", () => {
         optionalAttr: { type: "number" },
       };
 
-      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrowError();
+      expect(() => ModelSchema.validate(schema, METADATA)).not.toThrow();
     });
 
     test("throws a SchemaValidationError when an attribute specifies isHashKey, isRangeKey, or an index", () => {
       expect(() =>
         ModelSchema.validate({ attr: { type: "string", isHashKey: true } } as any, METADATA)
-      ).toThrowError(
+      ).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" includes an "isHashKey" config, which is only valid in the TableKeysSchema.`
       );
       expect(() =>
         ModelSchema.validate({ attr: { type: "string", isRangeKey: true } } as any, METADATA)
-      ).toThrowError(
+      ).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" includes an "isRangeKey" config, which is only valid in the TableKeysSchema.`
       );
       expect(() =>
         ModelSchema.validate({ attr: { type: "string", index: {} } } as any, METADATA)
-      ).toThrowError(
+      ).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" includes an "index" config, which is only valid in the TableKeysSchema.`
       );
     });
@@ -61,7 +63,41 @@ describe("ModelSchema", () => {
           } as any,
           METADATA
         )
-      ).toThrowError(`${ERR_MSG_PREFIX} the ModelSchema contains duplicate alias "attrAlias".`);
+      ).toThrow(`${ERR_MSG_PREFIX} the ModelSchema contains duplicate alias "attrAlias".`);
+    });
+
+    test("rejects alias namespace collisions and accepts prototype-like alias names", () => {
+      expect(() =>
+        ModelSchema.validate(
+          { a: { type: "string", alias: "b" }, b: { type: "string" } },
+          { name: "test" }
+        )
+      ).toThrow("conflicts");
+
+      const result = ModelSchema.validate(
+        { a: { type: "string", alias: "__proto__" } },
+        { name: "test" }
+      );
+
+      expect(Object.hasOwn(result.aliasesToAttributesMap, "__proto__")).toBe(true);
+      expect(result.aliasesToAttributesMap.__proto__).toBe("a");
+
+      const schema = { a: { type: "string", alias: "__proto__" } } as const;
+      const mapped = aliasMapping.call(
+        ioActions,
+        { a: "value" },
+        {
+          schema,
+          schemaEntries: Object.entries(schema),
+          aliasesMap: result.attributesToAliasesMap,
+          ioDirection: "fromDB",
+          schemaOptions: {},
+          modelName: "Audit",
+        }
+      );
+
+      expect(Object.hasOwn(mapped, "__proto__")).toBe(true);
+      expect(mapped.__proto__).toBe("value");
     });
   });
 

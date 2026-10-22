@@ -4,8 +4,9 @@
   "extends": "./tsconfig.build-esm.json",
 
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "commonjs",
     "moduleResolution": "Node",
+    "ignoreDeprecations": "6.0",
     "outDir": "dist/cjs",
     "verbatimModuleSyntax": false
   }

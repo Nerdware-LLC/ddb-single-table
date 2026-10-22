@@ -1,5 +1,6 @@
 import { TableKeysSchema } from "./TableKeysSchema.js";
 import type { TableKeysSchemaType } from "./types/TableKeysSchemaType.js";
+import type { MergeModelAndTableKeysSchema } from "./types/index.js";
 
 describe("TableKeysSchema", () => {
   // SHARED TEST INPUTS:
@@ -22,7 +23,7 @@ describe("TableKeysSchema", () => {
 
   const ERR_MSG_PREFIX = `TableKeysSchema is invalid:`;
 
-  describe("TableKeysSchema.validate()", () => {
+  describe("validate", () => {
     test(`returns an object with just "tableHashKey" when called with a schema that only contains a pk`, () => {
       expect(TableKeysSchema.validate({ pk: VALID_TABLE_KEYS_SCHEMA.pk })).toStrictEqual({
         tableHashKey: "pk",
@@ -54,7 +55,7 @@ describe("TableKeysSchema", () => {
     });
 
     test("validates a valid TableKeysSchemaType with all supported types and attributes", () => {
-      expect(() => TableKeysSchema.validate(VALID_TABLE_KEYS_SCHEMA)).not.toThrowError();
+      expect(() => TableKeysSchema.validate(VALID_TABLE_KEYS_SCHEMA)).not.toThrow();
     });
 
     test("throws a SchemaValidationError when a key attribute does not specify isHashKey, isRangeKey, nor an index", () => {
@@ -63,7 +64,7 @@ describe("TableKeysSchema", () => {
         attr: { type: "string", required: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" is not configured as a key or index.`
       );
     });
@@ -74,7 +75,7 @@ describe("TableKeysSchema", () => {
         attr: { type: "Date", required: true, isHashKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" has an invalid "type" (must be "string", "number", or "Buffer").`
       );
     });
@@ -85,7 +86,7 @@ describe("TableKeysSchema", () => {
         attr: { type: "string", required: false, isHashKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} attribute "attr" is not "required".`
       );
     });
@@ -96,7 +97,7 @@ describe("TableKeysSchema", () => {
         secondHashKey: { type: "string", required: true, isHashKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} multiple table hash keys ("firstHashKey" and "secondHashKey").`
       );
     });
@@ -108,7 +109,7 @@ describe("TableKeysSchema", () => {
         secondRangeKey: { type: "string", required: true, isRangeKey: true },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} multiple table range keys ("firstRangeKey" and "secondRangeKey").`
       );
     });
@@ -123,7 +124,7 @@ describe("TableKeysSchema", () => {
         },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} the index for attribute "attr" is missing a "name".`
       );
     });
@@ -145,19 +146,49 @@ describe("TableKeysSchema", () => {
         },
       };
 
-      expect(() => TableKeysSchema.validate(schema as any)).toThrowError(
+      expect(() => TableKeysSchema.validate(schema as any)).toThrow(
         `${ERR_MSG_PREFIX} multiple indexes with the same name ("${DUPE_INDEX_NAME}").`
       );
     });
 
     test(`throws a SchemaValidationError when the schema does not specify table hash-key`, () => {
-      expect(() => TableKeysSchema.validate({ sk: VALID_TABLE_KEYS_SCHEMA.sk })).toThrowError(
+      expect(() => TableKeysSchema.validate({ sk: VALID_TABLE_KEYS_SCHEMA.sk })).toThrow(
         `${ERR_MSG_PREFIX} the schema does not contain a hash key (must specify exactly one attribute with "isHashKey: true").`
       );
     });
+
+    test("defaults indexes to GLOBAL and validates LOCAL constraints and references", () => {
+      const pk = { type: "string", required: true, isHashKey: true } as const;
+
+      expect(
+        TableKeysSchema.validate({
+          pk,
+          other: { type: "string", required: true, index: { name: "gsi" } },
+        }).indexes?.gsi.type
+      ).toBe("GLOBAL");
+
+      expect(() =>
+        TableKeysSchema.validate({
+          pk,
+          other: { type: "string", required: true, index: { name: "lsi", global: false } },
+        })
+      ).toThrow("local index");
+
+      expect(() =>
+        TableKeysSchema.validate({ pk: { ...pk, index: { name: "bad", rangeKey: "missing" } } })
+      ).toThrow("unknown range");
+
+      const result = TableKeysSchema.validate({
+        pk: { ...pk, index: { name: "lsi", global: false, rangeKey: "other" } },
+        sk: { type: "string", required: true, isRangeKey: true },
+        other: { type: "string", required: true, index: { name: "gsi" } },
+      });
+
+      expect(result.indexes?.lsi).toMatchObject({ type: "LOCAL", indexPK: "pk", indexSK: "other" });
+    });
   });
 
-  describe("TableKeysSchema.getMergedModelSchema()", () => {
+  describe("getMergedModelSchema", () => {
     test("merges the TableKeysSchema into the provided ModelSchema", () => {
       expect(
         TableKeysSchema.getMergedModelSchema({
@@ -177,6 +208,36 @@ describe("TableKeysSchema", () => {
       });
     });
 
+    test("merges frozen configs without mutation and honors model overrides at runtime and type level", () => {
+      const pk = { type: "string", required: true, isHashKey: true } as const;
+      const table = { pk: { ...pk, alias: "tableID", default: "table" } } as const;
+      const model = Object.freeze({ pk: Object.freeze({ alias: "id", default: "model" }) });
+      const merged = TableKeysSchema.getMergedModelSchema({
+        tableKeysSchema: table,
+        modelSchema: model,
+      });
+
+      expect(merged.pk).toStrictEqual({
+        type: "string",
+        required: true,
+        alias: "id",
+        default: "model",
+      });
+
+      expect(model.pk).toStrictEqual({ alias: "id", default: "model" });
+
+      expectTypeOf<
+        MergeModelAndTableKeysSchema<typeof table, typeof model>["pk"]["alias"]
+      >().toEqualTypeOf<"id">();
+
+      const inherited = TableKeysSchema.getMergedModelSchema({
+        tableKeysSchema: table,
+        modelSchema: { pk: { alias: "id" } },
+      });
+
+      expect(inherited.pk.default).toBe("table");
+    });
+
     test("throws a SchemaValidationError if the ModelSchema conflicts with the TableKeysSchema", () => {
       expect(() =>
         TableKeysSchema.getMergedModelSchema({
@@ -185,7 +246,7 @@ describe("TableKeysSchema", () => {
             pk: { type: "number", required: true }, // <-- conflicting "type"
           },
         })
-      ).toThrowError(
+      ).toThrow(
         `ModelSchema is invalid: the "type" config in the ModelSchema for key attribute "pk" does not match the TableKeysSchema.`
       );
 
@@ -196,7 +257,7 @@ describe("TableKeysSchema", () => {
             pk: { type: "string", required: false }, // <-- conflicting "required"
           },
         })
-      ).toThrowError(
+      ).toThrow(
         `ModelSchema is invalid: the "required" config in the ModelSchema for key attribute "pk" does not match the TableKeysSchema.`
       );
     });

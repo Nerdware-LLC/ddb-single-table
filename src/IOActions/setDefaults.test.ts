@@ -1,3 +1,4 @@
+import { ioActions } from "./IOActions.js";
 import { recursivelyApplyIOAction } from "./recursivelyApplyIOAction.js";
 import { setDefaults } from "./setDefaults.js";
 import type { IOActions, IOActionContext } from "./types/index.js";
@@ -129,5 +130,91 @@ describe("IOAction: setDefaults", () => {
         },
       ],
     });
+  });
+
+  test("keeps defaults connected to the copied root without polluting or mutating input", () => {
+    const schema = {
+      profile: {
+        type: "map",
+        schema: {
+          count: { type: "number", default: 42 },
+          derived: {
+            type: "number",
+            default: (root: { profile: { count: number } }) => root.profile.count + 1,
+          },
+        },
+      },
+      items: {
+        type: "array",
+        schema: [{ type: "map", schema: { value: { type: "number", default: 7 } } }],
+      },
+      total: {
+        type: "number",
+        default: (root: { profile: { derived: number }; items: { value: number }[] }) =>
+          root.profile.derived + root.items[0].value,
+      },
+    } as const satisfies ModelSchemaType;
+    const input = { profile: {}, items: [{}] };
+    const context = {
+      schema,
+      schemaEntries: Object.entries(schema),
+      modelName: "Audit",
+      schemaOptions: {},
+      ioDirection: "toDB",
+      aliasesMap: {},
+    } satisfies IOActionContext;
+    const output = setDefaults.call(ioActions, input, context);
+    expect(output).toStrictEqual({
+      profile: { count: 42, derived: 43 },
+      items: [{ value: 7 }],
+      total: 50,
+    });
+    expect(input).toStrictEqual({ profile: {}, items: [{}] });
+    expect(output).not.toHaveProperty("count");
+    expect(output).not.toHaveProperty("_");
+  });
+
+  test("does not share mutable default containers across created items or the schema", () => {
+    const defaultMap = { values: [1] };
+    const schema = {
+      profile: {
+        type: "map",
+        default: defaultMap,
+        schema: {
+          values: { type: "array", schema: [{ type: "number" }] },
+        },
+      },
+    } as const satisfies ModelSchemaType;
+    const context = {
+      schema,
+      schemaEntries: Object.entries(schema),
+      modelName: "Audit",
+      schemaOptions: {},
+      ioDirection: "toDB",
+      aliasesMap: {},
+    } satisfies IOActionContext;
+    const first = setDefaults.call(ioActions, {}, context) as { profile: { values: number[] } };
+    const second = setDefaults.call(ioActions, {}, context) as { profile: { values: number[] } };
+    first.profile.values.push(2);
+    expect(second.profile.values).toStrictEqual([1]);
+    expect(defaultMap.values).toStrictEqual([1]);
+  });
+
+  test("applies defaults for prototype-like attribute names using own-property checks", () => {
+    const schema = { toString: { type: "string", default: "value" } } as const;
+    const output = setDefaults.call(
+      ioActions,
+      {},
+      {
+        schema,
+        schemaEntries: Object.entries(schema),
+        modelName: "Audit",
+        schemaOptions: {},
+        ioDirection: "toDB",
+        aliasesMap: {},
+      }
+    );
+    expect(Object.hasOwn(output, "toString")).toBe(true);
+    expect(Object.getOwnPropertyDescriptor(output, "toString")?.value).toBe("value");
   });
 });

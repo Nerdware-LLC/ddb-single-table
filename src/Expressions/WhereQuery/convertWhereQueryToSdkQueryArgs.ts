@@ -15,7 +15,10 @@ import type { BaseItem, UnknownItem } from "../../types/index.js";
  */
 export const convertWhereQueryToSdkQueryArgs = <ItemParams extends UnknownItem = BaseItem>({
   where,
-}: WhereQueryParameter<ItemParams>) => {
+  ExpressionAttributeNames: existingNames,
+  ExpressionAttributeValues: existingValues,
+}: WhereQueryParameter<ItemParams>
+  & Pick<ClientWrapperQueryInput, "ExpressionAttributeNames" | "ExpressionAttributeValues">) => {
   // Ensure `where` is a plain Record-like object
   if (!isPlainObject(where)) {
     throw new InvalidExpressionError({
@@ -41,8 +44,17 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends UnknownItem =
   // Process whereQuery to derive the KCE, EAN, and EAV:
 
   let KeyConditionExpression = "";
-  const ExpressionAttributeNames: ClientWrapperQueryInput["ExpressionAttributeNames"] = {};
-  const ExpressionAttributeValues: ClientWrapperQueryInput["ExpressionAttributeValues"] = {};
+  const ExpressionAttributeNames: NonNullable<ClientWrapperQueryInput["ExpressionAttributeNames"]> =
+    { ...existingNames };
+  const ExpressionAttributeValues: NonNullable<
+    ClientWrapperQueryInput["ExpressionAttributeValues"]
+  > = { ...existingValues };
+  const allocate = (base: string, bindings: object) => {
+    let token = base;
+    let suffix = 0;
+    while (Object.hasOwn(bindings, token)) token = `${base}${suffix++}`;
+    return token;
+  };
 
   for (let i = 0; i < whereQueryKeys.length; i++) {
     const attrName = whereQueryKeys[i];
@@ -52,7 +64,10 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends UnknownItem =
     const { operator, comparand } = getNormalizedComparisonMeta(attrName, whereQueryComparison);
 
     // Update ExpressionAttributeNames
-    const eanToken = `#${attrName}`;
+    const eanToken = allocate(
+      /^[A-Za-z0-9_]+$/.test(attrName) ? `#${attrName}` : "#q",
+      ExpressionAttributeNames
+    );
     ExpressionAttributeNames[eanToken] = attrName;
 
     // Update ExpressionAttributeValues, and get the KCE clause
@@ -60,8 +75,14 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends UnknownItem =
     if (operator === "between") {
       // For "between", the comparand is an array, so we need to add 2 KV-pairs to EAV
       const [lowerBoundComparand, upperBoundComparand] = comparand;
-      const lowerBoundEavToken = `:${attrName}LowerBound`;
-      const upperBoundEavToken = `:${attrName}UpperBound`;
+      const lowerBoundEavToken = allocate(
+        /^[A-Za-z0-9]+$/.test(attrName) ? `:${attrName}LowerBound` : ":qLower",
+        ExpressionAttributeValues
+      );
+      const upperBoundEavToken = allocate(
+        /^[A-Za-z0-9]+$/.test(attrName) ? `:${attrName}UpperBound` : ":qUpper",
+        ExpressionAttributeValues
+      );
       ExpressionAttributeValues[lowerBoundEavToken] = lowerBoundComparand;
       ExpressionAttributeValues[upperBoundEavToken] = upperBoundComparand;
       kceClause = WHERE_QUERY_OPERATOR_TO_EXPRESSION[operator](eanToken, [
@@ -69,7 +90,10 @@ export const convertWhereQueryToSdkQueryArgs = <ItemParams extends UnknownItem =
         upperBoundEavToken,
       ]);
     } else {
-      const eavToken = `:${attrName}`;
+      const eavToken = allocate(
+        /^[A-Za-z0-9]+$/.test(attrName) ? `:${attrName}` : ":q",
+        ExpressionAttributeValues
+      );
       ExpressionAttributeValues[eavToken] = comparand;
       kceClause = WHERE_QUERY_OPERATOR_TO_EXPRESSION[operator](eanToken, [eavToken]);
     }

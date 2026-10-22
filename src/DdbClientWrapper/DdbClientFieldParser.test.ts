@@ -1,4 +1,11 @@
+import { NumberValueImpl } from "@aws-sdk/util-dynamodb";
+import { getRecursiveValueConverter } from "../utils/getRecursiveValueConverter.js";
 import { DdbClientFieldParser } from "./DdbClientFieldParser.js";
+import type {
+  ClientWrapperPutItemOutput,
+  ClientWrapperBatchWriteItemOutput,
+  UnmarshalledItemCollectionMetrics,
+} from "./types/index.js";
 import type { __MetadataBearer as MetadataBearer } from "@aws-sdk/client-dynamodb";
 
 describe("DdbClientFieldParser", () => {
@@ -323,6 +330,64 @@ describe("DdbClientFieldParser", () => {
     test("parses response from TransactWriteItemsCommand", () => {
       const result = parser.parseClientResponse({ $metadata: mockMetadata });
       expect(result).toStrictEqual({ $metadata: mockMetadata });
+    });
+
+    test("forwards number-wrapping options for single and batch collection metrics", () => {
+      const parser = new DdbClientFieldParser({ tableName: "Audit" });
+
+      const metrics = {
+        ItemCollectionKey: { pk: { N: "9007199254740993" } },
+        SizeEstimateRangeGB: [0, 1],
+      };
+
+      const single = parser.parseClientResponse(
+        { ItemCollectionMetrics: metrics, $metadata: {} },
+        { wrapNumbers: true }
+      );
+
+      const batch = parser.parseClientResponse(
+        { ItemCollectionMetrics: { Audit: [metrics] }, $metadata: {} },
+        { wrapNumbers: true }
+      );
+
+      expect(single.ItemCollectionMetrics.ItemCollectionKey?.pk).toBeInstanceOf(NumberValueImpl);
+      expect(batch.ItemCollectionMetrics.Audit[0].ItemCollectionKey?.pk).toBeInstanceOf(
+        NumberValueImpl
+      );
+
+      expectTypeOf<
+        NonNullable<ClientWrapperPutItemOutput["ItemCollectionMetrics"]>
+      >().toEqualTypeOf<UnmarshalledItemCollectionMetrics>();
+
+      expectTypeOf<
+        NonNullable<ClientWrapperBatchWriteItemOutput["ItemCollectionMetrics"]>
+      >().toEqualTypeOf<Record<string, UnmarshalledItemCollectionMetrics[]>>();
+    });
+  });
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  describe("date handling", () => {
+    test("supports disabling legacy date conversion for direct wrapper users", () => {
+      const parser = new DdbClientFieldParser({ tableName: "Audit", dateConversion: "none" });
+      const value = "2026-10-20";
+      expect(parser.unmarshallAndConvertDates({ value: { S: value } })).toStrictEqual({ value });
+      expect(parser.marshallAndConvertDates({ value })).toStrictEqual({ value: { S: value } });
+    });
+
+    test("uses copy-on-write conversion and preserves unchanged subtrees", () => {
+      const convert = getRecursiveValueConverter((value) =>
+        value instanceof Date ? value.toISOString() : undefined
+      );
+
+      const input = { stable: { label: "string" }, changed: [new Date("2026-10-20")] };
+      const output = convert(input) as typeof input;
+
+      expect(output).not.toBe(input);
+      expect(output.stable).toBe(input.stable);
+      expect(input.changed[0]).toBeInstanceOf(Date);
+      expect(output.changed[0]).toBe("2026-10-20T00:00:00.000Z");
+      expect(convert(input.stable)).toBe(input.stable);
     });
   });
 });

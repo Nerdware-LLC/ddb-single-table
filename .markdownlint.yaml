@@ -1,0 +1,22 @@
+####################################################################################
+# Markdownlint Configs
+# https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint
+####################################################################################
+
+# MD001 heading-increment - If true, requires heading levels to only increment 1 level at a time.
+MD001: false
+
+# MD013 line-length - If true, requires line length to not exceed the specified limit (default: 80).
+MD013: false
+
+# MD024 no-duplicate-heading - If true, forbids duplicate headings at the same level.
+MD024: { siblings_only: true }
+
+# MD027 no-multiple-space-blockquote - If true, forbids 2+ spaces before blockquotes.
+MD027: false
+
+# MD033 no-inline-html - If true, forbids inline HTML.
+MD033: false
+
+# MD041 first-line-heading - If true, requires the first line in a file to be a heading.
+MD041: false

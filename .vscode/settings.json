@@ -1,19 +1,26 @@
 {
-  "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-
+  "editor.unicodeHighlight.allowedCharacters": {
+    "️–": true
+  },
   "eslint.codeActionsOnSave.mode": "all",
   "eslint.codeActionsOnSave.rules": ["!prefer-const", "*"], // When I say `let`, I mean `let`!
   "eslint.format.enable": false,
-
-  "markdownlint.config": {
-    "MD024": { "siblings_only": true }
+  "explorer.sortOrder": "type",
+  "explorer.sortOrderLexicographicOptions": "upper",
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "search.exclude": {
+    "package-lock.json": true,
+    "**/CHANGELOG.md": true,
+    "**/.git/**": true,
+    "**/.tsbuildinfo/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
   },
-
-  "search.exclude": { "package-lock.yaml": true, "**/CHANGELOG.md": true },
-
-  "typescript.tsdk": "node_modules/typescript/lib",
-
+  "todo-tree.ripgrep.ripgrep": "/usr/bin/rg",
   "vsicons.associations.files": [
     // https://github.com/vscode-icons/vscode-icons/blob/master/src/iconsManifest/supportedExtensions.ts
     {

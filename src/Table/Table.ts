@@ -1,12 +1,14 @@
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
 import { Model } from "../Model/Model.js";
 import { TableKeysSchema } from "../Schema/TableKeysSchema.js";
+import { registerClient } from "./clientLifecycle.js";
 import { createTable } from "./createTable.js";
 import { ensureTableIsActive } from "./ensureTableIsActive.js";
 import type { TableConstructorParameters, TableKeysAndIndexes, TableLogFn } from "./types/index.js";
 import type {
   TableKeysSchemaType,
   ModelSchemaType,
+  ModelSchemaInput,
   ModelSchemaOptions,
   MergeModelAndTableKeysSchema,
 } from "../Schema/types/index.js";
@@ -30,12 +32,15 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
   readonly ddb: DdbClientWrapper;
   readonly logger: TableLogFn;
   isTableActive: boolean;
+  private readonly releaseClient: (destroy: boolean) => void;
 
   constructor({
     tableName,
     tableKeysSchema,
     ddbClient,
     marshallingConfigs,
+    dateConversion,
+    dateSchema,
     logger = console.info,
   }: TableConstructorParameters<TKSchema>) {
     // Validate the TableKeysSchema and obtain the table's keys+indexes
@@ -50,16 +55,27 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
     this.indexes = indexes;
 
     // Attach proc exit handler which calls destroy method
-    process.on("exit", () => ddbClient.destroy());
+    this.releaseClient = registerClient(ddbClient);
 
     // DDB client wrapper
-    this.ddb = new DdbClientWrapper({ ddbClient, tableName, marshallingConfigs });
+    this.ddb = new DdbClientWrapper({
+      ddbClient,
+      tableName,
+      marshallingConfigs,
+      ...(dateConversion && { dateConversion }),
+      ...(dateSchema && { dateSchema }),
+    });
   }
 
   // INSTANCE METHODS:
 
   readonly createTable = createTable;
   readonly ensureTableIsActive = ensureTableIsActive;
+
+  /** Release lifecycle registration. Destroy only an exclusively owned client when requested. */
+  readonly dispose = ({ destroyClient = false }: { destroyClient?: boolean } = {}) => {
+    this.releaseClient(destroyClient);
+  };
 
   /** A `DescribeTable` wrapper for Table instances which call the method with their `tableName`. */
   readonly describeTable = async () => {
@@ -72,7 +88,7 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
    * a complete Model-item type, even if the ModelSchema does not specify the table's keys.
    */
   readonly getModelSchema = <const ModelSchema extends ModelSchemaType<TKSchema>>(
-    modelSchema: ModelSchema
+    modelSchema: ModelSchemaInput<TKSchema, ModelSchema>
   ) => {
     return TableKeysSchema.getMergedModelSchema<TKSchema, ModelSchema>({
       tableKeysSchema: this.tableKeysSchema,
@@ -126,7 +142,7 @@ export class Table<const TKSchema extends TableKeysSchemaType> implements TableK
     >,
   >(
     modelName: string,
-    modelSchema: ModelSchema,
+    modelSchema: ModelSchemaInput<TKSchema, ModelSchema>,
     modelSchemaOptions: ModelSchemaOptions = {}
   ) => {
     return new Model<

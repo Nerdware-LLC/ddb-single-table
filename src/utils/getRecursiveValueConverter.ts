@@ -31,16 +31,35 @@ export const getRecursiveValueConverter = <AllowedReturnTypes extends SupportedA
     if (!isUndefined(convertedValue)) return convertedValue;
 
     // Check for types that necessitate recursive calls
-    if (isArray(value)) return value.map(recursiveConversionFn);
-    if (isPlainObject(value)) {
-      const result: BaseItem = {};
-
-      for (const itemKey of Object.keys(value)) {
-        result[itemKey] = recursiveConversionFn(value[itemKey]);
+    if (isArray(value)) {
+      let result: SupportedAttributeValueType[] | undefined;
+      for (let index = 0; index < value.length; index++) {
+        const converted = recursiveConversionFn(value[index]);
+        if (converted !== value[index]) {
+          result ??= value.slice();
+          result[index] = converted;
+        }
       }
+      return result ?? value;
+    }
 
+    if (isPlainObject(value)) {
+      let result: BaseItem = value;
+      for (const itemKey of Object.keys(value)) {
+        const converted = recursiveConversionFn(value[itemKey]);
+        if (converted !== value[itemKey]) {
+          if (result === value) result = { ...value };
+          Object.defineProperty(result, itemKey, {
+            value: converted,
+            enumerable: true,
+            configurable: true,
+            writable: true,
+          });
+        }
+      }
       return result;
     }
+
     // If none of the above apply, return the value as-is
     return value;
   };

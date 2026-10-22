@@ -18,17 +18,27 @@ export const aliasMapping: IOAction = function (
   const itemToReturn: BaseItem = {};
 
   // Iterate over the item's keys
-  for (const itemKey in item) {
+  for (const itemKey of Object.keys(item)) {
     if (hasKey(aliasesMap, itemKey)) {
       // If itemKey is in the aliasMap, update the item with the mapped key
-      itemToReturn[aliasesMap[itemKey]] = item[itemKey];
+      Object.defineProperty(itemToReturn, aliasesMap[itemKey], {
+        value: item[itemKey],
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
     } else if (
       hasKey(schema, itemKey)
       || allowUnknownAttributes === true
       || (Array.isArray(allowUnknownAttributes) && allowUnknownAttributes.includes(itemKey))
     ) {
       // Else if itemKey is an attribute OR schema allows the unknown attribute, simply add K-V as-is
-      itemToReturn[itemKey] = item[itemKey];
+      Object.defineProperty(itemToReturn, itemKey, {
+        value: item[itemKey],
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
     } else {
       throw new ItemInputError(`${modelName} item contains unknown property: "${itemKey}"`);
     }

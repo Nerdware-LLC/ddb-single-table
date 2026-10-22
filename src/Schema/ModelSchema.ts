@@ -5,6 +5,7 @@ import { TIMESTAMP_ATTRIBUTES } from "./timestampAttributes.js";
 import type { TableKeysAndIndexes } from "../Table/index.js";
 import type {
   KeyAttributeConfig,
+  TableKeysSchemaType,
   ModelSchemaType,
   ModelSchemaOptions,
   ModelSchemaMetadata,
@@ -44,7 +45,7 @@ export class ModelSchema extends BaseSchema {
    * @throws {SchemaValidationError} if the provided ModelSchema is invalid.
    */
   static readonly validate = (
-    modelSchema: ModelSchemaType,
+    modelSchema: ModelSchemaType<TableKeysSchemaType>,
     { name: schemaName }: Pick<ModelSchemaMetadata, "name">
   ) => {
     // First run the base Schema validation checks:
@@ -75,8 +76,13 @@ export class ModelSchema extends BaseSchema {
 
       // If an "alias" is specified, ensure it's unique, and add it to the alias maps
       if (alias) {
+        if (alias !== attrName && Object.hasOwn(modelSchema, alias))
+          throw new SchemaValidationError({
+            schemaName,
+            problem: `alias "${alias}" conflicts with an attribute name`,
+          });
         // If alias already exists in accum, there's a dupe alias in the schema, throw error
-        if (alias in aliasesToAttributesMap) {
+        if (Object.hasOwn(aliasesToAttributesMap, alias)) {
           throw new SchemaValidationError({
             schemaName,
             problem: `the ModelSchema contains duplicate alias "${alias}"`,
@@ -84,8 +90,8 @@ export class ModelSchema extends BaseSchema {
         }
 
         // Add attrName/alias to the alias maps
-        attributesToAliasesMap[attrName] = alias;
-        aliasesToAttributesMap[alias] = attrName;
+        Object.defineProperty(attributesToAliasesMap, attrName, { value: alias, enumerable: true });
+        Object.defineProperty(aliasesToAttributesMap, alias, { value: attrName, enumerable: true });
       }
     }
 

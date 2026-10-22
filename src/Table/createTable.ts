@@ -68,7 +68,7 @@ export const createTable = async function <const TableKeysSchema extends TableKe
     // Indexes
     if (index) {
       // Determine GSI or LSI, then push to the respective array
-      const indexArray = index.global === true ? GlobalSecondaryIndexes : LocalSecondaryIndexes;
+      const indexArray = index.global !== false ? GlobalSecondaryIndexes : LocalSecondaryIndexes;
 
       indexArray.push({
         IndexName: index.name,

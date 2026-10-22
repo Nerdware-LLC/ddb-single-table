@@ -41,7 +41,7 @@ type TypeAttrConfigForValue<
   Value extends NonNullable<SupportedAttributeValueType>,
   NestDepth extends NestDepthMax32,
 > =
-  Value extends string
+  [Value] extends [never] ? never : [Value] extends [string]
     ? string extends Value
       ? { readonly type: "string" }
       : { readonly type: "enum"; readonly oneOf: UnionToTuple<Value> }
@@ -58,7 +58,9 @@ type TypeAttrConfigForValue<
   : Value extends Array<infer El>
     ? {
         readonly type: IsTuple<Value> extends true ? "tuple" : "array";
-        readonly schema: [ItemValueToAttrConfig<El, IterateNestDepthMax32<NestDepth>>];
+        readonly schema: IsTuple<Value> extends true
+          ? { [K in keyof Value]: ItemValueToAttrConfig<Value[K], IterateNestDepthMax32<NestDepth>> }
+          : [ItemValueToAttrConfig<El, IterateNestDepthMax32<NestDepth>>];
       }
   : Value extends BaseItem
     ? {

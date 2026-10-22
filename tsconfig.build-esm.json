@@ -9,6 +9,7 @@
 
   "compilerOptions": {
     // General build settings used for both ESM and CommonJS builds:
+    "rootDir": "./src",
     "types": ["node"],
     "skipLibCheck": true,
     "allowJs": false,

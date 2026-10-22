@@ -40,6 +40,6 @@ describe("IOAction: validateItem", () => {
           validateItem: (_item: any) => false,
         },
       } as IOActionContext)
-    ).toThrowError("Invalid MockModel item.");
+    ).toThrow("Invalid MockModel item.");
   });
 });

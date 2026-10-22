@@ -128,7 +128,7 @@ type SdkResponseFieldsThatRequireUnmarshalling<SdkOutput extends object> = {
   >;
   // The shape of `ItemCollectionMetrics` depends on whether the cmd is a batch operation or not
   ItemCollectionMetrics?: "ItemCollectionMetrics" extends keyof SdkOutput
-    ? Record<keyof ItemCollectionMetrics, any> extends keyof SdkOutput["ItemCollectionMetrics"]
+    ? keyof NonNullable<SdkOutput["ItemCollectionMetrics"]> extends keyof ItemCollectionMetrics
       ? // single-item operation ICM:
         MarshalledSdkFieldMeta<
           ItemCollectionMetrics, //            internal marshalled type from SDK

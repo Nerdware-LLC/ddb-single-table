@@ -73,7 +73,7 @@ describe("Table", () => {
         return Promise.resolve({ Table: { TableStatus: TableStatus.ACTIVE } });
       });
 
-      await expect(mockTable.ensureTableIsActive({ timeout: timeoutSeconds })).rejects.toThrowError(
+      await expect(mockTable.ensureTableIsActive({ timeout: timeoutSeconds })).rejects.toThrow(
         new DdbSingleTableError(
           `ensureTableIsActive has timed out after ${timeoutSeconds} seconds.`
         )
@@ -160,7 +160,7 @@ describe("Table", () => {
             },
           },
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         new DdbSingleTableError(
           `Invalid "createTable" args: "ProvisionedThroughput" should not be `
             + `provided when "BillingMode" is "${BillingMode.PAY_PER_REQUEST}".`
@@ -183,7 +183,7 @@ describe("Table", () => {
         code: DdbConnectionError.NODE_ERROR_CODES.ECONNREFUSED,
       } satisfies Partial<NodeJS.ErrnoException> as any);
 
-      await expect(mockTable.ensureTableIsActive()).rejects.toThrowError(DdbConnectionError);
+      await expect(mockTable.ensureTableIsActive()).rejects.toThrow(DdbConnectionError);
 
       expect(mockTable.isTableActive).toBe(false);
       expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
@@ -201,7 +201,7 @@ describe("Table", () => {
 
       mockDdbClient.on(DescribeTableCommand).rejectsOnce("FOO_ERROR");
 
-      await expect(mockTable.ensureTableIsActive()).rejects.toThrowError("FOO_ERROR");
+      await expect(mockTable.ensureTableIsActive()).rejects.toThrow("FOO_ERROR");
 
       expect(mockTable.isTableActive).toBe(false);
       expect(mockDdbClient).toHaveReceivedCommandOnce(DescribeTableCommand);
@@ -221,7 +221,7 @@ describe("Table", () => {
         .on(DescribeTableCommand)
         .rejectsOnce(new ResourceNotFoundException({ message: "", $metadata: {} }));
 
-      await expect(mockTable.ensureTableIsActive()).rejects.toThrowError(
+      await expect(mockTable.ensureTableIsActive()).rejects.toThrow(
         `Table "MockTable" not found. To have the table created automatically when `
           + `DynamoDB returns a "ResourceNotFoundException", set "createIfNotExists" to true.`
       );
@@ -288,7 +288,7 @@ describe("Table", () => {
             required: true,
             index: {
               name: "sortKey_lsi",
-              global: false,
+              global: true,
               project: true,
             },
           },
@@ -297,7 +297,7 @@ describe("Table", () => {
             required: true,
             index: {
               name: "dataKey_lsi",
-              global: false,
+              global: true,
               // project not defined (same as false)
             },
           },
@@ -353,8 +353,6 @@ describe("Table", () => {
               WriteCapacityUnits: 5,
             },
           },
-        ],
-        LocalSecondaryIndexes: [
           {
             IndexName: "sortKey_lsi",
             KeySchema: [{ AttributeName: "sortKey", KeyType: "HASH" }],
@@ -366,6 +364,183 @@ describe("Table", () => {
             Projection: { ProjectionType: "KEYS_ONLY" },
           },
         ],
+        LocalSecondaryIndexes: [],
+      });
+    });
+
+    describe("deadline and retry cleanup", () => {
+      beforeEach(() => vi.useFakeTimers());
+      afterEach(() => vi.useRealTimers());
+
+      const createMockTable = () =>
+        new Table({
+          ddbClient,
+          tableName: "DeadlineTable",
+          tableKeysSchema: { pk: { type: "string", isHashKey: true, required: true } },
+          logger: () => {},
+        });
+
+      test("rejects while describeTable is pending and ignores a late ACTIVE response", async () => {
+        const table = createMockTable();
+        const pending = Promise.withResolvers<Awaited<ReturnType<typeof table.describeTable>>>();
+        const describe = vi.spyOn(table, "describeTable").mockReturnValueOnce(pending.promise);
+        const failure = table.ensureTableIsActive({ timeout: 1 }).catch((error: unknown) => error);
+
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(await failure).toEqual(
+          new DdbSingleTableError("ensureTableIsActive has timed out after 1 seconds.")
+        );
+        expect(vi.getTimerCount()).toBe(0);
+
+        pending.resolve({ Table: { TableStatus: TableStatus.ACTIVE }, $metadata: {} });
+        await vi.runAllTimersAsync();
+        expect(table.isTableActive).toBe(false);
+        expect(describe).toHaveBeenCalledTimes(1);
+      });
+
+      test("rejects while createTable is pending and ignores a late ACTIVE response", async () => {
+        const table = createMockTable();
+        const pending = Promise.withResolvers<Awaited<ReturnType<typeof table.createTable>>>();
+        const describe = vi
+          .spyOn(table, "describeTable")
+          .mockRejectedValue(
+            new ResourceNotFoundException({ message: "not found", $metadata: {} })
+          );
+        const create = vi.spyOn(table, "createTable").mockReturnValueOnce(pending.promise);
+        const failure = table
+          .ensureTableIsActive({ timeout: 1, createIfNotExists: true })
+          .catch((error: unknown) => error);
+
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(await failure).toEqual(
+          new DdbSingleTableError("ensureTableIsActive has timed out after 1 seconds.")
+        );
+        expect(vi.getTimerCount()).toBe(0);
+
+        pending.resolve({ TableDescription: { TableStatus: TableStatus.ACTIVE }, $metadata: {} });
+        await vi.runAllTimersAsync();
+        expect(table.isTableActive).toBe(false);
+        expect(describe).toHaveBeenCalledTimes(1);
+        expect(create).toHaveBeenCalledTimes(1);
+      });
+
+      test("clears the polling timer when the deadline expires between requests", async () => {
+        const table = createMockTable();
+        const describe = vi.spyOn(table, "describeTable").mockResolvedValue({
+          Table: { TableStatus: TableStatus.CREATING },
+          $metadata: {},
+        });
+        const failure = table
+          .ensureTableIsActive({ timeout: 1, frequency: 10 })
+          .catch((error: unknown) => error);
+
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(await failure).toEqual(
+          new DdbSingleTableError("ensureTableIsActive has timed out after 1 seconds.")
+        );
+        expect(table.isTableActive).toBe(false);
+        expect(vi.getTimerCount()).toBe(0);
+        await vi.advanceTimersByTimeAsync(30000);
+        expect(describe).toHaveBeenCalledTimes(1);
+      });
+
+      test("rejects on exhausted attempts without waiting after the final attempt", async () => {
+        const table = createMockTable();
+        const describe = vi.spyOn(table, "describeTable").mockResolvedValue({
+          Table: { TableStatus: TableStatus.CREATING },
+          $metadata: {},
+        });
+        const failure = table
+          .ensureTableIsActive({ maxRetries: 2, frequency: 1, timeout: 30 })
+          .catch((error: unknown) => error);
+
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(await failure).toEqual(
+          new DdbSingleTableError('Table "DeadlineTable" did not become ACTIVE after 2 attempts.')
+        );
+        expect(describe).toHaveBeenCalledTimes(2);
+        expect(table.isTableActive).toBe(false);
+        expect(vi.getTimerCount()).toBe(0);
+      });
+
+      test("rejects without submitting a request when zero attempts are allowed", async () => {
+        const table = createMockTable();
+        const describe = vi.spyOn(table, "describeTable");
+
+        await expect(table.ensureTableIsActive({ maxRetries: 0 })).rejects.toThrow(
+          "after 0 attempts"
+        );
+        expect(describe).not.toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
+      });
+
+      test("clears the deadline after a successful response", async () => {
+        const table = createMockTable();
+        vi.spyOn(table, "describeTable").mockResolvedValue({
+          Table: { TableStatus: TableStatus.ACTIVE },
+          $metadata: {},
+        });
+
+        await expect(table.ensureTableIsActive()).resolves.toBeUndefined();
+        expect(table.isTableActive).toBe(true);
+        expect(vi.getTimerCount()).toBe(0);
+        await vi.runAllTimersAsync();
+      });
+
+      test.each([new Error("request failed"), "non-object failure"])(
+        "clears the deadline when a request fails with %s",
+        async (error) => {
+          const table = createMockTable();
+          vi.spyOn(table, "describeTable").mockRejectedValue(error);
+
+          await expect(table.ensureTableIsActive()).rejects.toBe(error);
+          expect(table.isTableActive).toBe(false);
+          expect(vi.getTimerCount()).toBe(0);
+          await vi.runAllTimersAsync();
+        }
+      );
+
+      test("clears the deadline when table creation fails", async () => {
+        const table = createMockTable();
+        vi.spyOn(table, "describeTable").mockRejectedValue(
+          new ResourceNotFoundException({ message: "not found", $metadata: {} })
+        );
+        const error = new Error("create failed");
+        vi.spyOn(table, "createTable").mockRejectedValue(error);
+
+        await expect(table.ensureTableIsActive({ createIfNotExists: true })).rejects.toBe(error);
+        expect(vi.getTimerCount()).toBe(0);
+        await vi.runAllTimersAsync();
+      });
+
+      test("waits between repeated not-found responses and creates the table only once", async () => {
+        const table = createMockTable();
+        const describe = vi
+          .spyOn(table, "describeTable")
+          .mockRejectedValue(
+            new ResourceNotFoundException({ message: "not found", $metadata: {} })
+          );
+        const create = vi.spyOn(table, "createTable").mockResolvedValue({
+          TableDescription: { TableStatus: TableStatus.CREATING },
+          $metadata: {},
+        });
+        const failure = table
+          .ensureTableIsActive({ maxRetries: 3, frequency: 1, createIfNotExists: true })
+          .catch((error: unknown) => error);
+
+        await vi.advanceTimersByTimeAsync(0);
+        expect(describe).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(999);
+        expect(describe).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1);
+        expect(describe).toHaveBeenCalledTimes(2);
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(await failure).toEqual(
+          new DdbSingleTableError('Table "DeadlineTable" did not become ACTIVE after 3 attempts.')
+        );
+        expect(describe).toHaveBeenCalledTimes(3);
+        expect(create).toHaveBeenCalledTimes(1);
+        expect(vi.getTimerCount()).toBe(0);
       });
     });
   });

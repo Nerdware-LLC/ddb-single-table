@@ -3,6 +3,7 @@ import {
   GetItemCommand,
   BatchGetItemCommand,
   BatchWriteItemCommand,
+  PutItemCommand,
   UpdateItemCommand,
   DeleteItemCommand,
   QueryCommand,
@@ -143,6 +144,32 @@ describe("Model", () => {
   const unaliasedMockItem = unaliasedMockItems[0];
   const unaliasedMockItemKeys = unaliasedMockItemsKeys[0];
 
+  const clientOptions = {
+    region: "local",
+    credentials: { accessKeyId: "local", secretAccessKey: "local" },
+  };
+
+  const createFixture = () => {
+    const client = new DynamoDBClient(clientOptions);
+    const mock = mockClient(client);
+    const table = new Table({
+      tableName: "Audit",
+      ddbClient: client,
+      tableKeysSchema: {
+        pk: { type: "string", required: true, isHashKey: true },
+        sk: { type: "string", required: true, isRangeKey: true },
+        gpk: { type: "string", required: true, index: { name: "gsi", rangeKey: "sk" } },
+      },
+    });
+    const model = table.createModel("Audit", {
+      pk: { alias: "id" },
+      text: { type: "string" },
+      date: { type: "Date" },
+      profile: { type: "map", schema: { text: { type: "string" }, date: { type: "Date" } } },
+    });
+    return { client, mock, table, model };
+  };
+
   describe("new Model()", () => {
     test("returns a Model instance with expected properties when provided valid arguments", () => {
       // Assert instance is of correct type and has expected property values:
@@ -152,7 +179,8 @@ describe("Model", () => {
       expect(mockModel.tableHashKey).toBe(mockTable.tableHashKey);
       expect(mockModel.tableRangeKey).toBe(mockTable.tableRangeKey);
       expect(mockModel.indexes).toStrictEqual(mockTable.indexes);
-      expect(mockModel.ddb).toStrictEqual(mockTable.ddb);
+      expect(mockModel.ddb).toBeInstanceOf(mockTable.ddb.constructor);
+      expect(mockModel.ddb).not.toBe(mockTable.ddb);
       expect(mockModel.schemaOptions.autoAddTimestamps).toBe(true);
       expect(mockModel.schemaOptions.allowUnknownAttributes).toBe(false);
     });
@@ -195,7 +223,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.getItem({} as MockItem)).rejects.toThrowError(/required .* "id"/i);
+      await expect(mockModel.getItem({} as MockItem)).rejects.toThrow(/required .* "id"/i);
     });
   });
 
@@ -286,12 +314,12 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with an invalid "primaryKeys" argument`, async () => {
-      await expect(mockModel.batchGetItems(null as any)).rejects.toThrowError(/primaryKeys/);
+      await expect(mockModel.batchGetItems(null as any)).rejects.toThrow(/primaryKeys/);
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
       const invalidMockItemsKeys = [{ id: "USER-X" }, ...mockItemsKeys];
-      await expect(mockModel.batchGetItems(invalidMockItemsKeys as any)).rejects.toThrowError(
+      await expect(mockModel.batchGetItems(invalidMockItemsKeys as any)).rejects.toThrow(
         /required .* "handle"/i
       );
     });
@@ -299,11 +327,11 @@ describe("Model", () => {
 
   describe("model.createItem()", () => {
     /* The createItem method uses PutCommand, the ReturnValues for which can only be "NONE" or
-    "ALL_OLD", so the DDB API won't ever return anything when PutCommand is used to create a new
-    item. However, PutCommand can also be used to make updates to existing items, so to ensure
-    the createItem method never overwrites an existing item, the function should always provide a
-    `ConditionExpression` of `attribute_not_exists( <tableHashKey> )`. The following tests assess
-    whether the method achieves these expected behaviors. */
+      "ALL_OLD", so the DDB API won't ever return anything when PutCommand is used to create a new
+      item. However, PutCommand can also be used to make updates to existing items, so to ensure
+      the createItem method never overwrites an existing item, the function should always provide a
+      `ConditionExpression` of `attribute_not_exists( <tableHashKey> )`. The following tests assess
+      whether the method achieves these expected behaviors. */
 
     test(`calls IO-Actions and "ddbClient.putItem" with an "attribute_not_exists" ConditionExpression when called with valid arguments`, async () => {
       // Arrange spies
@@ -337,7 +365,8 @@ describe("Model", () => {
       // Assert `putItem` was called with expected args
       expect(spies.clientPutItem).toHaveBeenCalledExactlyOnceWith({
         Item: expectedUnaliasedMockItem,
-        ConditionExpression: "attribute_not_exists(pk)",
+        ConditionExpression: "attribute_not_exists(#createPK)",
+        ExpressionAttributeNames: { "#createPK": "pk" },
       });
 
       // Assert `processItemAttributes.fromDB` was called and returned the expected result
@@ -346,7 +375,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.createItem({} as any)).rejects.toThrowError(
+      await expect(mockModel.createItem({} as any)).rejects.toThrow(
         /A value is required for MockModel property "id"/i
       );
     });
@@ -393,7 +422,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.upsertItem({} as any)).rejects.toThrowError(
+      await expect(mockModel.upsertItem({} as any)).rejects.toThrow(
         /A value is required for MockModel property "id"/i
       );
     });
@@ -504,7 +533,7 @@ describe("Model", () => {
     });
 
     test(`throws an error when called with an invalid "items" argument`, async () => {
-      await expect(mockModel.batchUpsertItems(null as any)).rejects.toThrowError();
+      await expect(mockModel.batchUpsertItems(null as any)).rejects.toThrow();
     });
   });
 
@@ -543,14 +572,32 @@ describe("Model", () => {
       // Assert `updateItem` was called with expected args
       expect(spies.clientUpdateItem).toHaveBeenCalledExactlyOnceWith({
         Key: unaliasedMockItemKeys,
-        UpdateExpression: "SET #sk = :sk, #updatedAt = :updatedAt",
+        UpdateExpression: "SET #sk = :v0, #updatedAt = :v1",
         ExpressionAttributeNames: { "#sk": "sk", "#updatedAt": "updatedAt" },
         ExpressionAttributeValues: {
-          ":sk": mockUpdatedHandle,
-          ":updatedAt": expect.any(Date),
+          ":v0": mockUpdatedHandle,
+          ":v1": expect.any(Date),
         },
         ReturnValues: "ALL_NEW",
       });
+    });
+
+    test("aliases create conditions and omits empty value bindings for REMOVE-only updates", async () => {
+      const { model, mock, table } = createFixture();
+      try {
+        mock.on(PutItemCommand).resolves({});
+        await model.createItem({ id: "p", sk: "s", gpk: "g" });
+        expect(
+          mock.commandCalls(PutItemCommand)[0].args[0].input.ExpressionAttributeNames
+        ).toStrictEqual({ "#createPK": "pk" });
+        mock.on(UpdateItemCommand).resolves({ Attributes: { pk: { S: "p" }, sk: { S: "s" } } });
+        await model.updateItem({ id: "p", sk: "s" }, { update: { text: undefined } as any });
+        expect(
+          mock.commandCalls(UpdateItemCommand)[0].args[0].input.ExpressionAttributeValues
+        ).toBeUndefined();
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
     });
   });
 
@@ -579,7 +626,7 @@ describe("Model", () => {
     });
 
     test(`throws an ItemInputError when called with a missing "required" key attribute`, async () => {
-      await expect(mockModel.deleteItem({} as any)).rejects.toThrowError(/required .* "id"/i);
+      await expect(mockModel.deleteItem({} as any)).rejects.toThrow(/required .* "id"/i);
     });
   });
 
@@ -846,6 +893,42 @@ describe("Model", () => {
     test(`throws an error when called with an invalid argument`, async () => {
       await expect(mockModel.batchUpsertAndDeleteItems({})).rejects.toThrow();
     });
+
+    test("excludes unprocessed binary puts and deletes from success results", async () => {
+      const client = new DynamoDBClient(clientOptions);
+      const mock = mockClient(client);
+
+      const table = new Table({
+        tableName: "Binary",
+        ddbClient: client,
+        tableKeysSchema: { pk: { type: "Buffer", required: true, isHashKey: true } },
+      });
+
+      const model = table.createModel("Binary", { name: { type: "string" } });
+
+      try {
+        mock.on(BatchWriteItemCommand).resolves({
+          UnprocessedItems: {
+            Binary: [
+              { PutRequest: { Item: { pk: { B: new Uint8Array([1]) }, name: { S: "put" } } } },
+              { DeleteRequest: { Key: { pk: { B: new Uint8Array([2]) } } } },
+            ],
+          },
+        });
+
+        const result = await model.batchUpsertAndDeleteItems(
+          {
+            upsertItems: [{ pk: Buffer.from([1]), name: "put" }],
+            deleteItems: [{ pk: Buffer.from([2]) }],
+          },
+          { batchConfigs: { retryConfigs: { maxRetries: 0 } } }
+        );
+
+        expect(result).toStrictEqual({ upsertItems: [], deleteItems: [] });
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
+    });
   });
 
   describe("model.query()", () => {
@@ -930,6 +1013,29 @@ describe("Model", () => {
       const result = await mockModel.query({ KeyConditionExpression: "foo = foo" });
       expect(result).toStrictEqual([]);
     });
+
+    test("preserves query bindings, infers indexes regardless of key order, and rejects a non-equality partition key", async () => {
+      const { model, mock, table } = createFixture();
+      try {
+        mock.on(QueryCommand).resolves({ Items: [] });
+        await model.query({
+          where: { sk: { beginsWith: "x" }, gpk: "group" },
+          FilterExpression: "#filter = :gpk",
+          ExpressionAttributeNames: { "#filter": "text" },
+          ExpressionAttributeValues: { ":gpk": "keep" },
+        });
+        const input = mock.commandCalls(QueryCommand)[0].args[0].input;
+        expect(input.IndexName).toBe("gsi");
+        expect(input.ExpressionAttributeNames).toMatchObject({ "#filter": "text" });
+        expect(input.ExpressionAttributeValues?.[":gpk"]).toStrictEqual({ S: "keep" });
+        expect(input.ExpressionAttributeValues?.[":gpk0"]).toStrictEqual({ S: "group" });
+        await expect(model.query({ where: { id: { gt: "a" }, sk: "x" } })).rejects.toThrow(
+          "equality"
+        );
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
+    });
   });
 
   describe("model.scan()", () => {
@@ -956,6 +1062,88 @@ describe("Model", () => {
     test(`returns an empty array when called with valid arguments but nothing is returned`, async () => {
       const result = await mockModel.scan();
       expect(result).toStrictEqual([]);
+    });
+  });
+
+  describe("date handling", () => {
+    test("converts declared dates while preserving ISO-looking strings and leaving wrapper legacy behavior intact", async () => {
+      const { model, mock, table } = createFixture();
+
+      try {
+        const iso = "2026-10-20T00:00:00.000Z";
+        mock.on(QueryCommand).resolves({
+          Items: [
+            {
+              pk: { S: "p" },
+              text: { S: iso },
+              date: { S: iso },
+              profile: { M: { text: { S: iso }, date: { S: iso } } },
+            },
+          ],
+        });
+
+        const [item] = await model.query({ where: { id: "p" } });
+        expect(item).toMatchObject({
+          text: iso,
+          date: new Date(iso),
+          profile: { text: iso, date: new Date(iso) },
+        });
+
+        const legacy = await table.ddb.query({});
+        expect(legacy.Items?.[0].text).toBeInstanceOf(Date);
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
+    });
+  });
+
+  describe("pagination", () => {
+    test("retains cursors and iterates past empty pages for query and scan", async () => {
+      const { model, mock, table } = createFixture();
+
+      try {
+        const cursor = { pk: { S: "p" }, sk: { S: "s" } };
+        mock
+          .on(QueryCommand)
+          .resolvesOnce({ Items: [], LastEvaluatedKey: cursor })
+          .resolvesOnce({ Items: [{ pk: { S: "p" }, sk: { S: "next" } }] });
+
+        const items = [];
+        for await (const item of model.queryItems({ where: { id: "p" } })) items.push(item);
+
+        expect(items).toStrictEqual([{ id: "p", sk: "next" }]);
+        expect(mock.commandCalls(QueryCommand)[1].args[0].input.ExclusiveStartKey).toStrictEqual(
+          cursor
+        );
+
+        mock
+          .on(ScanCommand)
+          .resolvesOnce({ Items: [], LastEvaluatedKey: cursor })
+          .resolvesOnce({ Items: [{ pk: { S: "p" } }] });
+
+        const scanned = [];
+        for await (const item of model.scanItems()) scanned.push(item);
+
+        expect(scanned).toStrictEqual([{ id: "p" }]);
+        expect(mock.commandCalls(ScanCommand)).toHaveLength(2);
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
+    });
+
+    test("stopping an iterator does not fetch another page", async () => {
+      const { table, model, mock } = createFixture();
+      try {
+        mock
+          .on(QueryCommand)
+          .resolves({ Items: [{ pk: { S: "p" } }], LastEvaluatedKey: { pk: { S: "p" } } });
+        const iterator = model.queryItems({ where: { id: "p" } });
+        expect((await iterator.next()).value).toMatchObject({ id: "p" });
+        await iterator.return(undefined);
+        expect(mock.commandCalls(QueryCommand)).toHaveLength(1);
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
     });
   });
 });

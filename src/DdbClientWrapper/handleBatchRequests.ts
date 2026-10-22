@@ -1,4 +1,3 @@
-import { isArray } from "@nerdware/ts-type-safety-utils";
 import { batchRequestWithExponentialBackoff } from "./batchRequestWithExponentialBackoff.js";
 import type { BatchRequestFunction, SomeBatchRequestObject, BatchConfigs } from "./types/index.js";
 
@@ -44,7 +43,7 @@ export const handleBatchRequests = async <
 >(
   submitBatchRequest: BatchFn,
   batchRequestObjects: Array<BatchRequestObj>,
-  { chunkSize: chunkSizeOverride, retryConfigs = {} }: BatchConfigs = {}
+  { chunkSize: chunkSizeOverride, concurrency = 1, retryConfigs = {} }: BatchConfigs = {}
 ): Promise<Array<BatchRequestObj> | undefined> => {
   // Sanity check: ensure that the `batchRequestObjects` array is not empty
   if (batchRequestObjects.length === 0) return;
@@ -56,39 +55,37 @@ export const handleBatchRequests = async <
 
   const maxChunkSize = isBatchWriteOp ? MAX_CHUNK_SIZE.WriteRequest : MAX_CHUNK_SIZE.GetRequest;
 
-  const chunkSize = chunkSizeOverride
-    ? Math.min(Math.max(1, chunkSizeOverride), maxChunkSize)
+  const chunkSize = Number.isFinite(chunkSizeOverride)
+    ? Math.min(Math.max(1, Math.floor(chunkSizeOverride!)), maxChunkSize)
     : maxChunkSize;
+  const chunkCount = Math.ceil(batchRequestObjects.length / chunkSize);
+  const workerCount = Number.isFinite(concurrency)
+    ? Math.min(chunkCount, Math.max(1, Math.floor(concurrency)))
+    : 1;
+  const results = new Array<Array<BatchRequestObj> | undefined>(chunkCount);
+  let nextChunk = 0;
+  const failures: unknown[] = [];
 
-  // Shallow copy the initial batch requests array:
-  const remainingBatchRequests = [...batchRequestObjects];
-
-  // This will hold any unprocessed batch requests that need to be returned:
-  const unprocessedBatchRequestsToReturn: Array<BatchRequestObj> = [];
-
-  // Loop until all batch requests have been submitted:
-  while (remainingBatchRequests.length > 0) {
-    const batchRequestsChunk = remainingBatchRequests.splice(0, chunkSize);
-
-    /* Run `submitBatchRequest` with the recursive exponential-backoff wrapper,
-      and collect any unprocessed requests returned by the function. */
-    const unprocessedBatchRequestsFromChunk = await batchRequestWithExponentialBackoff(
-      submitBatchRequest,
-      batchRequestsChunk,
-      retryConfigs
-    );
-
-    // If there are unprocessed requests, add them to the array to return:
-    if (
-      isArray(unprocessedBatchRequestsFromChunk)
-      && unprocessedBatchRequestsFromChunk.length > 0
-    ) {
-      unprocessedBatchRequestsToReturn.push(...unprocessedBatchRequestsFromChunk);
+  // Workers stop taking new chunks on failure; drain in-flight requests before rejecting.
+  const worker = async () => {
+    while (failures.length === 0 && nextChunk < chunkCount) {
+      const index = nextChunk++;
+      const offset = index * chunkSize;
+      try {
+        results[index] = await batchRequestWithExponentialBackoff(
+          submitBatchRequest,
+          batchRequestObjects.slice(offset, offset + chunkSize),
+          retryConfigs
+        );
+      } catch (error) {
+        failures.push(error);
+      }
     }
-  }
-
-  // If there are any unprocessed requests, return them:
-  if (unprocessedBatchRequestsToReturn.length > 0) return unprocessedBatchRequestsToReturn;
+  };
+  await Promise.all(Array.from({ length: workerCount }, worker));
+  if (failures.length) throw failures[0];
+  const unprocessed = results.flatMap((result) => result ?? []);
+  return unprocessed.length ? unprocessed : undefined;
 };
 
 /**

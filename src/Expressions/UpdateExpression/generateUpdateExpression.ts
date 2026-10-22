@@ -1,4 +1,5 @@
 import { isObjectLike, isDate, isBuffer, isArray } from "@nerdware/ts-type-safety-utils";
+import { ItemInputError } from "../../utils/errors.js";
 import { buildAttrPathTokens } from "./buildAttrPathTokens.js";
 import type { GenerateUpdateExpressionOpts } from "./types/index.js";
 import type { ClientWrapperUpdateItemInput } from "../../DdbClientWrapper/types/index.js";
@@ -22,11 +23,12 @@ export const generateUpdateExpression = (
   itemAttributes: UnknownItem,
   { nullHandling }: GenerateUpdateExpressionOpts = {}
 ): {
-  [Key in
-    | "UpdateExpression"
-    | "ExpressionAttributeNames"
-    | "ExpressionAttributeValues"]: NonNullable<ClientWrapperUpdateItemInput[Key]>;
+  [
+    Key in "UpdateExpression" | "ExpressionAttributeNames" | "ExpressionAttributeValues"
+  ]: NonNullable<ClientWrapperUpdateItemInput[Key]>;
 } => {
+  if (Object.keys(itemAttributes).length === 0)
+    throw new ItemInputError("An update must contain at least one attribute.");
   const shouldAddToRemoveClause =
     nullHandling !== "SET"
       ? (value: unknown) => value === undefined || value === null
@@ -36,12 +38,15 @@ export const generateUpdateExpression = (
   const ExpressionAttributeNames: Record<string, string> = {};
   const ExpressionAttributeValues: Record<string, SupportedAttributeValueType> = {};
 
+  let nextValueTokenIndex = 0;
+
   const recurse = (value: unknown, path: Array<string | number>) => {
     if (
       isObjectLike(value)
       && !isDate(value)
       && !isBuffer(value)
-      && !(value instanceof Set) //
+      && !(value instanceof Set)
+      && Object.keys(value).length > 0
     ) {
       if (isArray(value)) {
         value.forEach((arrayElement, index) => {
@@ -54,7 +59,11 @@ export const generateUpdateExpression = (
         }
       }
     } else {
-      const { namePath, valueToken } = buildAttrPathTokens(path, ExpressionAttributeNames);
+      const { namePath, valueToken } = buildAttrPathTokens(
+        path,
+        ExpressionAttributeNames,
+        nextValueTokenIndex++
+      );
       // Derive and append the appropriate UpdateExpression clause
       if (shouldAddToRemoveClause(value)) {
         updateExpressionClauses.REMOVE.push(namePath);

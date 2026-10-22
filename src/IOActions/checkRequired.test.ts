@@ -119,11 +119,10 @@ describe("IOAction: checkRequired", () => {
                     ...mockCtx.schema.books.schema[0].schema.author.schema.publisher,
                     schema: {
                       ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema,
-                      // prettier-ignore
                       address: {
-                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address,
+                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address, // prettier-ignore
                         schema: {
-                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema,
+                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema, // prettier-ignore
                           MISSING_ATTR: { type: "string", required: true },
                         },
                       },
@@ -145,7 +144,7 @@ describe("IOAction: checkRequired", () => {
 
     expect(() =>
       checkRequired.call(mockThis, mockItem, contextWithAddressMISSING_ATTR as any)
-    ).toThrowError(`A value is required for MockModel property "MISSING_ATTR".`);
+    ).toThrow(`A value is required for MockModel property "MISSING_ATTR".`);
   });
 
   test(`throws an ItemInputError when a non-"nullable" field is null`, () => {
@@ -167,11 +166,10 @@ describe("IOAction: checkRequired", () => {
                     ...mockCtx.schema.books.schema[0].schema.author.schema.publisher,
                     schema: {
                       ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema,
-                      // prettier-ignore
                       address: {
-                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address,
+                        ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address, // prettier-ignore
                         schema: {
-                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema,
+                          ...mockCtx.schema.books.schema[0].schema.author.schema.publisher.schema.address.schema, // prettier-ignore
                           NON_NULL_ATTR: { type: "string", nullable: false },
                         },
                       },
@@ -214,6 +212,6 @@ describe("IOAction: checkRequired", () => {
         },
         contextWithAddressNON_NULL_ATTR as any
       )
-    ).toThrowError(`A non-null value is required for MockModel property "NON_NULL_ATTR".`);
+    ).toThrow(`A non-null value is required for MockModel property "NON_NULL_ATTR".`);
   });
 });

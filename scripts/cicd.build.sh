@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 ############################################################
 # This script creates the ESM and CJS builds of the package.
 

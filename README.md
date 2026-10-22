@@ -69,6 +69,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and more. <br>
   - [Global `DynamoDBClient` Mock via `setupFiles`](#global-dynamodbclient-mock-via-setupfiles)
 - [📦 Batch Requests](#-batch-requests)
   - [Batch Retries with Exponential Backoff](#batch-retries-with-exponential-backoff)
+- [📄 Pagination](#-pagination)
 - [❓ FAQ](#-faq)
 - [🤝 Contributing](#-contributing)
 - [📝 License](#-license)
@@ -229,8 +230,8 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and more. <br>
         ],
       },
       /* By default, 'createdAt' and 'updatedAt' attributes are created for
-      each Model (unless explicitly disabled). Here's an example with these
-      attributes explicitly provided:                                    */
+        each Model (unless explicitly disabled). Here's an example with these
+        attributes explicitly provided:                                    */
       createdAt: {
         type: "Date",
         required: true,
@@ -241,7 +242,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and more. <br>
         required: true,
         default: () => new Date(),
         /* transformValue offers powerful hooks which allow you to modify values TO
-        and/or FROM the db. Each attribute can define its own transformValue hooks.*/
+          and/or FROM the db. Each attribute can define its own transformValue hooks.*/
         transformValue: {
           toDB: () => new Date(), /* <-- For data traveling TO the db (write ops).
           transformValue can also include a `fromDB` fn to transform values
@@ -819,6 +820,25 @@ DDB-ST models provide a high-level API for batching CRUD operations that handles
    > `Math.round( Math.random() * delay )`
 
    Note that the determination as to whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
+
+## 📄 Pagination
+
+`model.query()` and `model.scan()` return a single page as an array. Use `queryPage()`/`scanPage()` to retain the continuation key, or `queryItems()`/`scanItems()` to iterate across every page, including empty filtered pages:
+
+```ts
+const page = await UserModel.queryPage({ where: { userID: "USER-1" } });
+
+if (page.lastEvaluatedKey) {
+  const next = await UserModel.queryPage({
+    where: { userID: "USER-1" },
+    ExclusiveStartKey: page.lastEvaluatedKey,
+  });
+}
+
+for await (const user of UserModel.scanItems()) {
+  // Process one item at a time without collecting the entire table in memory.
+}
+```
 
 ## ❓ FAQ
 

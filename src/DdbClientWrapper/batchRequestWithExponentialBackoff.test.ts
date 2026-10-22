@@ -1,5 +1,6 @@
 import {
   BatchStatementErrorCodeEnum as BatchErrorCode,
+  ProvisionedThroughputExceededException,
   type BatchStatementError,
 } from "@aws-sdk/client-dynamodb";
 import { DdbSingleTableError } from "../utils/errors.js";
@@ -7,6 +8,8 @@ import { batchRequestWithExponentialBackoff } from "./batchRequestWithExponentia
 import type { WriteRequest } from "./types/index.js";
 
 describe("batchRequestWithExponentialBackoff()", () => {
+  afterEach(() => vi.useRealTimers());
+
   const mockSubmitBatchRequest = vi.fn();
 
   const mockBatchRequestObjects: Array<WriteRequest> = [1, 2, 3].map((num) =>
@@ -100,7 +103,7 @@ describe("batchRequestWithExponentialBackoff()", () => {
     const initialDelay = 333;
     const timeMultiplier = 2;
 
-    const expectedDelay = Math.round(mockMathRandomValue * (initialDelay * timeMultiplier ** 1));
+    const expectedDelay = Math.round(mockMathRandomValue * (initialDelay * timeMultiplier ** 0));
 
     await batchRequestWithExponentialBackoff(mockSubmitBatchRequest, mockBatchRequestObjects, {
       useJitter: true,
@@ -138,5 +141,32 @@ describe("batchRequestWithExponentialBackoff()", () => {
     ).resolves.not.toThrow();
 
     expect(mockSubmitBatchRequest).toHaveBeenCalledTimes(2);
+  });
+
+  test("recognizes SDK retry exceptions and uses initialDelay on the first retry", async () => {
+    vi.useFakeTimers();
+
+    const input = [{ pk: { S: "a" } }];
+    const submit = vi
+      .fn()
+      .mockRejectedValueOnce(
+        new ProvisionedThroughputExceededException({ message: "throttled", $metadata: {} })
+      )
+      .mockResolvedValueOnce(input)
+      .mockResolvedValueOnce(undefined);
+
+    const result = batchRequestWithExponentialBackoff(submit, input, { initialDelay: 100 });
+    await vi.advanceTimersByTimeAsync(99);
+    expect(submit).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(submit).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(199);
+    expect(submit).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await result;
+    expect(submit).toHaveBeenCalledTimes(3);
   });
 });

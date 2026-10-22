@@ -28,7 +28,7 @@ describe("IOAction: aliasMapping", () => {
       age: { type: "number" },
       email: { type: "string" },
     },
-    schemaEntries: [] as any, // empty, bc aliasMapping doesn't use schemaEntries
+    schemaEntries: [],
     schemaOptions: {
       allowUnknownAttributes: false,
     },
@@ -107,7 +107,7 @@ describe("IOAction: aliasMapping", () => {
           },
         }
       )
-    ).toThrowError(`MockModel item contains unknown property: "UNKNOWN_ATTR"`);
+    ).toThrow(`MockModel item contains unknown property: "UNKNOWN_ATTR"`);
   });
 
   test(`throws an error if an unknown attribute is found and "allowUnknownAttributes" does not include the key`, () => {
@@ -124,6 +124,6 @@ describe("IOAction: aliasMapping", () => {
           },
         }
       )
-    ).toThrowError(`MockModel item contains unknown property: "UNKNOWN_ATTR"`);
+    ).toThrow(`MockModel item contains unknown property: "UNKNOWN_ATTR"`);
   });
 });

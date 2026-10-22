@@ -21,9 +21,9 @@ jobs:
     permissions:
       contents: read # to checkout the code
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
@@ -40,7 +40,7 @@ jobs:
           echo "success=$( [ $? == 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
 
       - name: Upload Test Coverage Reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-coverage-reports
           path: ./coverage
@@ -51,10 +51,10 @@ jobs:
     needs: run-tests # run job if tests passed
     if: needs.run-tests.outputs.success == 'true'
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with: { name: test-coverage-reports }
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -67,9 +67,9 @@ jobs:
       contents: write #      to auto-merge dependabot PRs
       pull-requests: write # to update the PR
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Download Test Coverage Reports
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with: { name: test-coverage-reports, path: ./coverage }
       - name: Add Vitest Test Coverage Report to PR
         uses: davelosert/vitest-coverage-report-action@v2

@@ -1,4 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { mockClient } from "aws-sdk-client-mock";
 import { Model } from "../Model/index.js";
 import { SchemaValidationError } from "../utils/index.js";
 import { Table } from "./Table.js";
@@ -85,7 +86,7 @@ describe("Table", () => {
               sortKey: { type: "string" }, //      missing `isSortKey` and `required`
             } as any,
           })
-      ).toThrowError(SchemaValidationError);
+      ).toThrow(SchemaValidationError);
       expect(
         () =>
           new Table({
@@ -101,7 +102,7 @@ describe("Table", () => {
               },
             },
           })
-      ).toThrowError(SchemaValidationError);
+      ).toThrow(SchemaValidationError);
     });
   });
 
@@ -130,6 +131,32 @@ describe("Table", () => {
   });
 
   describe("table.createModel()", () => {
+    const clientOptions = {
+      region: "local",
+      credentials: { accessKeyId: "local", secretAccessKey: "local" },
+    };
+
+    const createFixture = () => {
+      const client = new DynamoDBClient(clientOptions);
+      const mock = mockClient(client);
+      const table = new Table({
+        tableName: "Audit",
+        ddbClient: client,
+        tableKeysSchema: {
+          pk: { type: "string", required: true, isHashKey: true },
+          sk: { type: "string", required: true, isRangeKey: true },
+          gpk: { type: "string", required: true, index: { name: "gsi", rangeKey: "sk" } },
+        },
+      });
+      const model = table.createModel("Audit", {
+        pk: { alias: "id" },
+        text: { type: "string" },
+        date: { type: "Date" },
+        profile: { type: "map", schema: { text: { type: "string" }, date: { type: "Date" } } },
+      });
+      return { client, mock, table, model };
+    };
+
     test("returns a new Model instance when called with valid arguments", () => {
       const table = new Table({
         ddbClient,
@@ -142,6 +169,7 @@ describe("Table", () => {
       const model = table.createModel("TestModel", { attributeA: { type: "string" } });
       expect(model).toBeInstanceOf(Model);
     });
+
     test(`passes "indexes" to the Model constructor`, () => {
       const table = new Table({
         ddbClient,
@@ -173,6 +201,42 @@ describe("Table", () => {
           indexSK: "sk",
         },
       });
+    });
+
+    test("requires complete configs for non-key attributes even when keys are inherited", () => {
+      const { table } = createFixture();
+      try {
+        // @ts-expect-error Only inherited table keys may omit their type config.
+        expect(() => table.createModel("Bad", { missing: { required: true } })).toThrow("type");
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
+    });
+  });
+
+  describe("table.dispose()", () => {
+    const clientOptions = {
+      region: "local",
+      credentials: { accessKeyId: "local", secretAccessKey: "local" },
+    };
+
+    test("disposal is idempotent and refuses to destroy shared clients", () => {
+      const client = new DynamoDBClient(clientOptions);
+      const destroy = vi.spyOn(client, "destroy");
+      const parameters = {
+        tableName: "Shared",
+        ddbClient: client,
+        tableKeysSchema: { pk: { type: "string", required: true, isHashKey: true } },
+      } as const;
+      const before = process.listenerCount("exit");
+      const first = new Table(parameters);
+      const second = new Table(parameters);
+      expect(process.listenerCount("exit") - before).toBeLessThanOrEqual(1);
+      expect(() => first.dispose({ destroyClient: true })).toThrow("another table");
+      first.dispose();
+      second.dispose({ destroyClient: true });
+      second.dispose({ destroyClient: true });
+      expect(destroy).toHaveBeenCalledTimes(1);
     });
   });
 });

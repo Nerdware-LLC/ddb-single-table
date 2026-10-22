@@ -5,10 +5,7 @@ import type {
   SomeBatchRequestObject,
   BatchRetryConfigs,
 } from "./types/index.js";
-import type {
-  BatchStatementError,
-  BatchStatementErrorCodeEnum as BatchErrorCode,
-} from "@aws-sdk/client-dynamodb";
+import type { BatchStatementErrorCodeEnum as BatchErrorCode } from "@aws-sdk/client-dynamodb";
 
 /**
  * This DynamoDB batch-requests helper handles submission and retry logic for batch
@@ -68,8 +65,19 @@ export const batchRequestWithExponentialBackoff = async <
     unprocessedRequestObjects = await submitBatchRequest(batchRequestObjects);
   } catch (err) {
     // If a batch op throws, NONE of the requests were successful, check if `err.Code` is retryable.
-    const maybeErrCode = (err as BatchStatementError | undefined)?.Code;
-    if (!isString(maybeErrCode) || !RETRYABLE_BATCH_ERROR_CODES[maybeErrCode]) throw err;
+    const error =
+      typeof err === "object" && err !== null
+        ? (err as { name?: unknown; Code?: unknown })
+        : undefined;
+    if (
+      ![error?.name, error?.Code].some(
+        (code) =>
+          isString(code)
+          && Object.hasOwn(RETRYABLE_BATCH_ERROR_CODES, code)
+          && RETRYABLE_BATCH_ERROR_CODES[code]
+      )
+    )
+      throw err;
     // If `err.Code` indicates the op should be retried, run again with all batchRequestObjects.
     unprocessedRequestObjects = batchRequestObjects;
   }
@@ -78,7 +86,7 @@ export const batchRequestWithExponentialBackoff = async <
     // Determine the next `numPreviousRetries` and the delay before the next attempt
     const retryCount = numPreviousRetries + 1;
     // If not disabled, the delay = initialDelay * timeMultiplier^retryCount milliseconds
-    let delay = disableDelay ? 0 : initialDelay * timeMultiplier ** retryCount;
+    let delay = disableDelay ? 0 : initialDelay * timeMultiplier ** numPreviousRetries;
 
     // If the next attempt would exceed maxRetries OR maxDelay, stop retrying
     if (retryCount > maxRetries || delay > maxDelay) {
@@ -124,6 +132,8 @@ const RETRYABLE_BATCH_ERROR_CODES: Readonly<
 > = {
   // Applicable to PROVISIONED BillingMode:
   ProvisionedThroughputExceeded: true,
+  ProvisionedThroughputExceededException: true,
+  ThrottlingException: true,
   // Applicable to PAY_PER_REQUEST BillingMode:
   RequestLimitExceeded: true,
 };
