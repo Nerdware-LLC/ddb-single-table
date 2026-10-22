@@ -14,12 +14,12 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.22.0",
+      "version": "24.22.1",
       "onFail": "download"
     },
     "packageManager": {
       "name": "npm",
-      "version": "12.2.0",
+      "version": "12.2.1",
       "onFail": "download"
     }
   },
