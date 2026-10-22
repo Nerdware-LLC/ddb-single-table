@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [3.1.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.0.2...v3.1.0) (2026-10-22)
+
+### Bug Fixes
+
+* correct expression-map token fmting ([fca56ff](https://github.com/Nerdware-LLC/ddb-single-table/commit/fca56ffda89b3ec4bfa656d350fe0200859264f5))
+* ensure EAV keys are valid and never collide ([e5c46d0](https://github.com/Nerdware-LLC/ddb-single-table/commit/e5c46d05205a1d2b87cda3309eaa500fa4d8d302))
+* ensure K is keyof T in SchemaMapRequiredAttrs ([b009a0d](https://github.com/Nerdware-LLC/ddb-single-table/commit/b009a0d8804cc487787202fb594282ab7c3767c5))
+* update batch handling ([ffe8f25](https://github.com/Nerdware-LLC/ddb-single-table/commit/ffe8f25e7fec3f94b40e86532da63eaa79208345))
+* update timeout handling in Promise ([3caf7a3](https://github.com/Nerdware-LLC/ddb-single-table/commit/3caf7a3017021efcdc40f4e1551c2bf6acf0add5))
+* update tuple-handling type logic ([1e1e1e4](https://github.com/Nerdware-LLC/ddb-single-table/commit/1e1e1e473afb9d46e10f82df3352d0c32127d3f5))
+
+
+### Features
+
+* expand+improve Schema validations ([14711c4](https://github.com/Nerdware-LLC/ddb-single-table/commit/14711c45813d5d0653657910a5911a61f3e63c70))
+
 ## [3.0.2](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.0.1...v3.0.2) (2025-12-15)
 
 ## [3.0.2-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.0.1...v3.0.2-next.1) (2025-12-15)
