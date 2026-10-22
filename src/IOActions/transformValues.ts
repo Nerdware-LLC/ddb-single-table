@@ -1,4 +1,5 @@
 import { isFunction, isUndefined } from "@nerdware/ts-type-safety-utils";
+import { getSchemaPlan } from "../Schema/schemaPlan.js";
 import type { IOAction } from "./types/index.js";
 import type { BaseItem } from "../types/index.js";
 
@@ -11,6 +12,7 @@ export const transformValues: IOAction = function (
   item,
   { schemaEntries, ioDirection, ...ctx }
 ) {
+  if (!getSchemaPlan(ctx.schema)[ioDirection]) return item;
   // To avoid mutating the original item, create a new object to return
   const itemToReturn: BaseItem = { ...item };
 

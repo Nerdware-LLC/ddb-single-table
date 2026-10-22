@@ -288,7 +288,7 @@ describe("Table", () => {
             required: true,
             index: {
               name: "sortKey_lsi",
-              global: false,
+              global: true,
               project: true,
             },
           },
@@ -297,7 +297,7 @@ describe("Table", () => {
             required: true,
             index: {
               name: "dataKey_lsi",
-              global: false,
+              global: true,
               // project not defined (same as false)
             },
           },
@@ -353,8 +353,6 @@ describe("Table", () => {
               WriteCapacityUnits: 5,
             },
           },
-        ],
-        LocalSecondaryIndexes: [
           {
             IndexName: "sortKey_lsi",
             KeySchema: [{ AttributeName: "sortKey", KeyType: "HASH" }],
@@ -366,6 +364,7 @@ describe("Table", () => {
             Projection: { ProjectionType: "KEYS_ONLY" },
           },
         ],
+        LocalSecondaryIndexes: [],
       });
     });
 

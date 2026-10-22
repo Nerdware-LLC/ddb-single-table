@@ -1,9 +1,13 @@
 import { isArray } from "@nerdware/ts-type-safety-utils";
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
+import { getNormalizedComparisonMeta } from "../Expressions/WhereQuery/getNormalizedComparisonMeta.js";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions/index.js";
 import { ioActions } from "../IOActions/IOActions.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
+import { getSchemaPlan, snapshotSchema } from "../Schema/schemaPlan.js";
 import { ItemInputError } from "../utils/errors.js";
+import { canonicalPrimaryKey } from "./canonicalPrimaryKey.js";
+import type { ItemPage } from "./types/ItemPage.js";
 import type {
   ModelConstructorParameters,
   AttributesAliasesMap,
@@ -91,8 +95,7 @@ export class Model<
   const Schema extends ModelSchemaType,
   ItemType extends UnknownItem = ItemTypeFromSchema<Schema>,
   ItemCreationParams extends UnknownItem = ItemCreationParameters<Schema>,
-> implements TableKeysAndIndexes
-{
+> implements TableKeysAndIndexes {
   // INSTANCE PROPERTIES:
   readonly modelName: string;
   readonly schema: Schema;
@@ -125,16 +128,18 @@ export class Model<
       validateItem,
     }: ModelConstructorParameters
   ) {
-    // Validate the Model schema and obtain the Model's alias maps
-    const { attributesToAliasesMap, aliasesToAttributesMap } = ModelSchema.validate(modelSchema, {
-      name: `${modelName} Model schema`,
-    });
-
-    this.modelName = modelName;
-    this.schema = {
+    const completeSchema = {
       ...modelSchema,
       ...(autoAddTimestamps && ModelSchema.TIMESTAMP_ATTRIBUTES),
     };
+
+    const { attributesToAliasesMap, aliasesToAttributesMap } = ModelSchema.validate(
+      completeSchema,
+      { name: `${modelName} Model schema` }
+    );
+
+    this.modelName = modelName;
+    this.schema = snapshotSchema(completeSchema);
     this.schemaOptions = {
       autoAddTimestamps,
       allowUnknownAttributes,
@@ -148,10 +153,10 @@ export class Model<
     this.tableHashKey = tableHashKey;
     this.tableRangeKey = tableRangeKey;
     this.indexes = indexes;
-    this.ddb = ddbClientWrapper;
+    this.ddb = ddbClientWrapper.withSchema(this.schema);
 
     // Cache sorted schema entries for IO-Actions
-    this.schemaEntries = ModelSchema.getSortedSchemaEntries(modelSchema, {
+    this.schemaEntries = ModelSchema.getSortedSchemaEntries(this.schema, {
       tableHashKey,
       ...(tableRangeKey && { tableRangeKey }),
       ...(indexes && { indexes }),
@@ -274,18 +279,19 @@ export class Model<
     });
 
     /* The `ReturnValues` param for PutItem can only be "NONE" or "ALL_OLD", so DDB
-    will never return anything here where PutItem is used to create a new item.  */
+      will never return anything here where PutItem is used to create a new item.  */
     await this.ddb.putItem({
       ...createItemOpts,
       Item: toDBitem,
-      ConditionExpression: `attribute_not_exists(${this.tableHashKey})`,
+      ConditionExpression: "attribute_not_exists(#createPK)",
+      ExpressionAttributeNames: { "#createPK": this.tableHashKey },
       /* Note that appending "AND attribute_not_exists(sk)" to the above ConditionExpression
-      would be superfluous, since PutItem operations are conducted by first finding an Item with
-      the specified Item's keys, and THEN it applies the ConditionExpression if it finds one. */
+        would be superfluous, since PutItem operations are conducted by first finding an Item with
+        the specified Item's keys, and THEN it applies the ConditionExpression if it finds one. */
     });
 
     /* Since the above PutItem operation will never return anything, `processItemAttributes.fromDB`
-    is called with the `toDBitem` to return an item with schema-defined defaults and transforms. */
+      is called with the `toDBitem` to return an item with schema-defined defaults and transforms. */
     return this.processItemAttributes.fromDB<ItemType>(toDBitem);
   };
 
@@ -399,8 +405,8 @@ export class Model<
       ...updateItemOpts,
       Key: unaliasedKeys,
       UpdateExpression,
-      ExpressionAttributeNames,
-      ExpressionAttributeValues,
+      ...(Object.keys(ExpressionAttributeNames).length && { ExpressionAttributeNames }),
+      ...(Object.keys(ExpressionAttributeValues).length && { ExpressionAttributeValues }),
       ReturnValues: "ALL_NEW", // <-- ensures the response contains `Attributes`
     });
 
@@ -562,30 +568,15 @@ export class Model<
         )
       : {};
 
-    // Create array of PROCESSED upsert-items by filtering out any UNPROCESSED items:
-    const processedToDBunaliasedUpsertItems = unprocessedPutRequestItems
-      ? toDBunaliasedUpsertItems.filter(
-          (item) =>
-            !unprocessedPutRequestItems.some(
-              (unprocessedPutReqItem) =>
-                item[this.tableHashKey] === unprocessedPutReqItem[this.tableHashKey]
-                && (!this.tableRangeKey
-                  || item[this.tableRangeKey] === unprocessedPutReqItem[this.tableRangeKey])
-            )
-        )
+    const keyOf = (item: Record<string, unknown>) =>
+      canonicalPrimaryKey(item, this.tableHashKey, this.tableRangeKey);
+    const failedPuts = new Set(unprocessedPutRequestItems?.map(keyOf));
+    const failedDeletes = new Set(unprocessedDeleteRequestKeys?.map(keyOf));
+    const processedToDBunaliasedUpsertItems = failedPuts.size
+      ? toDBunaliasedUpsertItems.filter((item) => !failedPuts.has(keyOf(item)))
       : toDBunaliasedUpsertItems;
-
-    // Create array of PROCESSED delete-op keys by filtering out any UNPROCESSED keys:
-    const processedToDBunaliasedKeysToDelete = unprocessedDeleteRequestKeys
-      ? toDBunaliasedKeysToDelete.filter(
-          (keys) =>
-            !unprocessedDeleteRequestKeys.some(
-              (unprocessedDeleteReqKeys) =>
-                keys[this.tableHashKey] === unprocessedDeleteReqKeys[this.tableHashKey]
-                && (!this.tableRangeKey
-                  || keys[this.tableRangeKey] === unprocessedDeleteReqKeys[this.tableRangeKey])
-            )
-        )
+    const processedToDBunaliasedKeysToDelete = failedDeletes.size
+      ? toDBunaliasedKeysToDelete.filter((item) => !failedDeletes.has(keyOf(item)))
       : toDBunaliasedKeysToDelete;
 
     // BatchWriteItem does not return items, so the input params are formatted for return.
@@ -614,7 +605,8 @@ export class Model<
    * @param queryOpts Options for the underlying `Query` operation.
    * @returns The items, if found.
    */
-  readonly query = async ({
+  /** Return one page, retaining the native unaliased continuation key. */
+  readonly queryPage = async ({
     where,
     limit, // lower-cased alias for "Limit"
     KeyConditionExpression,
@@ -622,7 +614,7 @@ export class Model<
     ExpressionAttributeValues,
     IndexName,
     ...queryOpts
-  }: QueryOpts<ItemType>): Promise<Array<ItemType>> => {
+  }: QueryOpts<ItemType>): Promise<ItemPage<ItemType>> => {
     // If a WhereQuery object is provided, use it to generate the KeyConditionExpression
     if (where) {
       // Unalias the keys
@@ -637,26 +629,35 @@ export class Model<
 
       // Generate the KeyConditionExpression and related values
       ({ KeyConditionExpression, ExpressionAttributeNames, ExpressionAttributeValues } =
-        convertWhereQueryToSdkQueryArgs({ where: unaliasedWhere }));
+        convertWhereQueryToSdkQueryArgs({
+          where: unaliasedWhere,
+          ...(ExpressionAttributeNames && { ExpressionAttributeNames }),
+          ...(ExpressionAttributeValues && { ExpressionAttributeValues }),
+        }));
 
-      // Check if IndexName needs to be added, test if `unaliasedWhere` contains the table's PK+SK
-      const [pkAttrName, skAttrName] = Object.keys(unaliasedWhere);
-
-      if (
-        !IndexName // skAttrName may be undefined if the `where` only contains the PK
-        && (pkAttrName !== this.tableHashKey || (!!skAttrName && skAttrName !== this.tableRangeKey))
-      ) {
-        // Get IndexName by searching table's indexes for matching PK+SK
-        for (const indexName in this.indexes) {
-          if (
-            pkAttrName === this.indexes[indexName].indexPK
-            && (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
-          ) {
-            IndexName = indexName;
-            break;
-          }
-        }
+      const keys = Object.keys(unaliasedWhere);
+      const matches = (pk: string, sk?: string) =>
+        Object.hasOwn(unaliasedWhere, pk) && keys.every((key) => key === pk || key === sk);
+      let selected = { indexPK: this.tableHashKey, indexSK: this.tableRangeKey };
+      if (IndexName) {
+        const index = this.indexes?.[IndexName];
+        if (!index) throw new ItemInputError(`Unknown index "${IndexName}".`);
+        selected = { indexPK: index.indexPK, indexSK: index.indexSK };
+      } else if (!matches(this.tableHashKey, this.tableRangeKey)) {
+        const index = Object.values(this.indexes ?? {}).find((candidate) =>
+          matches(candidate.indexPK, candidate.indexSK)
+        );
+        if (!index)
+          throw new ItemInputError("Where query does not match a table or index key schema.");
+        IndexName = index.name;
+        selected = { indexPK: index.indexPK, indexSK: index.indexSK };
       }
+      if (
+        !matches(selected.indexPK, selected.indexSK)
+        || getNormalizedComparisonMeta(selected.indexPK, unaliasedWhere[selected.indexPK]).operator
+          !== "eq"
+      )
+        throw new ItemInputError("Where query must use equality on the selected partition key.");
     }
 
     // Run the query
@@ -670,8 +671,29 @@ export class Model<
     });
 
     // If `items` is undefined, return an empty array instead of undefined
-    return response.Items?.map((item) => this.processItemAttributes.fromDB(item)) ?? [];
+    return {
+      items: response.Items?.map((item) => this.processItemAttributes.fromDB<ItemType>(item)) ?? [],
+      ...(response.LastEvaluatedKey && { lastEvaluatedKey: response.LastEvaluatedKey }),
+    };
   };
+
+  /** Single-page convenience method; use queryPage or queryItems to traverse further pages. */
+  readonly query = async (opts: QueryOpts<ItemType>): Promise<ItemType[]> => {
+    return (await this.queryPage(opts)).items;
+  };
+
+  /**
+   * Iterate all pages, including empty filtered pages. Limit is applied per SDK request.
+   * @yields {ItemType} Each decoded model item.
+   */
+  async *queryItems(opts: QueryOpts<ItemType>): AsyncGenerator<ItemType> {
+    let cursor = opts.ExclusiveStartKey;
+    do {
+      const page = await this.queryPage({ ...opts, ...(cursor && { ExclusiveStartKey: cursor }) });
+      yield* page.items;
+      cursor = page.lastEvaluatedKey;
+    } while (cursor);
+  }
 
   /**
    * [`Scan`][api-ref] operation wrapper which applies defaults and/or transforms defined in
@@ -684,11 +706,27 @@ export class Model<
    * @param scanOpts Options for the underlying `Scan` operation.
    * @returns The items, if found.
    */
-  readonly scan = async (scanOpts: ScanOpts = {}): Promise<Array<ItemType>> => {
+  readonly scanPage = async (scanOpts: ScanOpts = {}): Promise<ItemPage<ItemType>> => {
     const response = await this.ddb.scan(scanOpts);
-
-    return response.Items?.map((item) => this.processItemAttributes.fromDB(item)) ?? [];
+    return {
+      items: response.Items?.map((item) => this.processItemAttributes.fromDB<ItemType>(item)) ?? [],
+      ...(response.LastEvaluatedKey && { lastEvaluatedKey: response.LastEvaluatedKey }),
+    };
   };
+
+  /** Single-page convenience method; use scanPage or scanItems for pagination. */
+  readonly scan = async (opts: ScanOpts = {}): Promise<ItemType[]> => {
+    return (await this.scanPage(opts)).items;
+  };
+
+  async *scanItems(opts: ScanOpts = {}): AsyncGenerator<ItemType> {
+    let cursor = opts.ExclusiveStartKey;
+    do {
+      const page = await this.scanPage({ ...opts, ...(cursor && { ExclusiveStartKey: cursor }) });
+      yield* page.items;
+      cursor = page.lastEvaluatedKey;
+    } while (cursor);
+  }
 
   // INSTANCE METHOD UTILS:
 
@@ -739,8 +777,10 @@ export class Model<
       // Assemble array of enabled IO-Actions in toDB order:
       const toDBioActions = [];
       if (aliasMapping) toDBioActions.push(ioActions.aliasMapping);
-      if (setDefaults) toDBioActions.push(ioActions.setDefaults);
-      if (transformValues) toDBioActions.push(ioActions.transformValues);
+      if (setDefaults && getSchemaPlan(this.schema).defaults)
+        toDBioActions.push(ioActions.setDefaults);
+      if (transformValues && getSchemaPlan(this.schema).toDB)
+        toDBioActions.push(ioActions.transformValues);
       if (transformItem) toDBioActions.push(ioActions.transformItem);
       if (typeChecking) toDBioActions.push(ioActions.typeChecking);
       if (validate) toDBioActions.push(ioActions.validate);
@@ -774,7 +814,8 @@ export class Model<
     ) => {
       // Assemble array of enabled IO-Actions in fromDB order:
       const fromDBioActions = [];
-      if (transformValues) fromDBioActions.push(ioActions.transformValues);
+      if (transformValues && getSchemaPlan(this.schema).fromDB)
+        fromDBioActions.push(ioActions.transformValues);
       if (transformItem) fromDBioActions.push(ioActions.transformItem);
       if (aliasMapping) fromDBioActions.push(ioActions.aliasMapping);
 

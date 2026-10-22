@@ -1,6 +1,6 @@
+import { getArrayWrapper, getSchemaPlan } from "../Schema/schemaPlan.js";
 import { isType } from "../utils/isType.js";
 import type { IOActionRecursiveApplicator } from "./types/index.js";
-import type { ModelSchemaEntries } from "../Schema/types/index.js";
 
 /**
  * Applies the provided `ioAction` to nested attribute types.
@@ -26,8 +26,7 @@ export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
       // TUPLE
       attrValue = attrValue.map((tupleEl, index) =>
         ioAction.call(this, { [ARRAY_WRAPPER_KEY]: tupleEl }, {
-          schema: { [ARRAY_WRAPPER_KEY]: nestedSchema[index] },
-          schemaEntries: [[ARRAY_WRAPPER_KEY, nestedSchema[index]]] as ModelSchemaEntries,
+          ...getArrayWrapper(nestedSchema[index]),
           ...ctx,
         })[ARRAY_WRAPPER_KEY] // <-- Extracts the value from the wrapper object returned by the ioAction.
       );
@@ -35,8 +34,7 @@ export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
       // ARRAY
       attrValue = attrValue.map((arrayEl) =>
         ioAction.call(this, { [ARRAY_WRAPPER_KEY]: arrayEl }, {
-          schema: { [ARRAY_WRAPPER_KEY]: nestedSchema[0] },
-          schemaEntries: [[ARRAY_WRAPPER_KEY, nestedSchema[0]]] as ModelSchemaEntries,
+          ...getArrayWrapper(nestedSchema[0]),
           ...ctx,
         })[ARRAY_WRAPPER_KEY]
       );
@@ -45,7 +43,7 @@ export const recursivelyApplyIOAction: IOActionRecursiveApplicator = function (
     // MAP
     attrValue = ioAction.call(this, attrValue, {
       schema: nestedSchema,
-      schemaEntries: Object.entries(nestedSchema),
+      schemaEntries: getSchemaPlan(nestedSchema).entries,
       ...ctx,
     });
   }
