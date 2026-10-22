@@ -78,10 +78,23 @@ export class DdbClientWrapper extends DdbClientFieldParser {
   /** The DynamoDB client instance. */
   private readonly _ddbClient: TableConstructorParameters["ddbClient"];
 
-  constructor({ ddbClient, tableName, marshallingConfigs }: DdbClientWrapperConstructorParameters) {
-    super({ tableName, marshallingConfigs });
+  constructor({ ddbClient, ...parameters }: DdbClientWrapperConstructorParameters) {
+    super(parameters);
     this._ddbClient = ddbClient;
   }
+
+  /** A lightweight schema-specific view sharing the underlying client, not mutable configuration. */
+  readonly withSchema = (
+    dateSchema: NonNullable<DdbClientWrapperConstructorParameters["dateSchema"]>
+  ) => {
+    return new DdbClientWrapper({
+      ddbClient: this._ddbClient,
+      tableName: this.tableName,
+      marshallingConfigs: this.defaultMarshallingConfigs,
+      dateSchema,
+      dateConversion: this.dateConversion,
+    });
+  };
 
   /**
    * [`GetItem`][api-ref] operation wrapper.
@@ -114,6 +127,8 @@ export class DdbClientWrapper extends DdbClientFieldParser {
     const returnedItems: Array<{ [attrName: string]: AttributeValue }> = [];
     const returnedConsumedCapacity: Array<ConsumedCapacity> = [];
     let returnedMetadata: ClientWrapperBatchGetItemOutput["$metadata"] = {};
+    let requestSequence = 0;
+    let metadataSequence = -1;
 
     // Create BatchGetItemCommand args with marshalled `RequestItems`
     const { RequestItems, ...cmdArgs } = this.prepCommandArgs(rawCmdArgs, marshallOptions);
@@ -125,6 +140,7 @@ export class DdbClientWrapper extends DdbClientFieldParser {
     const submitBatchGetItemRequest: BatchRequestFunction<GetRequest> = async (
       batchGetItemReqObjects
     ) => {
+      const sequence = requestSequence++;
       const response = await this._ddbClient.send(
         new BatchGetItemCommand({
           ...cmdArgs,
@@ -143,7 +159,10 @@ export class DdbClientWrapper extends DdbClientFieldParser {
       // Handle ConsumedCapacity
       if (isArray(ConsumedCapacity)) returnedConsumedCapacity.push(...ConsumedCapacity);
       // Handle $metadata
-      returnedMetadata = $metadata;
+      if (sequence > metadataSequence) {
+        returnedMetadata = $metadata;
+        metadataSequence = sequence;
+      }
       // Return any unprocessed keys
       return UnprocessedKeys?.[this.tableName]?.Keys;
     };
@@ -240,6 +259,8 @@ export class DdbClientWrapper extends DdbClientFieldParser {
     const returnedItemCollectionMetrics: Array<ItemCollectionMetrics> = [];
     const returnedConsumedCapacity: Array<ConsumedCapacity> = [];
     let returnedMetadata: ClientWrapperBatchWriteItemOutput["$metadata"] = {};
+    let requestSequence = 0;
+    let metadataSequence = -1;
 
     // Create BatchWriteItemCommand args with marshalled `RequestItems`
     const { RequestItems, ...cmdArgs } = this.prepCommandArgs(rawCmdArgs, marshallOptions);
@@ -251,6 +272,7 @@ export class DdbClientWrapper extends DdbClientFieldParser {
     const submitBatchWriteItemRequest: BatchRequestFunction<WriteRequest> = async (
       batchWriteItemReqObjects
     ) => {
+      const sequence = requestSequence++;
       const response = await this._ddbClient.send(
         new BatchWriteItemCommand({
           ...cmdArgs,
@@ -267,7 +289,10 @@ export class DdbClientWrapper extends DdbClientFieldParser {
       // Handle ConsumedCapacity
       if (isArray(ConsumedCapacity)) returnedConsumedCapacity.push(...ConsumedCapacity);
       // Handle $metadata
-      returnedMetadata = $metadata;
+      if (sequence > metadataSequence) {
+        returnedMetadata = $metadata;
+        metadataSequence = sequence;
+      }
       // Return any unprocessed items
       return UnprocessedItems?.[this.tableName];
     };

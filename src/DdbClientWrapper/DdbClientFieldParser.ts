@@ -1,7 +1,9 @@
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { isArray, safeJsonStringify } from "@nerdware/ts-type-safety-utils";
 import { ItemInputError } from "../utils/errors.js";
+import { getRecursiveValueConverter } from "../utils/getRecursiveValueConverter.js";
 import { convertJsDates } from "./convertJsDates.js";
+import { convertSchemaDates } from "./convertSchemaDates.js";
 import type {
   UnmarshalledBatchGetItemCommandInput,
   UnmarshalledBatchWriteItemCommandInput,
@@ -15,12 +17,19 @@ import type {
   ToUnmarshalledSdkOutput,
   DdbClientFieldParserConstructorParameters,
 } from "./types/index.js";
+import type { BaseItem } from "../types/index.js";
 import type { ItemCollectionMetrics } from "@aws-sdk/client-dynamodb";
 import type { Simplify, RequiredDeep, AllUnionFields } from "type-fest";
 
 /**
  * Utility class for preparing DynamoDB client command arguments and parsing client responses.
  */
+const convertDateObjects = getRecursiveValueConverter((value) => {
+  if (!(value instanceof Date)) return undefined;
+  if (!Number.isFinite(value.getTime())) throw new ItemInputError("Invalid Date value.");
+  return value.toISOString();
+});
+
 export class DdbClientFieldParser {
   /**
    * Default {@link MarshallingConfigs} for the DynamoDB `marshall` and `unmarshall` util fns.
@@ -43,7 +52,17 @@ export class DdbClientFieldParser {
   protected readonly tableName: DdbClientFieldParserConstructorParameters["tableName"];
   protected readonly defaultMarshallingConfigs: Required<MarshallingConfigs>;
 
-  constructor({ tableName, marshallingConfigs }: DdbClientFieldParserConstructorParameters) {
+  protected readonly dateSchema: DdbClientFieldParserConstructorParameters["dateSchema"];
+  protected readonly dateConversion: "legacy" | "none";
+
+  constructor({
+    tableName,
+    marshallingConfigs,
+    dateSchema,
+    dateConversion = "legacy",
+  }: DdbClientFieldParserConstructorParameters) {
+    this.dateSchema = dateSchema;
+    this.dateConversion = dateConversion;
     this.tableName = tableName;
     this.defaultMarshallingConfigs = {
       marshallOptions: {
@@ -70,7 +89,14 @@ export class DdbClientFieldParser {
 
   /** Converts JS `Date` objects to datetime strings, and then marshalls the result. */
   readonly marshallAndConvertDates: MarshallingMethod = (data, marshallOpts) => {
-    return this.marshall(convertJsDates("toDB", data), marshallOpts);
+    return this.marshall(
+      this.dateSchema
+        ? (convertDateObjects(data) as BaseItem)
+        : this.dateConversion === "none"
+          ? data
+          : convertJsDates("toDB", data),
+      marshallOpts
+    );
   };
 
   /** Invokes the `unmarshall` util function with the default unmarshalling configs. */
@@ -83,7 +109,12 @@ export class DdbClientFieldParser {
 
   /** Unmarshalls the provided `data`, and then converts datetime strings to JS `Date` objects. */
   readonly unmarshallAndConvertDates: UnmarshallingMethod = (data, unmarshallOpts) => {
-    return convertJsDates("fromDB", this.unmarshall(data, unmarshallOpts));
+    const item = this.unmarshall(data, unmarshallOpts);
+    return this.dateSchema
+      ? convertSchemaDates(item, this.dateSchema)
+      : this.dateConversion === "none"
+        ? item
+        : convertJsDates("fromDB", item);
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -289,7 +320,7 @@ export class DdbClientFieldParser {
         LastEvaluatedKey: this.unmarshall(lastEvalKey, unmarshallOptions),
       }),
       ...(icMetrics && {
-        ItemCollectionMetrics: this.parseItemCollectionMetrics(icMetrics),
+        ItemCollectionMetrics: this.parseItemCollectionMetrics(icMetrics, unmarshallOptions),
       }),
       ...(responses && {
         Responses: {
