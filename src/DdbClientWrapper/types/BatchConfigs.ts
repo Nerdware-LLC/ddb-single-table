@@ -22,6 +22,8 @@ export type BatchConfigs = {
    * operation used in the `submitBatchRequest` function (larger values will be ignored).
    */
   chunkSize?: number;
+  /** Maximum independent chunks in flight. Defaults to 1; use higher values only for independent operations. */
+  concurrency?: number;
   retryConfigs?: BatchRetryConfigs;
 };
 
