@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [3.1.2-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.1.1...v3.1.2-next.1) (2026-10-25)
+
+### Bug Fixes
+
+* update index selection in 'query' ([551dd75](https://github.com/Nerdware-LLC/ddb-single-table/commit/551dd75eb327c459ed95e1cab5e5110bb90ffb76))
+
+
+### Reverts
+
+* fix index-selection logic in `query` ([6cbc07f](https://github.com/Nerdware-LLC/ddb-single-table/commit/6cbc07f82f307492c4989fe6d2dd65e2c5935945))
+
 ## [3.1.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.1.0...v3.1.1) (2026-10-25)
 
 ### Bug Fixes
