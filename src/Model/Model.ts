@@ -635,18 +635,18 @@ export class Model<
         }));
 
       // Check if IndexName needs to be added, test if `unaliasedWhere` contains the table's PK+SK
-      const [pkAttrName, skAttrName] = Object.keys(unaliasedWhere);
+      const unaliasedWhereKeys = Object.keys(unaliasedWhere);
 
       if (
         !IndexName // skAttrName may be undefined if the `where` only contains the PK
-        && (pkAttrName !== this.tableHashKey || (!!skAttrName && skAttrName !== this.tableRangeKey))
+        && !unaliasedWhereKeys.every(
+          (key) => key === this.tableHashKey || key === this.tableRangeKey
+        )
       ) {
         // Get IndexName by searching table's indexes for matching PK+SK
         for (const indexName in this.indexes) {
-          if (
-            pkAttrName === this.indexes[indexName].indexPK
-            && (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
-          ) {
+          const { indexPK, indexSK } = this.indexes[indexName];
+          if (unaliasedWhereKeys.every((key) => key === indexPK || key === indexSK)) {
             IndexName = indexName;
             break;
           }
