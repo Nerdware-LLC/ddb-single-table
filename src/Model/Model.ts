@@ -1,6 +1,5 @@
 import { isArray } from "@nerdware/ts-type-safety-utils";
 import { DdbClientWrapper } from "../DdbClientWrapper/index.js";
-import { getNormalizedComparisonMeta } from "../Expressions/WhereQuery/getNormalizedComparisonMeta.js";
 import { generateUpdateExpression, convertWhereQueryToSdkQueryArgs } from "../Expressions/index.js";
 import { ioActions } from "../IOActions/IOActions.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
@@ -596,7 +595,8 @@ export class Model<
 
   /**
    * [`Query`][api-ref] operation wrapper which applies defaults and/or transforms defined in
-   * this Model's schema to the returned items.
+   * this Model's schema to the returned items. Only _**one page**_ of results is returned;
+   * subsequent pages must be fetched separately using the native unaliased continuation key.
    *
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
    *
@@ -605,7 +605,6 @@ export class Model<
    * @param queryOpts Options for the underlying `Query` operation.
    * @returns The items, if found.
    */
-  /** Return one page, retaining the native unaliased continuation key. */
   readonly queryPage = async ({
     where,
     limit, // lower-cased alias for "Limit"
@@ -635,29 +634,24 @@ export class Model<
           ...(ExpressionAttributeValues && { ExpressionAttributeValues }),
         }));
 
-      const keys = Object.keys(unaliasedWhere);
-      const matches = (pk: string, sk?: string) =>
-        Object.hasOwn(unaliasedWhere, pk) && keys.every((key) => key === pk || key === sk);
-      let selected = { indexPK: this.tableHashKey, indexSK: this.tableRangeKey };
-      if (IndexName) {
-        const index = this.indexes?.[IndexName];
-        if (!index) throw new ItemInputError(`Unknown index "${IndexName}".`);
-        selected = { indexPK: index.indexPK, indexSK: index.indexSK };
-      } else if (!matches(this.tableHashKey, this.tableRangeKey)) {
-        const index = Object.values(this.indexes ?? {}).find((candidate) =>
-          matches(candidate.indexPK, candidate.indexSK)
-        );
-        if (!index)
-          throw new ItemInputError("Where query does not match a table or index key schema.");
-        IndexName = index.name;
-        selected = { indexPK: index.indexPK, indexSK: index.indexSK };
-      }
+      // Check if IndexName needs to be added, test if `unaliasedWhere` contains the table's PK+SK
+      const [pkAttrName, skAttrName] = Object.keys(unaliasedWhere);
+
       if (
-        !matches(selected.indexPK, selected.indexSK)
-        || getNormalizedComparisonMeta(selected.indexPK, unaliasedWhere[selected.indexPK]).operator
-          !== "eq"
-      )
-        throw new ItemInputError("Where query must use equality on the selected partition key.");
+        !IndexName // skAttrName may be undefined if the `where` only contains the PK
+        && (pkAttrName !== this.tableHashKey || (!!skAttrName && skAttrName !== this.tableRangeKey))
+      ) {
+        // Get IndexName by searching table's indexes for matching PK+SK
+        for (const indexName in this.indexes) {
+          if (
+            pkAttrName === this.indexes[indexName].indexPK
+            && (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
+          ) {
+            IndexName = indexName;
+            break;
+          }
+        }
+      }
     }
 
     // Run the query
