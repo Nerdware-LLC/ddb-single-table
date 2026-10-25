@@ -71,9 +71,11 @@
     "unrs-resolver": true
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1156.0",
     "@aws-sdk/util-dynamodb": "^3.996.9",
     "@nerdware/ts-type-safety-utils": "^1.3.1"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1156.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
