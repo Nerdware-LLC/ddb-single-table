@@ -1,4 +1,5 @@
 import { BaseSchema } from "./BaseSchema.js";
+import { TIMESTAMP_ATTRIBUTES } from "./timestampAttributes.js";
 import type { TableKeysSchemaType, ModelSchemaType, SchemaMetadata } from "./types/index.js";
 
 describe("BaseSchema", () => {
@@ -251,6 +252,63 @@ describe("BaseSchema", () => {
       ).toThrow(
         `${ERR_MSG_PREFIX.M_SCHEMA} attribute "attr" specifies a "default" value of type "string", but the attribute's configured "type" is "enum".`
       );
+    });
+
+    test("accepts null defaults only for nullable attributes", () => {
+      for (const config of [
+        { type: "string" },
+        { type: "number" },
+        { type: "boolean" },
+        { type: "Buffer" },
+        { type: "Date" },
+        { type: "map", schema: { child: { type: "string" } } },
+        { type: "array", schema: [{ type: "string" }] },
+        { type: "tuple", schema: [{ type: "string" }, { type: "number" }] },
+        { type: "enum", oneOf: ["value"] },
+      ] as const) {
+        expect(() =>
+          BaseSchema.validateAttributeTypes(
+            { attr: { ...config, nullable: true, default: null } },
+            METADATA.M_SCHEMA
+          )
+        ).not.toThrow();
+
+        for (const nullable of [undefined, false]) {
+          expect(() =>
+            BaseSchema.validateAttributeTypes(
+              { attr: { ...config, ...(nullable === false && { nullable }), default: null } },
+              METADATA.M_SCHEMA
+            )
+          ).toThrow('specifies a "default" value of type "object"');
+        }
+      }
+      expect(() =>
+        BaseSchema.validateAttributeTypes(
+          { attr: { type: "Date", nullable: true, default: {} } },
+          METADATA.M_SCHEMA
+        )
+      ).toThrow('specifies a "default" value of type "object"');
+    });
+
+    test("validates timestamp configs and a nested nullable timestamp with a null default", () => {
+      expect(() =>
+        BaseSchema.validateAttributeTypes(
+          {
+            ...TIMESTAMP_ATTRIBUTES,
+            contactInfo: {
+              type: "map",
+              schema: {
+                emailVerifiedAt: {
+                  ...TIMESTAMP_ATTRIBUTES.createdAt,
+                  nullable: true,
+                  default: null,
+                },
+              },
+            },
+          },
+          METADATA.M_SCHEMA
+        )
+      ).not.toThrow();
     });
 
     test("rejects invalid configs inside maps, arrays, and tuple positions", () => {

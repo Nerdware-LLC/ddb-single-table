@@ -162,11 +162,12 @@ export class BaseSchema {
 
       // Check if "default" is specified
       if (hasKey(attrConfig, "default")) {
-        // If the default is not a function, ensure its type matches the attr's defined "type"
+        // Literal defaults must match the type, or be null for a nullable attribute.
         const defaultValue = attrConfig.default;
 
         if (
           typeof defaultValue !== "function"
+          && !(defaultValue === null && attrConfig.nullable === true)
           && !isType[type](defaultValue, oneOf ?? nestedSchema)
         ) {
           throw new SchemaValidationError({
