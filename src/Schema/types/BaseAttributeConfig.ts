@@ -71,6 +71,7 @@ export interface BaseAttributeConfig {
    * - ##### When using a primitive-value `default`:
    *   - The primitive's type must match the attribute's `type`, otherwise the Model's
    *     constructor will throw an error.
+   *   - A `null` default is allowed when `nullable: true` is configured.
    *
    * - ##### When using a function `default`:
    *   - The function is called with the entire item-object provided to the Model method _**with

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [3.1.1-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.1.0...v3.1.1-next.1) (2026-10-25)
+
+### Bug Fixes
+
+* allow `default: null` when `nullable=true` ([f6817f5](https://github.com/Nerdware-LLC/ddb-single-table/commit/f6817f5240b4c917e5f7dd5ffc8939d786882d5f))
+
 ## [3.1.0](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.0.2...v3.1.0) (2026-10-22)
 
 ### Bug Fixes

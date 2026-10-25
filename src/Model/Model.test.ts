@@ -15,6 +15,7 @@ import { mockClient } from "aws-sdk-client-mock";
 import * as batchRequestsModule from "../DdbClientWrapper/handleBatchRequests.js";
 import * as whereQueryModule from "../Expressions/WhereQuery/index.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
+import { TIMESTAMP_ATTRIBUTES } from "../Schema/timestampAttributes.js";
 import { Table } from "../Table/Table.js";
 import { isValidIso8601DatetimeString } from "../utils/index.js";
 import { Model } from "./Model.js";
@@ -171,6 +172,42 @@ describe("Model", () => {
   };
 
   describe("new Model()", () => {
+    test("creates items with a nested nullable timestamp default and automatic timestamps", async () => {
+      const model = mockTable.createModel(
+        "User",
+        {
+          contactInfo: {
+            type: "map",
+            schema: {
+              emailVerifiedAt: {
+                ...TIMESTAMP_ATTRIBUTES.createdAt,
+                default: null,
+                nullable: true,
+                required: true,
+              },
+            },
+          },
+        },
+        { autoAddTimestamps: true }
+      );
+
+      const result = await model.createItem({
+        pk: "USER-1",
+        sk: "PROFILE",
+        data: 1,
+        contactInfo: {},
+      });
+
+      expect(result).toMatchObject({
+        contactInfo: { emailVerifiedAt: null },
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+      expect(mockDdbClient).toHaveReceivedCommandWith(PutItemCommand, {
+        Item: expect.objectContaining({ contactInfo: { M: { emailVerifiedAt: { NULL: true } } } }),
+      });
+    });
+
     test("returns a Model instance with expected properties when provided valid arguments", () => {
       // Assert instance is of correct type and has expected property values:
       expect(mockModel).toBeInstanceOf(Model);
