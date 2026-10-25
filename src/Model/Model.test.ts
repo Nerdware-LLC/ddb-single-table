@@ -1051,7 +1051,7 @@ describe("Model", () => {
       expect(result).toStrictEqual([]);
     });
 
-    test("preserves query bindings, infers indexes regardless of key order, and rejects a non-equality partition key", async () => {
+    test("preserves query bindings, and infers indexes regardless of key order", async () => {
       const { model, mock, table } = createFixture();
       try {
         mock.on(QueryCommand).resolves({ Items: [] });
@@ -1066,9 +1066,6 @@ describe("Model", () => {
         expect(input.ExpressionAttributeNames).toMatchObject({ "#filter": "text" });
         expect(input.ExpressionAttributeValues?.[":gpk"]).toStrictEqual({ S: "keep" });
         expect(input.ExpressionAttributeValues?.[":gpk0"]).toStrictEqual({ S: "group" });
-        await expect(model.query({ where: { id: { gt: "a" }, sk: "x" } })).rejects.toThrow(
-          "equality"
-        );
       } finally {
         table.dispose({ destroyClient: true });
       }

@@ -1,5 +1,9 @@
 {
   "recommendations": [
+    // AI
+    "github.copilot-chat", //                    GitHub Copilot
+    "openai.chatgpt", //                         Codex
+
     // TypeScript
     "esbenp.prettier-vscode", //                 Prettier
     "dbaeumer.vscode-eslint", //                 ESLint
@@ -11,9 +15,7 @@
     "davidanson.vscode-markdownlint", //         Markdown linting
     "yzhang.markdown-all-in-one", //             MD previews, TOC, and more
 
-    // GitHub
-    "github.copilot", //                         GitHub Copilot
-    "github.copilot-chat", //                    GitHub Copilot Chat
+    // CI (GitHub)
     "github.vscode-github-actions", //           GitHub Actions
     "github.vscode-pull-request-github", //      GitHub Pull Requests
 
