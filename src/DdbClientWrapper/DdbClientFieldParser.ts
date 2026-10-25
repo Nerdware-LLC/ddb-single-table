@@ -21,15 +21,15 @@ import type { BaseItem } from "../types/index.js";
 import type { ItemCollectionMetrics } from "@aws-sdk/client-dynamodb";
 import type { Simplify, RequiredDeep, AllUnionFields } from "type-fest";
 
-/**
- * Utility class for preparing DynamoDB client command arguments and parsing client responses.
- */
 const convertDateObjects = getRecursiveValueConverter((value) => {
   if (!(value instanceof Date)) return undefined;
   if (!Number.isFinite(value.getTime())) throw new ItemInputError("Invalid Date value.");
   return value.toISOString();
 });
 
+/**
+ * Utility class for preparing DynamoDB client command arguments and parsing client responses.
+ */
 export class DdbClientFieldParser {
   /**
    * Default {@link MarshallingConfigs} for the DynamoDB `marshall` and `unmarshall` util fns.
