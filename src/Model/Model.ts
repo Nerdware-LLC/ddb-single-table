@@ -5,7 +5,7 @@ import { ioActions } from "../IOActions/IOActions.js";
 import { ModelSchema } from "../Schema/ModelSchema.js";
 import { getSchemaPlan, snapshotSchema } from "../Schema/schemaPlan.js";
 import { ItemInputError } from "../utils/errors.js";
-import { canonicalPrimaryKey } from "./canonicalPrimaryKey.js";
+import { canonicalPrimaryKey, inferIndexName } from "./utils/index.js";
 import type { ItemPage } from "./types/ItemPage.js";
 import type {
   ModelConstructorParameters,
@@ -649,15 +649,7 @@ export class Model<
         && (pkAttrName !== this.tableHashKey || (!!skAttrName && skAttrName !== this.tableRangeKey))
       ) {
         // Get IndexName by searching table's indexes for matching PK+SK
-        for (const indexName in this.indexes) {
-          if (
-            pkAttrName === this.indexes[indexName].indexPK
-            && (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
-          ) {
-            IndexName = indexName;
-            break;
-          }
-        }
+        IndexName = inferIndexName({ pkAttrName, skAttrName }, this.indexes);
       }
     }
 
