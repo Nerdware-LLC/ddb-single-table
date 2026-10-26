@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [3.1.3](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.1.2...v3.1.3) (2026-10-26)
+
+### Bug Fixes
+
+* update auto-Index selection logic ([85b695e](https://github.com/Nerdware-LLC/ddb-single-table/commit/85b695ed3ed5ba82b8be5e65f98bfe54125b6653))
+
 ## [3.1.3-next.1](https://github.com/Nerdware-LLC/ddb-single-table/compare/v3.1.2...v3.1.3-next.1) (2026-10-26)
 
 ### Bug Fixes
