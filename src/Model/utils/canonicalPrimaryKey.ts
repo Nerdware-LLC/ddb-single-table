@@ -1,5 +1,5 @@
 import { NumberValueImpl } from "@aws-sdk/util-dynamodb";
-import { ItemInputError } from "../utils/errors.js";
+import { ItemInputError } from "../../utils/errors.js";
 
 const numericKey = (value: string): string => {
   const match = /^([+-]?)(\d*)(?:\.(\d*))?(?:e([+-]?\d+))?$/i.exec(value);
