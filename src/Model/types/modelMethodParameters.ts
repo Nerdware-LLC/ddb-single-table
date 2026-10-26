@@ -110,12 +110,21 @@ export type DeleteItemOpts = ModifyClientParamsForModel<ClientWrapperDeleteItemI
 export type BatchWriteItemsOpts = ModifyClientParamsForModel<ClientWrapperBatchWriteItemInput>;
 
 /**
- * `model.query()` parameters which are passed to the underlying `Query` SDK command.
+ * `model.query()`, `model.queryPage()`, and `model.queryItems()` parameters which are
+ * passed to the underlying `Query` SDK command.
  *
  * ### Auto-Generation of KeyConditionExpression
  *
  * The `model.query()` method also supports {@link WhereQueryParameter|`WhereQuery` syntax} which
  * can be used to auto-generate the `KeyConditionExpression`.
+ *
+ * Automatic index selection relies on `where` key-insertion order, including aliases:
+ * put the partition (hash) key first, then the optional sort (range) key. If supplying
+ * the sort key first (e.g. `{ sk: "whatever", pk: "foo" }`), you MUST explicitly
+ * supply `IndexName` for the intended secondary index. For the base table, put its
+ * partition key first. Explicit `IndexName` overrides automatic selection. When multiple
+ * indexes match, the first matching configured index is selected; use `IndexName`
+ * to choose a specific one. Without `where`, supply `IndexName` for secondary-index queries.
  *
  * @example
  * ```ts

@@ -11,6 +11,12 @@ export type WhereQueryParameter<ItemParams extends UnknownItem = BaseItem> = {
    * - `ExpressionAttributeNames`
    * - `ExpressionAttributeValues`
    *
+   * In `model.query()`, `model.queryPage()`, and `model.queryItems()`, automatic index
+   * selection relies on key-insertion order: partition (hash) key first, then optional
+   * sort (range) key, including when using aliases. If supplying the sort key first
+   * (e.g. `{ sk: "whatever", pk: "foo" }`), you MUST supply `IndexName` explicitly
+   * for the intended secondary index. For the base table, put its partition key first.
+   *
    * ```ts
    * // The `where` argument in this query contains 2 WhereQueryComparisonObjects:
    * const queryResults = await PersonModel.query({

@@ -1051,12 +1051,12 @@ describe("Model", () => {
       expect(result).toStrictEqual([]);
     });
 
-    test("preserves query bindings, and infers indexes regardless of key order", async () => {
+    test("preserves query bindings while inferring an index from partition-key-first order", async () => {
       const { model, mock, table } = createFixture();
       try {
         mock.on(QueryCommand).resolves({ Items: [] });
         await model.query({
-          where: { sk: { beginsWith: "x" }, gpk: "group" },
+          where: { gpk: "group", sk: { beginsWith: "x" } },
           FilterExpression: "#filter = :gpk",
           ExpressionAttributeNames: { "#filter": "text" },
           ExpressionAttributeValues: { ":gpk": "keep" },
@@ -1070,6 +1070,102 @@ describe("Model", () => {
         table.dispose({ destroyClient: true });
       }
     });
+  });
+
+  describe("model.queryPage() index selection", () => {
+    test.each([
+      { where: { pk: "foo", sk: "whatever" }, expectedIndex: undefined },
+      { where: { pk: "foo" }, expectedIndex: undefined },
+      { where: { id: "foo", handle: "whatever" }, expectedIndex: undefined },
+      { where: { sk: "whatever", data: 42 }, expectedIndex: "sk_gsi" },
+      { where: { data: 42, sk: "whatever" }, expectedIndex: "data_gsi" },
+      { where: { handle: "whatever", data: 42 }, expectedIndex: "sk_gsi" },
+      { where: { data: 42, handle: "whatever" }, expectedIndex: "data_gsi" },
+      { where: { sk: "whatever" }, expectedIndex: "sk_gsi" },
+      { where: { data: 42 }, expectedIndex: "data_gsi" },
+      { where: { handle: "whatever" }, expectedIndex: "sk_gsi" },
+    ])("selects $expectedIndex for ordered where=$where", async ({ where, expectedIndex }) => {
+      await mockModel.queryPage({ where });
+
+      const input = mockDdbClient.commandCalls(QueryCommand)[0].args[0].input;
+      if (expectedIndex) expect(input.IndexName).toBe(expectedIndex);
+      else expect(input).not.toHaveProperty("IndexName");
+    });
+
+    test.each([
+      { where: { data: 42, sk: "whatever" }, IndexName: "sk_gsi" },
+      { where: { sk: "whatever", data: 42 }, IndexName: "data_gsi" },
+      { where: { data: 42, handle: "whatever" }, IndexName: "sk_gsi" },
+      { where: { handle: "whatever", data: 42 }, IndexName: "data_gsi" },
+      { where: { sk: "whatever" }, IndexName: "data_gsi" },
+    ])("honors explicit $IndexName for where=$where", async ({ where, IndexName }) => {
+      await mockModel.queryPage({ where, IndexName });
+
+      const input = mockDdbClient.commandCalls(QueryCommand)[0].args[0].input;
+      expect(input.IndexName).toBe(IndexName);
+    });
+
+    test("uses key order rather than comparison operators to distinguish table and index keys", async () => {
+      const client = new DynamoDBClient(clientOptions);
+      const mock = mockClient(client);
+      const table = new Table({
+        tableName: "ReverseKeys",
+        ddbClient: client,
+        tableKeysSchema: {
+          pk: { type: "string", required: true, isHashKey: true },
+          sk: {
+            type: "string",
+            required: true,
+            isRangeKey: true,
+            index: { name: "reverse_gsi", rangeKey: "pk" },
+          },
+        },
+      });
+      const model = table.createModel("ReverseKeys", {});
+
+      try {
+        mock.on(QueryCommand).resolves({ Items: [] });
+        // This order automatically targets reverse_gsi, even with a sort-key operator first.
+        const where = { sk: { beginsWith: "whatever" }, pk: "foo" };
+        await model.queryPage({ where });
+        expect(mock.commandCalls(QueryCommand)[0].args[0].input.IndexName).toBe("reverse_gsi");
+
+        // An explicit index allows its sort key to be supplied first without changing the target.
+        await model.queryPage({
+          where: { pk: "foo", sk: "whatever" },
+          IndexName: "reverse_gsi",
+        });
+        expect(mock.commandCalls(QueryCommand)[1].args[0].input.IndexName).toBe("reverse_gsi");
+      } finally {
+        table.dispose({ destroyClient: true });
+      }
+    });
+
+    test.each([
+      { where: { data: 42, handle: "whatever" }, IndexName: undefined, expectedIndex: "data_gsi" },
+      { where: { data: 42, handle: "whatever" }, IndexName: "sk_gsi", expectedIndex: "sk_gsi" },
+    ])(
+      "keeps $expectedIndex across queryItems pages",
+      async ({ where, IndexName, expectedIndex }) => {
+        const cursor = { pk: { S: "foo" }, sk: { S: "whatever" }, data: { N: "42" } };
+        mockDdbClient
+          .on(QueryCommand)
+          .resolvesOnce({ Items: [], LastEvaluatedKey: cursor })
+          .resolvesOnce({ Items: [] });
+
+        const items = [];
+        for await (const item of mockModel.queryItems({ where, IndexName })) items.push(item);
+
+        expect(items).toStrictEqual([]);
+        const calls = mockDdbClient.commandCalls(QueryCommand);
+        expect(calls).toHaveLength(2);
+        expect(calls.map((call) => call.args[0].input.IndexName)).toStrictEqual([
+          expectedIndex,
+          expectedIndex,
+        ]);
+        expect(calls[1].args[0].input.ExclusiveStartKey).toStrictEqual(cursor);
+      }
+    );
   });
 
   describe("model.scan()", () => {

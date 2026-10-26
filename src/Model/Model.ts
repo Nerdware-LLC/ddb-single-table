@@ -598,6 +598,12 @@ export class Model<
    * this Model's schema to the returned items. Only _**one page**_ of results is returned;
    * subsequent pages must be fetched separately using the native unaliased continuation key.
    *
+   * Automatic index selection relies on `where` key-insertion order: supply the partition
+   * (hash) key first, then the optional sort (range) key. Aliases follow the same rule.
+   * If supplying the sort key first (e.g. `{ sk: "whatever", pk: "foo" }`), you MUST
+   * supply `IndexName` explicitly for the intended secondary index. For the base table,
+   * put its partition key first. Explicit `IndexName` always overrides automatic selection.
+   *
    * [api-ref]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
    *
    * // IDEA - Restrict QueryOpts.IndexName to only be a valid index name for the table.
@@ -634,19 +640,20 @@ export class Model<
           ...(ExpressionAttributeValues && { ExpressionAttributeValues }),
         }));
 
-      // Check if IndexName needs to be added, test if `unaliasedWhere` contains the table's PK+SK
-      const unaliasedWhereKeys = Object.keys(unaliasedWhere);
+      // Check if IndexName needs to be added (THIS IS RELIANT UPON KEY-INSERTION ORDER!)
+      const [pkAttrName, skAttrName] = Object.keys(unaliasedWhere);
 
+      // Check if `unaliasedWhere` contains the table's PK/SK
       if (
         !IndexName // skAttrName may be undefined if the `where` only contains the PK
-        && !unaliasedWhereKeys.every(
-          (key) => key === this.tableHashKey || key === this.tableRangeKey
-        )
+        && (pkAttrName !== this.tableHashKey || (!!skAttrName && skAttrName !== this.tableRangeKey))
       ) {
         // Get IndexName by searching table's indexes for matching PK+SK
         for (const indexName in this.indexes) {
-          const { indexPK, indexSK } = this.indexes[indexName];
-          if (unaliasedWhereKeys.every((key) => key === indexPK || key === indexSK)) {
+          if (
+            pkAttrName === this.indexes[indexName].indexPK
+            && (!skAttrName || skAttrName === this.indexes[indexName].indexSK)
+          ) {
             IndexName = indexName;
             break;
           }
@@ -671,13 +678,19 @@ export class Model<
     };
   };
 
-  /** Single-page convenience method; use queryPage or queryItems to traverse further pages. */
+  /**
+   * Single-page convenience method; use queryPage or queryItems to traverse further pages.
+   * Automatic index selection requires `where` keys in partition-key-first order, as in
+   * {@link queryPage}. Supply `IndexName` explicitly when putting the sort key first.
+   */
   readonly query = async (opts: QueryOpts<ItemType>): Promise<ItemType[]> => {
     return (await this.queryPage(opts)).items;
   };
 
   /**
    * Iterate all pages, including empty filtered pages. Limit is applied per SDK request.
+   * Automatic index selection requires `where` keys in partition-key-first order, as in
+   * {@link queryPage}. Supply `IndexName` explicitly when putting the sort key first.
    * @yields {ItemType} Each decoded model item.
    */
   async *queryItems(opts: QueryOpts<ItemType>): AsyncGenerator<ItemType> {

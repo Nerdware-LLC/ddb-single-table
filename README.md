@@ -69,6 +69,7 @@ Marshalling ✅ Validation ✅ Where-style query API ✅ and more. <br>
   - [Global `DynamoDBClient` Mock via `setupFiles`](#global-dynamodbclient-mock-via-setupfiles)
 - [📦 Batch Requests](#-batch-requests)
   - [Batch Retries with Exponential Backoff](#batch-retries-with-exponential-backoff)
+- [🔎 Query Index Selection](#-query-index-selection)
 - [📄 Pagination](#-pagination)
 - [❓ FAQ](#-faq)
 - [🤝 Contributing](#-contributing)
@@ -820,6 +821,30 @@ DDB-ST models provide a high-level API for batching CRUD operations that handles
    > `Math.round( Math.random() * delay )`
 
    Note that the determination as to whether the delay exceeds the `maxDelay` is made BEFORE the jitter is applied.
+
+## 🔎 Query Index Selection
+
+Automatic index selection in `model.query()`, `model.queryPage()`, and `model.queryItems()` **relies on the key-insertion order of `where`**. Supply the partition (hash) key first, followed by the optional sort (range) key. This rule also applies when using attribute aliases.
+
+For example, with one index named `sk_gsi` using partition key `sk` and sort key `data`, and another named `data_gsi` using partition key `data` and sort key `sk`:
+
+```ts
+// Automatically selects sk_gsi:
+await model.query({ where: { sk: "whatever", data: 42 } });
+
+// Automatically selects data_gsi:
+await model.query({ where: { data: 42, sk: "whatever" } });
+
+// Sort key first: explicitly select the intended index.
+await model.query({
+  where: { data: 42, sk: "whatever" },
+  IndexName: "sk_gsi",
+});
+```
+
+**If you put the sort key first, such as `{ sk: "whatever", pk: "foo" }`, you MUST explicitly supply `IndexName` for the intended secondary index.** The library does not infer key roles from comparison operators or rearrange keys. Explicit `IndexName` always overrides automatic selection.
+
+For a base-table query, put the table's partition key first (e.g. `{ pk: "foo", sk: "whatever" }`) and omit `IndexName`. With only a partition key in `where`, automatic selection uses the base table if its partition key matches; otherwise it selects the first configured index with that partition key. When multiple indexes match, supply `IndexName` to choose a specific one. Queries using a raw `KeyConditionExpression` without `where` must also supply `IndexName` when targeting a secondary index.
 
 ## 📄 Pagination
 
