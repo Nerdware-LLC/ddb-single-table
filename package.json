@@ -80,7 +80,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
-    "@types/node": "^25.9.9",
+    "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "^4.0.15",
     "@vitest/eslint-plugin": "^1.6.28",
     "aws-sdk-client-mock": "^4.1.0",
